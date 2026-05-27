@@ -6,17 +6,6 @@ import { Marquee }           from '@/components/Marquee'
 import { ScrollReveal }      from '@/components/ScrollReveal'
 import { AnimatedCounter }   from '@/components/AnimatedCounter'
 
-const PHOTOS = [
-  { src: '/gallery/2026/PXL_20260524_094219679.jpg',    caption: 'Friday evening' },
-  { src: '/gallery/2026/PXL_20260524_094220066.jpg',    caption: 'Main stage' },
-  { src: '/gallery/2026/PXL_20260524_094231598.jpg',    caption: 'The crowd' },
-  { src: '/gallery/2026/PXL_20260524_094232166.jpg',    caption: 'Live set' },
-  { src: '/gallery/2026/PXL_20260524_094234189.jpg',    caption: 'Festival grounds' },
-  { src: '/gallery/2026/PXL_20260524_094237321.MP.jpg', caption: 'Devon coast' },
-  { src: '/gallery/2026/PXL_20260524_094238702.jpg',    caption: 'Camping area' },
-  { src: '/gallery/2026/PXL_20260524_094239199.jpg',    caption: 'Sunset' },
-]
-
 const STATS = [
   { value: 1200, label: 'Attendees', suffix: '+' },
   { value: 42,   label: 'Acts' },
@@ -111,27 +100,6 @@ export default function Page() {
             <div className="stats-row">
               {STATS.map(s => (
                 <AnimatedCounter key={s.label} value={s.value} label={s.label} suffix={s.suffix ?? ''} />
-              ))}
-            </div>
-          </ScrollReveal>
-
-          {/* Photo grid */}
-          <ScrollReveal delay={60}>
-            <div className="photo-grid" role="list" aria-label="Photos from SharkFest 2026">
-              {PHOTOS.map((photo, i) => (
-                <div key={i} className="photo-item" role="listitem">
-                  <Image
-                    src={photo.src}
-                    alt={`SharkFest 2026 — ${photo.caption}`}
-                    fill
-                    sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                    priority={i < 3}
-                  />
-                  <div className="photo-caption" aria-hidden="true">
-                    <span>{photo.caption}</span>
-                  </div>
-                </div>
               ))}
             </div>
           </ScrollReveal>
