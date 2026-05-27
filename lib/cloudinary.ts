@@ -41,7 +41,12 @@ export async function getFolder(folder: string): Promise<CloudinaryAsset[]> {
       }
     )
 
-    if (!res.ok) throw new Error(`Cloudinary API error ${res.status}`)
+    if (!res.ok) {
+      const body = await res.text().catch(() => '(no body)')
+      throw new Error(
+        `Cloudinary API ${res.status} — cloud:"${CLOUD}" folder:"${folder}" — ${body}`
+      )
+    }
     const data = await res.json()
     all.push(...(data.resources as CloudinaryAsset[]))
     nextCursor = data.next_cursor
