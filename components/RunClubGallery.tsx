@@ -3,14 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { CloudinaryAsset } from '@/lib/cloudinary'
+import { thumbUrl, fullUrl } from '@/lib/cloudinary'
 
 interface Props {
   images: CloudinaryAsset[]
-  thumbUrl: (id: string) => string
-  fullUrl:  (id: string) => string
 }
 
-export function RunClubGallery({ images, thumbUrl, fullUrl }: Props) {
+export function RunClubGallery({ images }: Props) {
   const [open,    setOpen]    = useState<number | null>(null)
   const [loaded,  setLoaded]  = useState<Set<string>>(new Set())
   const closeRef = useRef<HTMLButtonElement>(null)

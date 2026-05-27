@@ -6,28 +6,23 @@ import { Marquee }           from '@/components/Marquee'
 import { ScrollReveal }      from '@/components/ScrollReveal'
 import { AnimatedCounter }   from '@/components/AnimatedCounter'
 
-const PHOTOS = [
-  { src: '/gallery/2026/PXL_20260524_094219679.jpg',    caption: 'Friday evening' },
-  { src: '/gallery/2026/PXL_20260524_094220066.jpg',    caption: 'Main stage' },
-  { src: '/gallery/2026/PXL_20260524_094231598.jpg',    caption: 'The crowd' },
-  { src: '/gallery/2026/PXL_20260524_094232166.jpg',    caption: 'Live set' },
-  { src: '/gallery/2026/PXL_20260524_094234189.jpg',    caption: 'Festival grounds' },
-  { src: '/gallery/2026/PXL_20260524_094237321.MP.jpg', caption: 'Devon coast' },
-  { src: '/gallery/2026/PXL_20260524_094238702.jpg',    caption: 'Camping area' },
-  { src: '/gallery/2026/PXL_20260524_094239199.jpg',    caption: 'Sunset' },
+const STATS = [
+  { value: 830, label: 'Attendees', suffix: '+' },
+  { value: 3,   label: 'Headline Acts' },
+  { value: 3,   label: 'Days' },
+  { value: 216, label: 'Pitches' },
 ]
 
-const STATS = [
-  { value: 1200, label: 'Attendees', suffix: '+' },
-  { value: 42,   label: 'Acts' },
-  { value: 3,    label: 'Days' },
-  { value: 216,  label: 'Pitches' },
+const NIGHTS = [
+  { day: 'Friday',   theme: 'The Shrine',                    act: 'The Shrine',            icon: '🎸' },
+  { day: 'Saturday', theme: 'Hawaiian Night',                 act: 'Break Beat Bandits',    icon: '🌺' },
+  { day: 'Sunday',   theme: "70's Night",                     act: 'FLAIRZ',                icon: '🕺' },
 ]
 
 const RELIVE = [
-  { num: '01', icon: '📸', tag: 'Gallery',    title: 'Full photo album',       body: 'Every shot from the three days — browse, download, and share the memories.' },
-  { num: '02', icon: '🎬', tag: 'Highlights', title: 'Watch the highlights',   body: 'The best moments from the main stage, the village, and the pitches.' },
-  { num: '03', icon: '📝', tag: 'Recap',      title: 'Read the wrap-up',       body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.' },
+  { num: '01', icon: '📸', tag: 'Your Photos',  title: 'Community gallery',       body: 'Upload your shots from the weekend — the good, the muddy, the golden.', href: '/community' },
+  { num: '02', icon: '🏃', tag: 'Run Club',     title: 'Festival run photos',     body: '182 photos from the morning run — Devon coast at its finest.',             href: '/run-club'  },
+  { num: '03', icon: '📝', tag: 'Recap',        title: 'Read the wrap-up',        body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.', href: null },
 ]
 
 export default function Page() {
@@ -115,22 +110,21 @@ export default function Page() {
             </div>
           </ScrollReveal>
 
-          {/* Photo grid */}
-          <ScrollReveal delay={60}>
-            <div className="photo-grid" role="list" aria-label="Photos from SharkFest 2026">
-              {PHOTOS.map((photo, i) => (
-                <div key={i} className="photo-item" role="listitem">
-                  <Image
-                    src={photo.src}
-                    alt={`SharkFest 2026 — ${photo.caption}`}
-                    fill
-                    sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                    priority={i < 3}
-                  />
-                  <div className="photo-caption" aria-hidden="true">
-                    <span>{photo.caption}</span>
-                  </div>
+          {/* Headline nights */}
+          <ScrollReveal delay={100}>
+            <div className="nights-label">
+              <span className="nights-label-line" />
+              3 Themed Headline Nights
+              <span className="nights-label-line" />
+            </div>
+            <div className="nights-grid">
+              {NIGHTS.map((n, i) => (
+                <div key={n.day} className="night-card">
+                  <span className="night-icon">{n.icon}</span>
+                  <p className="night-day">{n.day}</p>
+                  <p className="night-theme">{n.theme}</p>
+                  <p className="night-act">{n.act}</p>
+                  <span className="night-index">0{i + 1}</span>
                 </div>
               ))}
             </div>
@@ -164,17 +158,31 @@ export default function Page() {
           <div className="relive-grid">
             {RELIVE.map((card, i) => (
               <ScrollReveal key={card.tag} delay={i * 80}>
-                <div className="relive-card">
-                  <span className="relive-card-num" aria-hidden="true">{card.num}</span>
-                  <div className="relive-card-icon">{card.icon}</div>
-                  <p className="relive-card-tag">{card.tag}</p>
-                  <h3 className="relive-card-title">{card.title}</h3>
-                  <p className="relive-card-body">{card.body}</p>
-                  <span className="relive-card-pill">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Coming soon
-                  </span>
-                </div>
+                {card.href ? (
+                  <Link href={card.href} className="relive-card relive-card--link">
+                    <span className="relive-card-num" aria-hidden="true">{card.num}</span>
+                    <div className="relive-card-icon">{card.icon}</div>
+                    <p className="relive-card-tag">{card.tag}</p>
+                    <h3 className="relive-card-title">{card.title}</h3>
+                    <p className="relive-card-body">{card.body}</p>
+                    <span className="relive-card-pill relive-card-pill--live">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      View now
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="relive-card">
+                    <span className="relive-card-num" aria-hidden="true">{card.num}</span>
+                    <div className="relive-card-icon">{card.icon}</div>
+                    <p className="relive-card-tag">{card.tag}</p>
+                    <h3 className="relive-card-title">{card.title}</h3>
+                    <p className="relive-card-body">{card.body}</p>
+                    <span className="relive-card-pill">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      Coming soon
+                    </span>
+                  </div>
+                )}
               </ScrollReveal>
             ))}
           </div>
@@ -202,6 +210,7 @@ export default function Page() {
           <a href="#2026">SharkFest 2026</a>
           <a href="#relive">Highlights</a>
           <Link href="/run-club">Run Club</Link>
+          <Link href="/community">Community Photos</Link>
           <a href="https://torbaySharks.co.uk" rel="noopener noreferrer">RFC website</a>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>

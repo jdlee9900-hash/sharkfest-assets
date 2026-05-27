@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getFolder, listFolders, thumbUrl, fullUrl } from '@/lib/cloudinary'
+import { getFolder, listFolders } from '@/lib/cloudinary'
 import { RunClubGallery } from '@/components/RunClubGallery'
 
 export const metadata: Metadata = {
@@ -91,7 +91,7 @@ export default async function RunClubPage() {
         )}
 
         {images.length > 0 && (
-          <RunClubGallery images={images} thumbUrl={thumbUrl} fullUrl={fullUrl} />
+          <RunClubGallery images={images} />
         )}
 
         {images.length === 0 && !noCredentials && !error && (
