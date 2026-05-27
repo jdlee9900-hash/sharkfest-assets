@@ -1,16 +1,10 @@
 'use client'
 
 import { useRef } from 'react'
-import { useOceanCanvas } from './useOceanCanvas'
+import { useHeroCanvas } from './useHeroCanvas'
 
 export function OceanCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  useOceanCanvas(canvasRef)
-  return (
-    <canvas
-      ref={canvasRef}
-      className="ocean-canvas"
-      aria-hidden="true"
-    />
-  )
+  const ref = useRef<HTMLCanvasElement>(null)
+  useHeroCanvas(ref)
+  return <canvas ref={ref} className="ocean-canvas" aria-hidden="true" />
 }
