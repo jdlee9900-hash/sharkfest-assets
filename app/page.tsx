@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { CountdownTimer }   from '@/components/CountdownTimer'
 import { OceanCanvas }      from '@/components/OceanCanvas'
 import { Marquee }           from '@/components/Marquee'
@@ -200,6 +201,7 @@ export default function Page() {
           <a href="mailto:hello@torbaySharks.co.uk">Contact</a>
           <a href="#2026">SharkFest 2026</a>
           <a href="#relive">Highlights</a>
+          <Link href="/run-club">Run Club</Link>
           <a href="https://torbaySharks.co.uk" rel="noopener noreferrer">RFC website</a>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
