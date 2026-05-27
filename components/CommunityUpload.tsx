@@ -4,42 +4,83 @@ import { useState, useRef, useCallback } from 'react'
 
 interface FileEntry {
   file: File
-  takenAt: string | null  // ISO string from EXIF, or null
+  takenAt: string | null
   status: 'pending' | 'uploading' | 'done' | 'error'
+  progress: number   // 0–100
   error?: string
 }
 
 async function readExifDate(file: File): Promise<string | null> {
   try {
-    const exifr = await import('exifr')
-    const result = await exifr.parse(file, ['DateTimeOriginal', 'DateTime', 'CreateDate'])
-    const dt: Date | undefined = result?.DateTimeOriginal ?? result?.CreateDate ?? result?.DateTime
-    return dt ? dt.toISOString() : null
+    // Race against a 4-second timeout — some mobile browsers stall on large HEICs
+    const withTimeout = new Promise<null>(resolve => setTimeout(() => resolve(null), 4000))
+    const read = (async () => {
+      const exifr = await import('exifr')
+      const result = await exifr.parse(file, ['DateTimeOriginal', 'DateTime', 'CreateDate'])
+      const dt: Date | undefined = result?.DateTimeOriginal ?? result?.CreateDate ?? result?.DateTime
+      return dt instanceof Date ? dt.toISOString() : null
+    })()
+    return await Promise.race([read, withTimeout])
   } catch {
     return null
   }
 }
 
+/**
+ * Upload to Cloudinary using XMLHttpRequest.
+ * fetch() silently fails on iOS Safari for large binary FormData payloads;
+ * XHR is significantly more reliable for mobile file uploads.
+ */
+function xhrUpload(
+  url: string,
+  fd: FormData,
+  onProgress: (pct: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', url)
+    xhr.timeout = 120_000 // 2 min — large RAW/HEIC files on slow connections
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve()
+      } else {
+        let msg = 'Upload failed'
+        try { msg = JSON.parse(xhr.responseText)?.error?.message ?? msg } catch { /* noop */ }
+        reject(new Error(msg))
+      }
+    }
+    xhr.onerror   = () => reject(new Error('Network error — check your connection and try again'))
+    xhr.ontimeout = () => reject(new Error('Upload timed out — try a smaller photo or a stronger signal'))
+    xhr.send(fd)
+  })
+}
+
 export function CommunityUpload() {
-  const [name,    setName]    = useState('')
-  const [entries, setEntries] = useState<FileEntry[]>([])
+  const [name,     setName]     = useState('')
+  const [entries,  setEntries]  = useState<FileEntry[]>([])
   const [dragging, setDragging] = useState(false)
-  const [allDone, setAllDone] = useState(false)
+  const [allDone,  setAllDone]  = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const patchEntry = useCallback((idx: number, patch: Partial<FileEntry>) => {
+    setEntries(prev => prev.map((e, j) => j === idx ? { ...e, ...patch } : e))
+  }, [])
+
   const addFiles = useCallback(async (files: FileList | File[]) => {
-    const arr = Array.from(files).filter(f => f.type.startsWith('image/'))
+    const arr = Array.from(files).filter(f => f.type.startsWith('image/') || f.name.match(/\.(heic|heif)$/i))
     if (!arr.length) return
 
-    const newEntries: FileEntry[] = arr.map(f => ({ file: f, takenAt: null, status: 'pending' }))
-    setEntries(prev => [...prev, ...newEntries])
+    const fresh: FileEntry[] = arr.map(f => ({ file: f, takenAt: null, status: 'pending', progress: 0 }))
+    setEntries(prev => [...prev, ...fresh])
     setAllDone(false)
 
-    // Read EXIF in parallel
     const dates = await Promise.all(arr.map(readExifDate))
     setEntries(prev => {
       const next = [...prev]
-      // Update the entries we just added (they're at the end)
       const start = next.length - arr.length
       for (let i = 0; i < arr.length; i++) {
         next[start + i] = { ...next[start + i], takenAt: dates[i] }
@@ -66,39 +107,44 @@ export function CommunityUpload() {
     for (let i = 0; i < entries.length; i++) {
       if (entries[i].status === 'done') continue
 
-      setEntries(prev => prev.map((e, j) => j === i ? { ...e, status: 'uploading' } : e))
+      patchEntry(i, { status: 'uploading', progress: 0, error: undefined })
 
       try {
-        // Get a fresh signature for this file (each can have different EXIF date)
-        const sigRes = await fetch('/api/sign-upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uploaderName: name.trim(), photoTakenAt: entries[i].takenAt ?? '' }),
-        })
-        if (!sigRes.ok) throw new Error('Could not sign upload')
-        const { timestamp, signature, apiKey, cloudName, folder, context } = await sigRes.json()
-
-        const fd = new FormData()
-        fd.append('file', entries[i].file)
-        fd.append('api_key',   apiKey)
-        fd.append('timestamp', String(timestamp))
-        fd.append('signature', signature)
-        fd.append('folder',    folder)
-        fd.append('context',   context)
-
-        const upRes = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          { method: 'POST', body: fd }
-        )
-        if (!upRes.ok) {
-          const err = await upRes.json().catch(() => ({}))
-          throw new Error(err?.error?.message ?? 'Upload failed')
+        // Step 1: get a signed upload token from our server
+        let sigData: { timestamp: number; signature: string; apiKey: string; cloudName: string; folder: string; context: string }
+        try {
+          const sigRes = await fetch('/api/sign-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uploaderName: name.trim(), photoTakenAt: entries[i].takenAt ?? '' }),
+          })
+          if (!sigRes.ok) {
+            const body = await sigRes.json().catch(() => ({}))
+            throw new Error(body?.error ?? `Server error ${sigRes.status}`)
+          }
+          sigData = await sigRes.json()
+        } catch (err) {
+          throw new Error(`Couldn't prepare upload: ${err instanceof Error ? err.message : 'network error'}`)
         }
 
-        setEntries(prev => prev.map((e, j) => j === i ? { ...e, status: 'done' } : e))
+        // Step 2: send the file directly to Cloudinary via XHR (more reliable on mobile than fetch)
+        const fd = new FormData()
+        fd.append('file',      entries[i].file)
+        fd.append('api_key',   sigData.apiKey)
+        fd.append('timestamp', String(sigData.timestamp))
+        fd.append('signature', sigData.signature)
+        fd.append('folder',    sigData.folder)
+        fd.append('context',   sigData.context)
+
+        await xhrUpload(
+          `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`,
+          fd,
+          pct => patchEntry(i, { progress: pct }),
+        )
+
+        patchEntry(i, { status: 'done', progress: 100 })
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Upload failed'
-        setEntries(prev => prev.map((e, j) => j === i ? { ...e, status: 'error', error: msg } : e))
+        patchEntry(i, { status: 'error', error: err instanceof Error ? err.message : 'Upload failed' })
       }
     }
 
@@ -111,11 +157,10 @@ export function CommunityUpload() {
   const isUploading    = uploadingCount > 0
   const canUpload      = name.trim().length > 0 && pendingCount > 0 && !isUploading
 
-  const formatDate = (iso: string | null) => {
-    if (!iso) return 'No date found — will sort by upload time'
-    const d = new Date(iso)
-    return d.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
-  }
+  const formatDate = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+      : 'Reading date…'
 
   return (
     <div className="cu-wrap">
@@ -155,7 +200,7 @@ export function CommunityUpload() {
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
         <p className="cu-dz-text">Click to browse or drag photos here</p>
-        <p className="cu-dz-hint">JPEG, PNG, HEIC — multiple files welcome</p>
+        <p className="cu-dz-hint">JPEG, PNG, HEIC · multiple files welcome</p>
         <input
           ref={inputRef}
           type="file"
@@ -169,19 +214,25 @@ export function CommunityUpload() {
       {/* File list */}
       {entries.length > 0 && (
         <ul className="cu-filelist">
-          {entries.map((e, i) => (
-            <li key={`${e.file.name}-${i}`} className={`cu-file cu-file--${e.status}`}>
+          {entries.map((entry, i) => (
+            <li key={`${entry.file.name}-${i}`} className={`cu-file cu-file--${entry.status}`}>
               <div className="cu-file-info">
-                <span className="cu-file-name">{e.file.name}</span>
-                <span className="cu-file-date">{formatDate(e.takenAt)}</span>
-                {e.error && <span className="cu-file-error">{e.error}</span>}
+                <span className="cu-file-name">{entry.file.name}</span>
+                <span className="cu-file-date">{formatDate(entry.takenAt)}</span>
+                {entry.error && <span className="cu-file-error">{entry.error}</span>}
+                {entry.status === 'uploading' && (
+                  <div className="cu-progress">
+                    <div className="cu-progress-bar" style={{ width: `${entry.progress}%` }} />
+                    <span className="cu-progress-label">{entry.progress}%</span>
+                  </div>
+                )}
               </div>
               <div className="cu-file-status">
-                {e.status === 'pending'   && <span className="cu-badge cu-badge--pending">Ready</span>}
-                {e.status === 'uploading' && <span className="cu-badge cu-badge--uploading">Uploading…</span>}
-                {e.status === 'done'      && <span className="cu-badge cu-badge--done">✓ Done</span>}
-                {e.status === 'error'     && <span className="cu-badge cu-badge--error">Failed</span>}
-                {e.status !== 'uploading' && e.status !== 'done' && (
+                {entry.status === 'pending'   && <span className="cu-badge cu-badge--pending">Ready</span>}
+                {entry.status === 'uploading' && <span className="cu-badge cu-badge--uploading">Uploading</span>}
+                {entry.status === 'done'      && <span className="cu-badge cu-badge--done">✓ Done</span>}
+                {entry.status === 'error'     && <span className="cu-badge cu-badge--error">Failed</span>}
+                {entry.status !== 'uploading' && entry.status !== 'done' && (
                   <button className="cu-remove" onClick={() => removeEntry(i)} aria-label="Remove file">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                   </button>
