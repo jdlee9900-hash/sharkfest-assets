@@ -118,27 +118,40 @@ const BASE_PARAMS = { type: 'upload', max_results: '500', image_metadata: 'true'
 export async function getFolder(folder: string): Promise<CloudinaryAsset[]> {
   if (!KEY || !SEC) return []
 
-  const byAssetFolder = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, asset_folder: folder })
-  if (byAssetFolder.length > 0) return byAssetFolder
+  try {
+    const byAssetFolder = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, asset_folder: folder })
+    if (byAssetFolder.length > 0) return byAssetFolder
+  } catch { /* fall through */ }
 
-  const byPrefix = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: folder })
-  if (byPrefix.length > 0) return byPrefix
+  try {
+    const byPrefix = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: `${folder}/` })
+    if (byPrefix.length > 0) return byPrefix
+  } catch { /* fall through */ }
 
-  return collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: `${folder}/` })
+  try {
+    return await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: folder })
+  } catch { return [] }
 }
 
 export async function getCommunityPhotos(): Promise<CommunityAsset[]> {
   if (!KEY || !SEC) return []
 
-  const byAsset = await collectPages<CommunityAsset>(
-    { ...BASE_PARAMS, asset_folder: 'public-uploads', context: 'true' }
-  )
-  if (byAsset.length > 0) return sortByTaken(byAsset)
+  const opts = { ...BASE_PARAMS, context: 'true' }
 
-  const byPrefix = await collectPages<CommunityAsset>(
-    { ...BASE_PARAMS, prefix: 'public-uploads', context: 'true' }
-  )
-  return sortByTaken(byPrefix)
+  try {
+    const byAsset = await collectPages<CommunityAsset>({ ...opts, asset_folder: 'public-uploads' })
+    if (byAsset.length > 0) return sortByTaken(byAsset)
+  } catch { /* fall through to next method */ }
+
+  try {
+    const byPrefix = await collectPages<CommunityAsset>({ ...opts, prefix: 'public-uploads/' })
+    if (byPrefix.length > 0) return sortByTaken(byPrefix)
+  } catch { /* fall through to next method */ }
+
+  try {
+    const byPrefix2 = await collectPages<CommunityAsset>({ ...opts, prefix: 'public-uploads' })
+    return sortByTaken(byPrefix2)
+  } catch { return [] }
 }
 
 function sortByTaken<T extends CloudinaryAsset>(assets: T[]): T[] {
