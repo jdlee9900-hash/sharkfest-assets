@@ -98,7 +98,7 @@ async function collectPages<T extends CloudinaryAsset = CloudinaryAsset>(basePar
   do {
     const params = { ...baseParams, ...(nextCursor ? { next_cursor: nextCursor } : {}) }
     const data = await fetchPage(params)
-    all.push(...(data.resources ?? []))
+    all.push(...(data.resources as T[] ?? []))
     nextCursor = data.next_cursor
   } while (nextCursor)
 
