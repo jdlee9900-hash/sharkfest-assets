@@ -29,6 +29,34 @@ export function fullUrl(publicId: string) {
 }
 
 /**
+ * Extracts a Date from common Android camera filename patterns.
+ * iOS uses sequential IMG_XXXX filenames with no date embedded.
+ *
+ * Patterns handled:
+ *   PXL_YYYYMMDD_HHMMSS*   — Google Pixel
+ *   YYYYMMDD_HHMMSS*       — Samsung, LG, stock Android
+ *   IMG_YYYYMMDD_HHMMSS*   — Huawei, OnePlus, Xiaomi
+ *   IMG-YYYYMMDD-WA*       — WhatsApp saves (date only, time set to 00:00)
+ */
+function parseAndroidFilename(name: string): Date | null {
+  const patterns: RegExp[] = [
+    /^(?:PXL|IMG)_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,  // PXL_ / IMG_YYYYMMDD_HHMMSS
+    /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,               // YYYYMMDD_HHMMSS
+    /^IMG-(\d{4})(\d{2})(\d{2})/,                                   // WhatsApp IMG-YYYYMMDD (date only)
+  ]
+  for (const re of patterns) {
+    const m = name.match(re)
+    if (!m) continue
+    const iso = m[4]
+      ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`
+      : `${m[1]}-${m[2]}-${m[3]}T00:00:00`
+    const d = new Date(iso)
+    if (!isNaN(d.getTime())) return d
+  }
+  return null
+}
+
+/**
  * Returns the best-effort date the photo was actually taken.
  * Priority: Cloudinary EXIF → PXL_ filename → context metadata → created_at.
  */
@@ -42,13 +70,11 @@ export function photoTakenAt(asset: CloudinaryAsset & { context?: { custom?: { p
     if (!isNaN(d.getTime())) return d
   }
 
-  // 2. Parse PXL_YYYYMMDD_HHMMSS* filenames (Google Pixel / Android)
+  // 2. Parse date/time from Android camera filename patterns
+  //    iOS uses sequential IMG_XXXX with no date — EXIF above is the only option there.
   const filename = asset.public_id.split('/').pop() ?? ''
-  const pxl = filename.match(/^PXL_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/)
-  if (pxl) {
-    const d = new Date(`${pxl[1]}-${pxl[2]}-${pxl[3]}T${pxl[4]}:${pxl[5]}:${pxl[6]}`)
-    if (!isNaN(d.getTime())) return d
-  }
+  const androidDate = parseAndroidFilename(filename)
+  if (androidDate) return androidDate
 
   // 3. Context metadata (set by community upload form)
   const ctx = asset.context?.custom?.photo_taken_at
