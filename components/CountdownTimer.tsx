@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
-const TARGET = new Date('2028-05-26T12:00:00')
+const TARGET = new Date('2028-07-21T12:00:00')
 
 function pad(n: number) { return String(n).padStart(2, '0') }
 

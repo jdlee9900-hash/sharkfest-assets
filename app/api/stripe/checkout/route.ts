@@ -10,12 +10,19 @@ export async function POST(request: Request) {
   const stripeKey = process.env.STRIPE_SECRET_KEY
   if (!stripeKey) return NextResponse.json({ error: 'Payments not configured' }, { status: 503 })
 
-  const { instalment_id } = await request.json()
-  if (!instalment_id) return NextResponse.json({ error: 'Missing instalment_id' }, { status: 400 })
+  const body = await request.json()
+  // instalment_id = paying a specific instalment (e.g. deposit)
+  // amount = custom balance payment in pence
+  const { instalment_id, amount: customAmountPence } = body
+
+  if (!instalment_id && !customAmountPence) {
+    return NextResponse.json({ error: 'Missing instalment_id or amount' }, { status: 400 })
+  }
 
   const service = createServiceClient()
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
 
-  // Get the user's registration first
+  // Get the user's registration
   const { data: registration } = await service
     .from('registrations')
     .select('id, email, first_name, surname')
@@ -26,32 +33,68 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No registration found' }, { status: 404 })
   }
 
-  // Verify the instalment belongs to this registration
-  const { data: instalment, error: insErr } = await service
-    .from('instalments')
-    .select('*')
-    .eq('id', instalment_id)
-    .eq('registration_id', registration.id)
-    .single()
-
-  if (insErr || !instalment) {
-    return NextResponse.json({ error: 'Instalment not found' }, { status: 404 })
-  }
-
-  // Check if already paid
-  const { data: existingPayment } = await service
-    .from('payments')
-    .select('status')
-    .eq('instalment_id', instalment_id)
-    .eq('status', 'paid')
-    .maybeSingle()
-
-  if (existingPayment) {
-    return NextResponse.json({ error: 'Already paid' }, { status: 409 })
-  }
-
   const stripe = new Stripe(stripeKey)
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
+  let amountPence: number
+  let label: string
+
+  if (instalment_id) {
+    // Paying a specific instalment (deposit)
+    const { data: instalment } = await service
+      .from('instalments')
+      .select('*')
+      .eq('id', instalment_id)
+      .eq('registration_id', registration.id)
+      .single()
+
+    if (!instalment) {
+      return NextResponse.json({ error: 'Instalment not found' }, { status: 404 })
+    }
+
+    // Check not already paid
+    const { data: alreadyPaid } = await service
+      .from('payments')
+      .select('id')
+      .eq('instalment_id', instalment_id)
+      .eq('status', 'paid')
+      .maybeSingle()
+
+    if (alreadyPaid) {
+      return NextResponse.json({ error: 'Already paid' }, { status: 409 })
+    }
+
+    amountPence = instalment.amount
+    label = instalment.label
+  } else {
+    // Custom balance payment — validate amount
+    amountPence = Math.round(customAmountPence)
+    if (amountPence < 100) {
+      return NextResponse.json({ error: 'Minimum payment is £1' }, { status: 400 })
+    }
+
+    // Check remaining balance
+    const { data: plan } = await service
+      .from('payment_plans')
+      .select('total_amount')
+      .eq('registration_id', registration.id)
+      .maybeSingle()
+
+    if (plan) {
+      const { data: paidRows } = await service
+        .from('payments')
+        .select('amount')
+        .eq('registration_id', registration.id)
+        .eq('status', 'paid')
+
+      const totalPaid = (paidRows ?? []).reduce((s, p) => s + p.amount, 0)
+      const remaining = plan.total_amount - totalPaid
+
+      if (amountPence > remaining) {
+        return NextResponse.json({ error: `Amount exceeds remaining balance of £${(remaining / 100).toFixed(2)}` }, { status: 400 })
+      }
+    }
+
+    label = 'Balance payment'
+  }
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -59,10 +102,10 @@ export async function POST(request: Request) {
       price_data: {
         currency: 'gbp',
         product_data: {
-          name: `SharkFest 2028 — ${instalment.label}`,
-          description: `Booking for ${registration.first_name} ${registration.surname}`,
+          name: `SharkFest 2028 — ${label}`,
+          description: `${registration.first_name} ${registration.surname}`,
         },
-        unit_amount: instalment.amount,
+        unit_amount: amountPence,
       },
       quantity: 1,
     }],
@@ -71,18 +114,18 @@ export async function POST(request: Request) {
     success_url: `${origin}/my-booking?payment=success`,
     cancel_url: `${origin}/my-booking?payment=cancelled`,
     metadata: {
-      registration_id: instalment.registration_id,
-      instalment_id: instalment.id,
+      registration_id: registration.id,
+      instalment_id: instalment_id ?? '',
       user_id: user.id,
     },
   })
 
-  // Create a pending payment record
+  // Create pending payment record
   await service.from('payments').insert({
-    registration_id: instalment.registration_id,
+    registration_id: registration.id,
     user_id: user.id,
-    instalment_id: instalment.id,
-    amount: instalment.amount,
+    instalment_id: instalment_id ?? null,
+    amount: amountPence,
     status: 'pending',
     stripe_session_id: session.id,
   })

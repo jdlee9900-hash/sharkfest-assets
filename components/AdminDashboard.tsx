@@ -7,8 +7,6 @@ import { formatAmount } from '@/lib/types'
 
 type Status = 'pending' | 'confirmed' | 'waitlist' | 'cancelled'
 
-interface InstalmentRow { label: string; amount: string; due_date: string }
-
 const STATUS_OPTS: { value: Status; label: string; color: string }[] = [
   { value: 'pending',   label: 'Pending',   color: 'var(--gold-400)' },
   { value: 'confirmed', label: 'Confirmed', color: '#22c55e' },
@@ -27,10 +25,6 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
   // Payment plan form state
   const [planTotal, setPlanTotal] = useState('')
   const [planNotes, setPlanNotes] = useState('')
-  const [planInstalments, setPlanInstalments] = useState<InstalmentRow[]>([
-    { label: 'Deposit', amount: '', due_date: '' },
-    { label: 'Final payment', amount: '', due_date: '' },
-  ])
   const [planSaving, setPlanSaving] = useState(false)
   const [planError, setPlanError] = useState('')
   const [planSuccess, setPlanSuccess] = useState('')
@@ -77,35 +71,14 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
     setAllocating(id)
     setPlanTotal('')
     setPlanNotes('')
-    setPlanInstalments([
-      { label: 'Deposit', amount: '', due_date: '' },
-      { label: 'Final payment', amount: '', due_date: '' },
-    ])
     setPlanError('')
     setPlanSuccess('')
   }
-
-  const addInstalment = () =>
-    setPlanInstalments(prev => [...prev, { label: '', amount: '', due_date: '' }])
-
-  const removeInstalment = (i: number) =>
-    setPlanInstalments(prev => prev.filter((_, j) => j !== i))
-
-  const patchInstalment = (i: number, key: keyof InstalmentRow, value: string) =>
-    setPlanInstalments(prev => prev.map((ins, j) => j === i ? { ...ins, [key]: value } : ins))
 
   const savePaymentPlan = async () => {
     if (!allocating) return
     const total = parseFloat(planTotal)
     if (!planTotal || isNaN(total) || total <= 0) { setPlanError('Enter a valid total amount'); return }
-
-    const rows = planInstalments.filter(i => i.label || i.amount)
-    const sumPence = rows.reduce((s, i) => s + Math.round(parseFloat(i.amount || '0') * 100), 0)
-    const totalPence = Math.round(total * 100)
-    if (rows.length > 0 && sumPence !== totalPence) {
-      setPlanError(`Instalment total (${formatAmount(sumPence)}) must equal plan total (${formatAmount(totalPence)})`)
-      return
-    }
 
     setPlanSaving(true)
     setPlanError('')
@@ -114,13 +87,8 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         registration_id: allocating,
-        total_amount: totalPence,
+        total_amount: Math.round(total * 100),
         notes: planNotes,
-        instalments: rows.map(i => ({
-          label: i.label,
-          amount: Math.round(parseFloat(i.amount) * 100),
-          due_date: i.due_date || null,
-        })),
       }),
     })
     const body = await res.json()
@@ -266,38 +234,26 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
               </div>
             )}
 
-            <div className="reg-row">
-              <div className="cu-field" style={{ flex: 1 }}>
-                <label className="cu-label">Total amount (£) *</label>
-                <input type="number" className="cu-input" min="0" step="0.01" placeholder="120.00"
-                  value={planTotal} onChange={e => setPlanTotal(e.target.value)} />
+            <div className="adm-plan-fields">
+              <div className="cu-field">
+                <label className="cu-label">Total cost (£) *</label>
+                <div className="adm-amount-wrap">
+                  <span className="adm-amount-prefix">£</span>
+                  <input type="number" className="cu-input adm-amount-input" min="0" step="0.01" placeholder="0.00"
+                    value={planTotal} onChange={e => setPlanTotal(e.target.value)} />
+                </div>
               </div>
-              <div className="cu-field" style={{ flex: 2 }}>
+              <div className="cu-field">
                 <label className="cu-label">Notes</label>
-                <input type="text" className="cu-input" placeholder="e.g. Tent pitch + electric"
+                <input type="text" className="cu-input" placeholder="e.g. Tent pitch + electric hookup"
                   value={planNotes} onChange={e => setPlanNotes(e.target.value)} />
               </div>
             </div>
 
-            <p className="cu-label" style={{ marginBottom: '0.5rem', marginTop: '0.25rem' }}>Instalments</p>
-            {planInstalments.map((ins, i) => (
-              <div key={i} className="adm-ins-row">
-                <input type="text" className="cu-input adm-ins-label" placeholder="Label"
-                  value={ins.label} onChange={e => patchInstalment(i, 'label', e.target.value)} />
-                <input type="number" className="cu-input adm-ins-amount" placeholder="£0.00" min="0" step="0.01"
-                  value={ins.amount} onChange={e => patchInstalment(i, 'amount', e.target.value)} />
-                <input type="date" className="cu-input adm-ins-date"
-                  value={ins.due_date} onChange={e => patchInstalment(i, 'due_date', e.target.value)} />
-                <button className="cu-remove" onClick={() => removeInstalment(i)} aria-label="Remove instalment">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                </button>
-              </div>
-            ))}
-
-            <button className="adm-add-ins" onClick={addInstalment}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-              Add instalment
-            </button>
+            <div className="adm-deposit-note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              A £50 deposit will be created automatically. The attendee can then pay the remaining balance in amounts of their choice.
+            </div>
 
             <div className="adm-modal-actions">
               <button className="reg-back-btn" onClick={() => setAllocating(null)}>Cancel</button>

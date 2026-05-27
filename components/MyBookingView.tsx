@@ -13,12 +13,11 @@ interface Props {
   payments: Payment[]
 }
 
-function paidInstalments(instalments: Instalment[], payments: Payment[]): Set<string> {
-  return new Set(
-    payments
-      .filter(p => p.status === 'paid' && p.instalment_id)
-      .map(p => p.instalment_id!)
-  )
+const STATUS_COLORS: Record<string, string> = {
+  pending:   'var(--gold-400)',
+  confirmed: '#22c55e',
+  waitlist:  '#a78bfa',
+  cancelled: '#f87171',
 }
 
 export function MyBookingView({ user, registration, paymentPlan, instalments, payments }: Props) {
@@ -26,12 +25,17 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
   const searchParams = useSearchParams()
   const paymentResult = searchParams.get('payment')
 
-  const [paying, setPaying] = useState<string | null>(null)
-  const [payError, setPayError] = useState('')
+  const [paying, setPaying]           = useState<string | null>(null)
+  const [customAmount, setCustomAmount] = useState('')
+  const [payError, setPayError]       = useState('')
 
-  const paid = paidInstalments(instalments, payments)
-  const totalPaid = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)
-  const balance = paymentPlan ? paymentPlan.total_amount - totalPaid : null
+  const paidIds = new Set(
+    payments.filter(p => p.status === 'paid' && p.instalment_id).map(p => p.instalment_id!)
+  )
+  const totalPaid   = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0)
+  const balance     = paymentPlan ? paymentPlan.total_amount - totalPaid : null
+  const depositIns  = instalments.find(i => i.label === 'Deposit')
+  const depositPaid = depositIns ? paidIds.has(depositIns.id) : false
 
   const handlePay = async (instalmentId: string) => {
     setPaying(instalmentId)
@@ -51,17 +55,30 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
     }
   }
 
+  const handleCustomPay = async () => {
+    const pence = Math.round(parseFloat(customAmount) * 100)
+    if (!pence || pence < 100) { setPayError('Please enter an amount of at least £1'); return }
+    setPaying('custom')
+    setPayError('')
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: pence }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'Payment setup failed')
+      window.location.href = body.url
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : 'Something went wrong')
+      setPaying(null)
+    }
+  }
+
   const handleSignOut = async () => {
     const { createClient } = await import('@/lib/supabase/client')
     await createClient().auth.signOut()
     router.push('/')
-  }
-
-  const STATUS_COLORS: Record<string, string> = {
-    pending:   'var(--gold-400)',
-    confirmed: '#22c55e',
-    waitlist:  '#a78bfa',
-    cancelled: '#f87171',
   }
 
   return (
@@ -75,7 +92,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
         <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
       </div>
 
-      {/* Payment result banner */}
+      {/* Payment result banners */}
       {paymentResult === 'success' && (
         <div className="mb-banner mb-banner--success" role="alert">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
@@ -97,7 +114,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
         </div>
       ) : (
         <>
-          {/* Registration summary */}
+          {/* Booking summary */}
           <div className="mb-card">
             <div className="mb-card-head">
               <h2 className="mb-card-title">Booking details</h2>
@@ -117,14 +134,26 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
             </dl>
           </div>
 
-          {/* Payment plan */}
+          {/* Payment section */}
           {paymentPlan ? (
             <div className="mb-card">
-              <div className="mb-card-head">
-                <h2 className="mb-card-title">Payment plan</h2>
-                <div className="mb-balance">
-                  <span className="mb-balance-label">Balance remaining</span>
-                  <span className="mb-balance-amount" style={{ color: balance === 0 ? '#22c55e' : 'var(--gold-400)' }}>
+              <h2 className="mb-card-title" style={{ marginBottom: '1.25rem' }}>Payments</h2>
+
+              {/* Balance overview */}
+              <div className="mb-balance-row">
+                <div className="mb-balance-item">
+                  <span className="mb-balance-label">Total cost</span>
+                  <span className="mb-balance-value">{formatAmount(paymentPlan.total_amount)}</span>
+                </div>
+                <div className="mb-balance-divider" aria-hidden="true" />
+                <div className="mb-balance-item">
+                  <span className="mb-balance-label">Paid</span>
+                  <span className="mb-balance-value" style={{ color: '#22c55e' }}>{formatAmount(totalPaid)}</span>
+                </div>
+                <div className="mb-balance-divider" aria-hidden="true" />
+                <div className="mb-balance-item">
+                  <span className="mb-balance-label">Remaining</span>
+                  <span className="mb-balance-value" style={{ color: balance === 0 ? '#22c55e' : 'var(--gold-500, #b7860b)' }}>
                     {formatAmount(balance ?? 0)}
                   </span>
                 </div>
@@ -139,55 +168,73 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
                 </div>
               )}
 
-              <div className="mb-instalments">
-                {instalments.map(ins => {
-                  const isPaid = paid.has(ins.id)
-                  return (
-                    <div key={ins.id} className={`mb-instalment ${isPaid ? 'mb-instalment--paid' : ''}`}>
-                      <div className="mb-ins-info">
-                        <span className="mb-ins-label">{ins.label}</span>
-                        {ins.due_date && (
-                          <span className="mb-ins-due">
-                            Due {new Date(ins.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mb-ins-right">
-                        <span className="mb-ins-amount">{formatAmount(ins.amount)}</span>
-                        {isPaid ? (
-                          <span className="mb-ins-paid">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                            Paid
-                          </span>
-                        ) : (
-                          <button
-                            className="btn btn-accent mb-pay-btn"
-                            onClick={() => handlePay(ins.id)}
-                            disabled={paying === ins.id}
-                          >
-                            {paying === ins.id ? 'Redirecting…' : `Pay ${formatAmount(ins.amount)}`}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {instalments.length === 0 && (
-                <p className="mb-plan-notes" style={{ color: 'var(--grey-400)' }}>
-                  No instalment schedule set yet — we&apos;ll be in touch.
-                </p>
+              {/* Deposit */}
+              {depositIns && (
+                <div className={`mb-deposit-card ${depositPaid ? 'mb-deposit-card--paid' : ''}`}>
+                  <div>
+                    <p className="mb-deposit-title">
+                      {depositPaid ? '✓ Deposit paid' : 'Deposit required to secure your booking'}
+                    </p>
+                    <p className="mb-deposit-sub">
+                      {depositPaid
+                        ? `${formatAmount(depositIns.amount)} deposit received`
+                        : `Pay a ${formatAmount(depositIns.amount)} deposit to confirm your place at SharkFest 2028`}
+                    </p>
+                  </div>
+                  {!depositPaid && (
+                    <button
+                      className="btn btn-accent mb-pay-btn"
+                      onClick={() => handlePay(depositIns.id)}
+                      disabled={paying === depositIns.id}
+                    >
+                      {paying === depositIns.id ? 'Redirecting…' : `Pay ${formatAmount(depositIns.amount)} deposit`}
+                    </button>
+                  )}
+                </div>
               )}
 
-              <div className="mb-total-row">
-                <span>Total</span>
-                <span>{formatAmount(paymentPlan.total_amount)}</span>
-              </div>
+              {/* Custom balance payment — shown once deposit is paid (or if no deposit instalment) */}
+              {(depositPaid || !depositIns) && balance !== null && balance > 0 && (
+                <div className="mb-custom-pay">
+                  <p className="mb-custom-title">Pay towards your balance</p>
+                  <p className="mb-custom-sub">
+                    You have {formatAmount(balance)} remaining. Enter any amount to pay now.
+                  </p>
+                  <div className="mb-custom-input-row">
+                    <div className="adm-amount-wrap" style={{ flex: 1 }}>
+                      <span className="adm-amount-prefix">£</span>
+                      <input
+                        type="number"
+                        className="cu-input adm-amount-input"
+                        placeholder="0.00"
+                        min="1"
+                        step="0.01"
+                        max={(balance / 100).toFixed(2)}
+                        value={customAmount}
+                        onChange={e => setCustomAmount(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      className="btn btn-accent mb-pay-btn"
+                      onClick={handleCustomPay}
+                      disabled={paying === 'custom' || !customAmount}
+                    >
+                      {paying === 'custom' ? 'Redirecting…' : 'Pay now'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {balance === 0 && (
+                <div className="mb-paid-full">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  Paid in full — see you at SharkFest 2028!
+                </div>
+              )}
             </div>
           ) : (
             <div className="mb-card mb-card--muted">
-              <h2 className="mb-card-title">Payment plan</h2>
+              <h2 className="mb-card-title">Payments</h2>
               <p style={{ color: 'var(--grey-400)', marginTop: '0.5rem', fontSize: '0.9375rem' }}>
                 Your payment plan hasn&apos;t been allocated yet. We&apos;ll email you once it&apos;s ready, usually within 7 days of registering.
               </p>
@@ -200,16 +247,19 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
               <h2 className="mb-card-title">Payment history</h2>
               <table className="mb-pay-table">
                 <thead>
-                  <tr><th>Date</th><th>Amount</th><th>Status</th></tr>
+                  <tr><th>Date</th><th>Description</th><th>Amount</th></tr>
                 </thead>
                 <tbody>
-                  {payments.filter(p => p.status === 'paid').map(p => (
-                    <tr key={p.id}>
-                      <td>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
-                      <td>{formatAmount(p.amount)}</td>
-                      <td><span className="mb-paid-badge">Paid</span></td>
-                    </tr>
-                  ))}
+                  {payments.filter(p => p.status === 'paid').map(p => {
+                    const ins = instalments.find(i => i.id === p.instalment_id)
+                    return (
+                      <tr key={p.id}>
+                        <td>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                        <td>{ins?.label ?? 'Balance payment'}</td>
+                        <td>{formatAmount(p.amount)}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
