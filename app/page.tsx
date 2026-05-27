@@ -7,10 +7,16 @@ import { ScrollReveal }      from '@/components/ScrollReveal'
 import { AnimatedCounter }   from '@/components/AnimatedCounter'
 
 const STATS = [
-  { value: 1200, label: 'Attendees', suffix: '+' },
-  { value: 42,   label: 'Acts' },
-  { value: 3,    label: 'Days' },
-  { value: 216,  label: 'Pitches' },
+  { value: 830, label: 'Attendees', suffix: '+' },
+  { value: 3,   label: 'Headline Acts' },
+  { value: 3,   label: 'Days' },
+  { value: 216, label: 'Pitches' },
+]
+
+const NIGHTS = [
+  { day: 'Friday',   theme: 'The Shrine',                    act: 'The Shrine',            icon: '🎸' },
+  { day: 'Saturday', theme: 'Hawaiian Night',                 act: 'Break Beat Bandits',    icon: '🌺' },
+  { day: 'Sunday',   theme: "70's Night",                     act: 'FLAIRZ',                icon: '🕺' },
 ]
 
 const RELIVE = [
@@ -100,6 +106,26 @@ export default function Page() {
             <div className="stats-row">
               {STATS.map(s => (
                 <AnimatedCounter key={s.label} value={s.value} label={s.label} suffix={s.suffix ?? ''} />
+              ))}
+            </div>
+          </ScrollReveal>
+
+          {/* Headline nights */}
+          <ScrollReveal delay={100}>
+            <div className="nights-label">
+              <span className="nights-label-line" />
+              3 Themed Headline Nights
+              <span className="nights-label-line" />
+            </div>
+            <div className="nights-grid">
+              {NIGHTS.map((n, i) => (
+                <div key={n.day} className="night-card">
+                  <span className="night-icon">{n.icon}</span>
+                  <p className="night-day">{n.day}</p>
+                  <p className="night-theme">{n.theme}</p>
+                  <p className="night-act">{n.act}</p>
+                  <span className="night-index">0{i + 1}</span>
+                </div>
               ))}
             </div>
           </ScrollReveal>
