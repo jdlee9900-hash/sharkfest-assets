@@ -40,22 +40,34 @@ export async function listFolders(): Promise<string[]> {
   return (data.folders ?? []).map((f: any) => f.path as string)
 }
 
+async function fetchPage(params: Record<string, string>): Promise<{ resources: CloudinaryAsset[]; next_cursor?: string }> {
+  return apiGet('resources/image', params)
+}
+
 export async function getFolder(folder: string): Promise<CloudinaryAsset[]> {
   if (!KEY || !SEC) return []
 
+  // Try 1: asset_folder mode (Cloudinary dynamic/fixed folder mode)
+  const byAssetFolder = await collectPages({ type: 'upload', max_results: '500', asset_folder: folder })
+  if (byAssetFolder.length > 0) return byAssetFolder
+
+  // Try 2: prefix without trailing slash (legacy folder mode)
+  const byPrefix = await collectPages({ type: 'upload', max_results: '500', prefix: folder })
+  if (byPrefix.length > 0) return byPrefix
+
+  // Try 3: prefix with trailing slash
+  const byPrefixSlash = await collectPages({ type: 'upload', max_results: '500', prefix: `${folder}/` })
+  return byPrefixSlash
+}
+
+async function collectPages(baseParams: Record<string, string>): Promise<CloudinaryAsset[]> {
   const all: CloudinaryAsset[] = []
   let nextCursor: string | undefined
 
   do {
-    const params: Record<string, string> = {
-      type:        'upload',
-      max_results: '500',
-      prefix:      folder.endsWith('/') ? folder : `${folder}/`,
-      ...(nextCursor ? { next_cursor: nextCursor } : {}),
-    }
-
-    const data = await apiGet('resources/image', params)
-    all.push(...(data.resources as CloudinaryAsset[]))
+    const params = { ...baseParams, ...(nextCursor ? { next_cursor: nextCursor } : {}) }
+    const data = await fetchPage(params)
+    all.push(...(data.resources ?? []))
     nextCursor = data.next_cursor
   } while (nextCursor)
 
