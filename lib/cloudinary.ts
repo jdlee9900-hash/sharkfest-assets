@@ -8,6 +8,7 @@ export interface CloudinaryAsset {
   height: number
   format: string
   created_at: string
+  image_metadata?: Record<string, string>
 }
 
 export interface CommunityAsset extends CloudinaryAsset {
@@ -25,6 +26,39 @@ export function thumbUrl(publicId: string, w = 700) {
 
 export function fullUrl(publicId: string) {
   return `https://res.cloudinary.com/${CLOUD}/image/upload/w_1920,c_limit,f_auto,q_auto/${publicId}`
+}
+
+/**
+ * Returns the best-effort date the photo was actually taken.
+ * Priority: Cloudinary EXIF → PXL_ filename → context metadata → created_at.
+ */
+export function photoTakenAt(asset: CloudinaryAsset & { context?: { custom?: { photo_taken_at?: string } } }): Date {
+  // 1. Cloudinary EXIF (image_metadata requested via API)
+  const exif = asset.image_metadata?.DateTimeOriginal ?? asset.image_metadata?.DateTime
+  if (exif) {
+    // EXIF format: "2026:05:24 09:42:19" — replace first two colons only
+    const iso = exif.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
+    const d = new Date(iso)
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // 2. Parse PXL_YYYYMMDD_HHMMSS* filenames (Google Pixel / Android)
+  const filename = asset.public_id.split('/').pop() ?? ''
+  const pxl = filename.match(/^PXL_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/)
+  if (pxl) {
+    const d = new Date(`${pxl[1]}-${pxl[2]}-${pxl[3]}T${pxl[4]}:${pxl[5]}:${pxl[6]}`)
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // 3. Context metadata (set by community upload form)
+  const ctx = asset.context?.custom?.photo_taken_at
+  if (ctx) {
+    const d = new Date(ctx)
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // 4. Cloudinary upload date
+  return new Date(asset.created_at)
 }
 
 async function apiGet(path: string, params: Record<string, string> = {}) {
@@ -53,42 +87,36 @@ async function fetchPage(params: Record<string, string>): Promise<{ resources: C
   return apiGet('resources/image', params)
 }
 
+const BASE_PARAMS = { type: 'upload', max_results: '500', image_metadata: 'true' }
+
 export async function getFolder(folder: string): Promise<CloudinaryAsset[]> {
   if (!KEY || !SEC) return []
 
-  // Try 1: asset_folder mode (Cloudinary dynamic/fixed folder mode)
-  const byAssetFolder = await collectPages<CloudinaryAsset>({ type: 'upload', max_results: '500', asset_folder: folder })
+  const byAssetFolder = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, asset_folder: folder })
   if (byAssetFolder.length > 0) return byAssetFolder
 
-  // Try 2: prefix without trailing slash (legacy folder mode)
-  const byPrefix = await collectPages<CloudinaryAsset>({ type: 'upload', max_results: '500', prefix: folder })
+  const byPrefix = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: folder })
   if (byPrefix.length > 0) return byPrefix
 
-  // Try 3: prefix with trailing slash
-  return collectPages<CloudinaryAsset>({ type: 'upload', max_results: '500', prefix: `${folder}/` })
+  return collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: `${folder}/` })
 }
 
 export async function getCommunityPhotos(): Promise<CommunityAsset[]> {
   if (!KEY || !SEC) return []
 
-  // Try asset_folder first (dynamic folder mode), then prefix
   const byAsset = await collectPages<CommunityAsset>(
-    { type: 'upload', max_results: '500', asset_folder: 'public-uploads', context: 'true' }
+    { ...BASE_PARAMS, asset_folder: 'public-uploads', context: 'true' }
   )
-  if (byAsset.length > 0) return sortCommunity(byAsset)
+  if (byAsset.length > 0) return sortByTaken(byAsset)
 
   const byPrefix = await collectPages<CommunityAsset>(
-    { type: 'upload', max_results: '500', prefix: 'public-uploads', context: 'true' }
+    { ...BASE_PARAMS, prefix: 'public-uploads', context: 'true' }
   )
-  return sortCommunity(byPrefix)
+  return sortByTaken(byPrefix)
 }
 
-function sortCommunity(photos: CommunityAsset[]): CommunityAsset[] {
-  return photos.slice().sort((a, b) => {
-    const ta = a.context?.custom?.photo_taken_at || a.created_at
-    const tb = b.context?.custom?.photo_taken_at || b.created_at
-    return new Date(ta).getTime() - new Date(tb).getTime()
-  })
+function sortByTaken<T extends CloudinaryAsset>(assets: T[]): T[] {
+  return assets.slice().sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
 }
 
 async function collectPages<T extends CloudinaryAsset = CloudinaryAsset>(baseParams: Record<string, string>): Promise<T[]> {
@@ -102,7 +130,6 @@ async function collectPages<T extends CloudinaryAsset = CloudinaryAsset>(basePar
     nextCursor = data.next_cursor
   } while (nextCursor)
 
-  return all.sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )
+  // Default sort newest-first; callers can re-sort if needed
+  return all.sort((a, b) => photoTakenAt(b).getTime() - photoTakenAt(a).getTime())
 }

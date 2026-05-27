@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { thumbUrl, fullUrl } from '@/lib/cloudinary'
+import { thumbUrl, fullUrl, photoTakenAt } from '@/lib/cloudinary'
 import type { CommunityAsset } from '@/lib/cloudinary'
 
 interface DayGroup {
@@ -12,8 +12,8 @@ interface DayGroup {
 }
 
 function photoDate(p: CommunityAsset): string {
-  const raw = p.context?.custom?.photo_taken_at || p.created_at
-  return raw ? new Date(raw).toISOString().slice(0, 10) : 'other'
+  const d = photoTakenAt(p)
+  return isNaN(d.getTime()) ? 'other' : d.toISOString().slice(0, 10)
 }
 
 function dateLabel(dateKey: string): string {
@@ -35,11 +35,7 @@ function groupByDay(photos: CommunityAsset[]): DayGroup[] {
     .map(([key, ps]) => ({
       key,
       label: dateLabel(key),
-      photos: ps.slice().sort((a, b) => {
-        const ta = a.context?.custom?.photo_taken_at || a.created_at
-        const tb = b.context?.custom?.photo_taken_at || b.created_at
-        return new Date(ta).getTime() - new Date(tb).getTime()
-      }),
+      photos: ps.slice().sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime()),
     }))
 }
 
