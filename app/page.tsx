@@ -34,7 +34,7 @@ export default function Page() {
         <div className="hero-overlay" aria-hidden="true" />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <Image src="/logo.png" alt="Torbay Sharks RFC" width={116} height={116} className="hero-logo" priority />
+          <Image src="/logo.png" alt="Torbay Sharks RFC" width={200} height={200} className="hero-logo" priority />
 
           <p className="hero-eyebrow">Torbay Sharks RFC · Devon Coast</p>
 
