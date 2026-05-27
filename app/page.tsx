@@ -1,0 +1,211 @@
+import Image from 'next/image'
+import Link from 'next/link'
+import { CountdownTimer }   from '@/components/CountdownTimer'
+import { OceanCanvas }      from '@/components/OceanCanvas'
+import { Marquee }           from '@/components/Marquee'
+import { ScrollReveal }      from '@/components/ScrollReveal'
+import { AnimatedCounter }   from '@/components/AnimatedCounter'
+
+const PHOTOS = [
+  { src: '/gallery/2026/PXL_20260524_094219679.jpg',    caption: 'Friday evening' },
+  { src: '/gallery/2026/PXL_20260524_094220066.jpg',    caption: 'Main stage' },
+  { src: '/gallery/2026/PXL_20260524_094231598.jpg',    caption: 'The crowd' },
+  { src: '/gallery/2026/PXL_20260524_094232166.jpg',    caption: 'Live set' },
+  { src: '/gallery/2026/PXL_20260524_094234189.jpg',    caption: 'Festival grounds' },
+  { src: '/gallery/2026/PXL_20260524_094237321.MP.jpg', caption: 'Devon coast' },
+  { src: '/gallery/2026/PXL_20260524_094238702.jpg',    caption: 'Camping area' },
+  { src: '/gallery/2026/PXL_20260524_094239199.jpg',    caption: 'Sunset' },
+]
+
+const STATS = [
+  { value: 1200, label: 'Attendees', suffix: '+' },
+  { value: 42,   label: 'Acts' },
+  { value: 3,    label: 'Days' },
+  { value: 216,  label: 'Pitches' },
+]
+
+const RELIVE = [
+  { num: '01', icon: '📸', tag: 'Gallery',    title: 'Full photo album',       body: 'Every shot from the three days — browse, download, and share the memories.' },
+  { num: '02', icon: '🎬', tag: 'Highlights', title: 'Watch the highlights',   body: 'The best moments from the main stage, the village, and the pitches.' },
+  { num: '03', icon: '📝', tag: 'Recap',      title: 'Read the wrap-up',       body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.' },
+]
+
+export default function Page() {
+  return (
+    <>
+      {/* ══════════════════ HERO ══════════════════ */}
+      <section className="hero">
+        <OceanCanvas />
+        <div className="hero-overlay" aria-hidden="true" />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Image src="/logo.png" alt="Torbay Sharks RFC" width={116} height={116} className="hero-logo" priority />
+
+          <p className="hero-eyebrow">Torbay Sharks RFC · Devon Coast</p>
+
+          <h1 className="hero-title">SharkFest 2028</h1>
+
+          <p className="hero-date"><strong>26 – 29 May 2028</strong></p>
+
+          {/* Stat pills */}
+          <div className="hero-stats">
+            {[['42','acts'],['216','pitches'],['3','days'],['4th','year']].map(([v,l]) => (
+              <div key={l} className="stat-pill">
+                <span className="stat-pill-val">{v}</span>
+                <span className="stat-pill-lbl">{l}</span>
+              </div>
+            ))}
+          </div>
+
+          <CountdownTimer />
+
+          <div className="hero-cta">
+            <a href="mailto:hello@torbaySharks.co.uk?subject=SharkFest 2028 interest" className="btn btn-accent">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              Register interest
+            </a>
+            <a href="#2026" className="btn btn-outline">
+              Relive 2026
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div className="scroll-hint" aria-hidden="true">
+          <span>scroll</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+
+        <div className="hero-wave" aria-hidden="true">
+          <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#fbbf24"/>
+          </svg>
+        </div>
+      </section>
+
+      {/* ══════════════════ MARQUEE ══════════════════ */}
+      <Marquee />
+
+      {/* ══════════════════ THANK YOU 2026 ══════════════════ */}
+      <section className="thankyou" id="2026">
+        <div className="section-inner">
+
+          <ScrollReveal>
+            <div className="section-label">
+              <span className="section-label-line" />
+              SharkFest 2026
+              <span className="section-label-line" />
+            </div>
+            <h2 className="section-title-lg">Thank you.<br />That was special.</h2>
+          </ScrollReveal>
+
+          {/* Cinematic quote */}
+          <ScrollReveal delay={100}>
+            <blockquote className="quote-block">
+              Three days. One community. Zero regrets.
+            </blockquote>
+          </ScrollReveal>
+
+          {/* Animated stats */}
+          <ScrollReveal delay={80}>
+            <div className="stats-row">
+              {STATS.map(s => (
+                <AnimatedCounter key={s.label} value={s.value} label={s.label} suffix={s.suffix ?? ''} />
+              ))}
+            </div>
+          </ScrollReveal>
+
+          {/* Photo grid */}
+          <ScrollReveal delay={60}>
+            <div className="photo-grid" role="list" aria-label="Photos from SharkFest 2026">
+              {PHOTOS.map((photo, i) => (
+                <div key={i} className="photo-item" role="listitem">
+                  <Image
+                    src={photo.src}
+                    alt={`SharkFest 2026 — ${photo.caption}`}
+                    fill
+                    sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                    priority={i < 3}
+                  />
+                  <div className="photo-caption" aria-hidden="true">
+                    <span>{photo.caption}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ══════════════════ RE-LIVE ══════════════════ */}
+      {/* wave transition off-white → navy */}
+      <div className="relive-wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <path d="M0,30 C360,60 720,0 1080,30 C1260,45 1380,15 1440,30 L1440,60 L0,60 Z" fill="#0f172a"/>
+        </svg>
+      </div>
+
+      <section className="relive" id="relive">
+        <div className="section-inner">
+
+          <ScrollReveal>
+            <div className="section-label" style={{ color: 'var(--gold-400)' }}>
+              <span className="section-label-line" />
+              Coming soon
+              <span className="section-label-line" />
+            </div>
+            <h2 className="section-title-lg">Re-live<br />the festival</h2>
+            <p className="section-sub" style={{ marginBottom: 0 }}>
+              More from SharkFest 2026 is on its way — full gallery, highlight reel, and a proper write-up.
+            </p>
+          </ScrollReveal>
+
+          <div className="relive-grid">
+            {RELIVE.map((card, i) => (
+              <ScrollReveal key={card.tag} delay={i * 80}>
+                <div className="relive-card">
+                  <span className="relive-card-num" aria-hidden="true">{card.num}</span>
+                  <div className="relive-card-icon">{card.icon}</div>
+                  <p className="relive-card-tag">{card.tag}</p>
+                  <h3 className="relive-card-title">{card.title}</h3>
+                  <p className="relive-card-body">{card.body}</p>
+                  <span className="relive-card-pill">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Coming soon
+                  </span>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          {/* Notify CTA */}
+          <ScrollReveal delay={160}>
+            <div className="notify-strip">
+              <p>Be the first to know when it&apos;s ready.</p>
+              <a href="mailto:hello@torbaySharks.co.uk?subject=SharkFest 2026 highlights" className="btn btn-accent">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notify me
+              </a>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ══════════════════ FOOTER ══════════════════ */}
+      <footer className="footer">
+        <Image src="/logo.png" alt="Torbay Sharks RFC" width={52} height={52} className="footer-logo-img" />
+        <p className="footer-wordmark">SHARKFEST</p>
+        <p className="footer-sub">Torbay Sharks RFC · Devon Coast</p>
+        <nav className="footer-links" aria-label="Footer links">
+          <a href="mailto:hello@torbaySharks.co.uk">Contact</a>
+          <a href="#2026">SharkFest 2026</a>
+          <a href="#relive">Highlights</a>
+          <Link href="/run-club">Run Club</Link>
+          <a href="https://torbaySharks.co.uk" rel="noopener noreferrer">RFC website</a>
+        </nav>
+        <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
+      </footer>
+    </>
+  )
+}
