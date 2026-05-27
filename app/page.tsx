@@ -20,9 +20,9 @@ const NIGHTS = [
 ]
 
 const RELIVE = [
-  { num: '01', icon: '📸', tag: 'Gallery',    title: 'Full photo album',       body: 'Every shot from the three days — browse, download, and share the memories.' },
-  { num: '02', icon: '🎬', tag: 'Highlights', title: 'Watch the highlights',   body: 'The best moments from the main stage, the village, and the pitches.' },
-  { num: '03', icon: '📝', tag: 'Recap',      title: 'Read the wrap-up',       body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.' },
+  { num: '01', icon: '📸', tag: 'Your Photos',  title: 'Community gallery',       body: 'Upload your shots from the weekend — the good, the muddy, the golden.', href: '/community' },
+  { num: '02', icon: '🏃', tag: 'Run Club',     title: 'Festival run photos',     body: '182 photos from the morning run — Devon coast at its finest.',             href: '/run-club'  },
+  { num: '03', icon: '📝', tag: 'Recap',        title: 'Read the wrap-up',        body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.', href: null },
 ]
 
 export default function Page() {
@@ -158,17 +158,31 @@ export default function Page() {
           <div className="relive-grid">
             {RELIVE.map((card, i) => (
               <ScrollReveal key={card.tag} delay={i * 80}>
-                <div className="relive-card">
-                  <span className="relive-card-num" aria-hidden="true">{card.num}</span>
-                  <div className="relive-card-icon">{card.icon}</div>
-                  <p className="relive-card-tag">{card.tag}</p>
-                  <h3 className="relive-card-title">{card.title}</h3>
-                  <p className="relive-card-body">{card.body}</p>
-                  <span className="relive-card-pill">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Coming soon
-                  </span>
-                </div>
+                {card.href ? (
+                  <Link href={card.href} className="relive-card relive-card--link">
+                    <span className="relive-card-num" aria-hidden="true">{card.num}</span>
+                    <div className="relive-card-icon">{card.icon}</div>
+                    <p className="relive-card-tag">{card.tag}</p>
+                    <h3 className="relive-card-title">{card.title}</h3>
+                    <p className="relive-card-body">{card.body}</p>
+                    <span className="relive-card-pill relive-card-pill--live">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      View now
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="relive-card">
+                    <span className="relive-card-num" aria-hidden="true">{card.num}</span>
+                    <div className="relive-card-icon">{card.icon}</div>
+                    <p className="relive-card-tag">{card.tag}</p>
+                    <h3 className="relive-card-title">{card.title}</h3>
+                    <p className="relive-card-body">{card.body}</p>
+                    <span className="relive-card-pill">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      Coming soon
+                    </span>
+                  </div>
+                )}
               </ScrollReveal>
             ))}
           </div>
@@ -196,6 +210,7 @@ export default function Page() {
           <a href="#2026">SharkFest 2026</a>
           <a href="#relive">Highlights</a>
           <Link href="/run-club">Run Club</Link>
+          <Link href="/community">Community Photos</Link>
           <a href="https://torbaySharks.co.uk" rel="noopener noreferrer">RFC website</a>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>

@@ -10,6 +10,15 @@ export interface CloudinaryAsset {
   created_at: string
 }
 
+export interface CommunityAsset extends CloudinaryAsset {
+  context?: {
+    custom?: {
+      uploader_name?: string
+      photo_taken_at?: string
+    }
+  }
+}
+
 export function thumbUrl(publicId: string, w = 700) {
   return `https://res.cloudinary.com/${CLOUD}/image/upload/w_${w},c_limit,f_auto,q_auto/${publicId}`
 }
@@ -48,20 +57,42 @@ export async function getFolder(folder: string): Promise<CloudinaryAsset[]> {
   if (!KEY || !SEC) return []
 
   // Try 1: asset_folder mode (Cloudinary dynamic/fixed folder mode)
-  const byAssetFolder = await collectPages({ type: 'upload', max_results: '500', asset_folder: folder })
+  const byAssetFolder = await collectPages<CloudinaryAsset>({ type: 'upload', max_results: '500', asset_folder: folder })
   if (byAssetFolder.length > 0) return byAssetFolder
 
   // Try 2: prefix without trailing slash (legacy folder mode)
-  const byPrefix = await collectPages({ type: 'upload', max_results: '500', prefix: folder })
+  const byPrefix = await collectPages<CloudinaryAsset>({ type: 'upload', max_results: '500', prefix: folder })
   if (byPrefix.length > 0) return byPrefix
 
   // Try 3: prefix with trailing slash
-  const byPrefixSlash = await collectPages({ type: 'upload', max_results: '500', prefix: `${folder}/` })
-  return byPrefixSlash
+  return collectPages<CloudinaryAsset>({ type: 'upload', max_results: '500', prefix: `${folder}/` })
 }
 
-async function collectPages(baseParams: Record<string, string>): Promise<CloudinaryAsset[]> {
-  const all: CloudinaryAsset[] = []
+export async function getCommunityPhotos(): Promise<CommunityAsset[]> {
+  if (!KEY || !SEC) return []
+
+  // Try asset_folder first (dynamic folder mode), then prefix
+  const byAsset = await collectPages<CommunityAsset>(
+    { type: 'upload', max_results: '500', asset_folder: 'public-uploads', context: 'true' }
+  )
+  if (byAsset.length > 0) return sortCommunity(byAsset)
+
+  const byPrefix = await collectPages<CommunityAsset>(
+    { type: 'upload', max_results: '500', prefix: 'public-uploads', context: 'true' }
+  )
+  return sortCommunity(byPrefix)
+}
+
+function sortCommunity(photos: CommunityAsset[]): CommunityAsset[] {
+  return photos.slice().sort((a, b) => {
+    const ta = a.context?.custom?.photo_taken_at || a.created_at
+    const tb = b.context?.custom?.photo_taken_at || b.created_at
+    return new Date(ta).getTime() - new Date(tb).getTime()
+  })
+}
+
+async function collectPages<T extends CloudinaryAsset = CloudinaryAsset>(baseParams: Record<string, string>): Promise<T[]> {
+  const all: T[] = []
   let nextCursor: string | undefined
 
   do {
