@@ -156,6 +156,6 @@ async function collectPages<T extends CloudinaryAsset = CloudinaryAsset>(basePar
     nextCursor = data.next_cursor
   } while (nextCursor)
 
-  // Default sort newest-first; callers can re-sort if needed
-  return all.sort((a, b) => photoTakenAt(b).getTime() - photoTakenAt(a).getTime())
+  // Sort oldest first (earliest photo taken first)
+  return all.sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
 }

@@ -198,6 +198,10 @@ function Lightbox({
 
 type Source = 'community' | 'runclub'
 
+function filename(p: CloudinaryAsset) {
+  return p.public_id.split('/').pop() ?? p.public_id
+}
+
 export function CommunityGallery({
   photos,
   runClubPhotos,
@@ -212,17 +216,21 @@ export function CommunityGallery({
 
   const markLoaded = useCallback((id: string) => setLoaded(s => new Set([...s, id])), [])
 
-  // Reset day tab when switching source
   const switchSource = (s: Source) => { setSource(s); setActiveKey('all'); setOpenIdx(null) }
 
   // ── Community view ──────────────────────────────
-  const groups     = groupByDay(photos)
-  const dayKeys    = ['all', ...groups.map(g => g.key)]
-  const visGroups  = activeKey === 'all' ? groups : groups.filter(g => g.key === activeKey)
-  const flatComm   = visGroups.flatMap(g => g.photos)
+  // Exclude photos whose filename matches a run-club photo — prevents duplicates
+  // when the same files were uploaded to both folders during testing.
+  const runClubFilenames = new Set(runClubPhotos.map(filename))
+  const communityOnly    = photos.filter(p => !runClubFilenames.has(filename(p)))
 
-  // ── Run Club view ───────────────────────────────
-  const rcSorted   = runClubPhotos.slice().sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
+  const groups    = groupByDay(communityOnly)
+  const dayKeys   = ['all', ...groups.map(g => g.key)]
+  const visGroups = activeKey === 'all' ? groups : groups.filter(g => g.key === activeKey)
+  const flatComm  = visGroups.flatMap(g => g.photos)
+
+  // ── Run Club view — already sorted ascending from server ────────────────────
+  const rcSorted = runClubPhotos
 
   const activeFlat = source === 'community' ? flatComm : rcSorted
 
@@ -241,7 +249,7 @@ export function CommunityGallery({
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             Your Photos
-            <span className="cg-tab-count">{photos.length}</span>
+            <span className="cg-tab-count">{communityOnly.length}</span>
           </button>
           <button
             className={`cg-source-tab ${source === 'runclub' ? 'cg-source-tab--active' : ''}`}
