@@ -1,4 +1,4 @@
-const CLOUD = process.env.CLOUDINARY_CLOUD_NAME ?? 'c-ced7723b838bd9dbf940dffe6eee3c'
+const CLOUD = process.env.CLOUDINARY_CLOUD_NAME ?? 'dtrgis7lb'
 const KEY   = process.env.CLOUDINARY_API_KEY    ?? ''
 const SEC   = process.env.CLOUDINARY_API_SECRET ?? ''
 
