@@ -83,7 +83,7 @@ async function sendEmails(reg: { id: string; email: string; first_name: string; 
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'SharkFest <noreply@sharkfest.vercel.app>',
+        from: process.env.EMAIL_FROM ?? 'SharkFest <noreply@sharkfest.vercel.app>',
         to: [reg.email],
         subject: 'SharkFest 2028 — Registration received',
         html: userHtml,
@@ -94,7 +94,7 @@ async function sendEmails(reg: { id: string; email: string; first_name: string; 
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'SharkFest <noreply@sharkfest.vercel.app>',
+          from: process.env.EMAIL_FROM ?? 'SharkFest <noreply@sharkfest.vercel.app>',
           to: [to],
           subject: `New registration: ${reg.first_name} ${reg.surname}`,
           html: adminHtml,
