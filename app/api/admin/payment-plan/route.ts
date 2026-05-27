@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 
+const DEPOSIT_AMOUNT = 5000 // £50 in pence
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -10,8 +12,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { registration_id, total_amount, notes, instalments } = await request.json()
-  if (!registration_id || !total_amount || !Array.isArray(instalments)) {
+  const { registration_id, total_amount, notes } = await request.json()
+  if (!registration_id || !total_amount) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
   }
 
@@ -28,6 +30,7 @@ export async function POST(request: Request) {
   let planErr = null
 
   if (existing) {
+    // Update the total and notes only — don't touch the deposit instalment
     const { data, error } = await service
       .from('payment_plans')
       .update({
@@ -42,6 +45,7 @@ export async function POST(request: Request) {
     plan = data
     planErr = error
   } else {
+    // Create new plan
     const { data, error } = await service
       .from('payment_plans')
       .insert({
@@ -54,25 +58,21 @@ export async function POST(request: Request) {
       .single()
     plan = data
     planErr = error
+
+    // Auto-create deposit instalment on first allocation
+    if (!error && data) {
+      await service.from('instalments').insert({
+        payment_plan_id: data.id,
+        registration_id,
+        label: 'Deposit',
+        amount: DEPOSIT_AMOUNT,
+        due_date: null,
+      })
+    }
   }
 
   if (planErr || !plan) {
-    return NextResponse.json({ error: planErr?.message ?? 'Failed to create plan' }, { status: 500 })
-  }
-
-  // Delete old instalments and re-insert
-  await service.from('instalments').delete().eq('payment_plan_id', plan.id)
-
-  if (instalments.length > 0) {
-    const rows = instalments.map((ins: { label: string; amount: number; due_date: string }) => ({
-      payment_plan_id: plan.id,
-      registration_id,
-      label: ins.label?.trim() || 'Payment',
-      amount: Math.round(ins.amount),
-      due_date: ins.due_date || null,
-    }))
-    const { error: insErr } = await service.from('instalments').insert(rows)
-    if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
+    return NextResponse.json({ error: planErr?.message ?? 'Failed to save plan' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, plan_id: plan.id })

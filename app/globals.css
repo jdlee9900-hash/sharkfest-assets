@@ -1116,9 +1116,70 @@ body::after {
   padding: 0.3rem 0.75rem; border-radius: var(--r-full); color: var(--navy-900);
   flex-shrink: 0;
 }
-.mb-balance { text-align: right; }
-.mb-balance-label { font-size: 0.8rem; color: var(--grey-400); display: block; }
-.mb-balance-amount { font-size: 1.375rem; font-weight: 700; }
+/* Balance overview strip */
+.mb-balance-row {
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--grey-100); border-radius: var(--r-lg);
+  overflow: hidden; margin-bottom: 1.25rem;
+}
+.mb-balance-item {
+  flex: 1; display: flex; flex-direction: column; gap: 0.25rem;
+  padding: 1rem 1.25rem; background: var(--grey-50);
+}
+.mb-balance-divider { width: 1px; background: var(--grey-100); flex-shrink: 0; }
+.mb-balance-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--grey-400); }
+.mb-balance-value { font-size: 1.25rem; font-weight: 700; color: var(--navy-900); }
+
+/* Deposit card */
+.mb-deposit-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.25rem; border-radius: var(--r-lg); margin-bottom: 1rem;
+  background: #fffbea; border: 1.5px solid var(--gold-400);
+  flex-wrap: wrap;
+}
+.mb-deposit-card--paid {
+  background: #f0fdf4; border-color: #86efac;
+}
+.mb-deposit-title { font-size: 0.9375rem; font-weight: 700; color: var(--navy-900); margin: 0 0 0.2rem; }
+.mb-deposit-sub { font-size: 0.8375rem; color: var(--grey-500); margin: 0; }
+
+/* Custom balance payment */
+.mb-custom-pay {
+  padding: 1.25rem; border-radius: var(--r-lg);
+  border: 1px solid var(--grey-100); background: var(--grey-50);
+  margin-bottom: 1rem;
+}
+.mb-custom-title { font-size: 0.9375rem; font-weight: 700; color: var(--navy-900); margin: 0 0 0.25rem; }
+.mb-custom-sub { font-size: 0.8375rem; color: var(--grey-500); margin: 0 0 1rem; }
+.mb-custom-input-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+
+/* Paid in full */
+.mb-paid-full {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-size: 0.9375rem; font-weight: 600; color: #16a34a;
+  padding: 1rem 1.25rem; border-radius: var(--r-lg);
+  background: #f0fdf4; border: 1px solid #86efac;
+}
+
+/* Amount input with £ prefix */
+.adm-amount-wrap { position: relative; display: flex; align-items: center; }
+.adm-amount-prefix {
+  position: absolute; left: 0.875rem; color: var(--grey-400);
+  font-size: 0.9375rem; pointer-events: none; user-select: none;
+}
+.adm-amount-input { padding-left: 1.875rem !important; }
+
+/* Admin deposit note */
+.adm-deposit-note {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  font-size: 0.8375rem; color: var(--grey-500); line-height: 1.5;
+  background: var(--grey-50); border: 1px solid var(--grey-100);
+  border-radius: var(--r-md); padding: 0.75rem 1rem;
+}
+.adm-deposit-note svg { flex-shrink: 0; margin-top: 0.1rem; color: var(--grey-400); }
+
+/* Admin plan fields layout */
+.adm-plan-fields { display: flex; flex-direction: column; gap: 0.875rem; }
 
 .mb-detail-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.875rem 1.5rem;
