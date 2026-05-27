@@ -853,6 +853,26 @@ body::after {
 /* ════════════════════════════════════════════════
    COMMUNITY GALLERY
 ════════════════════════════════════════════════ */
+/* Source switcher — Your Photos / Run Club */
+.cg-source-tabs {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  max-width: 960px; margin: 0 auto 1.5rem;
+  padding: 0 0.5rem;
+}
+.cg-source-tab {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.6rem 1.25rem; border-radius: var(--r-full);
+  font-size: 0.9375rem; font-weight: 600;
+  border: 2px solid var(--grey-300);
+  color: var(--grey-500); background: white;
+  transition: all 0.18s;
+}
+.cg-source-tab:hover { border-color: var(--navy-700); color: var(--navy-700); }
+.cg-source-tab--active {
+  background: var(--navy-900); border-color: var(--navy-900); color: white;
+}
+.cg-source-tab--active .cg-tab-count { background: rgba(255,255,255,0.15); color: white; }
+
 .cg-tabs {
   display: flex; flex-wrap: wrap; gap: 0.5rem;
   max-width: 960px; margin: 0 auto 2rem;

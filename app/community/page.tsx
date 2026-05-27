@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getCommunityPhotos } from '@/lib/cloudinary'
+import { getCommunityPhotos, getFolder } from '@/lib/cloudinary'
 import { CommunityUpload }  from '@/components/CommunityUpload'
 import { CommunityGallery } from '@/components/CommunityGallery'
 
@@ -13,11 +13,13 @@ export const metadata: Metadata = {
 }
 
 export default async function CommunityPage() {
-  let photos: Awaited<ReturnType<typeof getCommunityPhotos>> = []
+  let photos:       Awaited<ReturnType<typeof getCommunityPhotos>> = []
+  let runClubPhotos: Awaited<ReturnType<typeof getFolder>> = []
 
-  try {
-    photos = await getCommunityPhotos()
-  } catch { /* show empty state */ }
+  await Promise.allSettled([
+    getCommunityPhotos().then(r => { photos = r }).catch(() => {}),
+    getFolder('run-club').then(r => { runClubPhotos = r }).catch(() => {}),
+  ])
 
   const noCredentials = !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET
 
@@ -46,10 +48,10 @@ export default async function CommunityPage() {
             SharkFest 2026
             <span className="section-label-line" />
           </div>
-          <h1 className="rc-hero-title">Your Photos</h1>
+          <h1 className="rc-hero-title">Community</h1>
           <p className="rc-hero-sub">
             {photos.length > 0
-              ? `${photos.length} community photos — sorted by day and time.`
+              ? `${photos.length} photos shared · ${runClubPhotos.length} run club shots — sorted by day and time.`
               : 'Share your shots from the weekend — the good, the muddy, the golden.'}
           </p>
         </div>
@@ -85,7 +87,9 @@ export default async function CommunityPage() {
         )}
 
         {/* Gallery */}
-        {photos.length > 0 && <CommunityGallery photos={photos} />}
+        {(photos.length > 0 || runClubPhotos.length > 0) && (
+          <CommunityGallery photos={photos} runClubPhotos={runClubPhotos} />
+        )}
 
         {photos.length === 0 && !noCredentials && (
           <div className="cg-empty">
