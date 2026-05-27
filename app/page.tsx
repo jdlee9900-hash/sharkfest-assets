@@ -40,7 +40,7 @@ export default function Page() {
 
           <h1 className="hero-title">SharkFest 2028</h1>
 
-          <p className="hero-date"><strong>26 – 29 May 2028</strong></p>
+          <p className="hero-date"><strong>Summer 2028</strong></p>
 
           {/* Stat pills */}
           <div className="hero-stats">
@@ -55,10 +55,6 @@ export default function Page() {
           <CountdownTimer />
 
           <div className="hero-cta">
-            <a href="mailto:hello@torbaySharks.co.uk?subject=SharkFest 2028 interest" className="btn btn-accent">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              Register interest
-            </a>
             <a href="#2026" className="btn btn-outline">
               Relive 2026
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
@@ -97,7 +93,7 @@ export default function Page() {
           {/* Cinematic quote */}
           <ScrollReveal delay={100}>
             <blockquote className="quote-block">
-              Three days. One community. Zero regrets.
+              Three Days, Two Marques, One Community. Nothing else competes.
             </blockquote>
           </ScrollReveal>
 
