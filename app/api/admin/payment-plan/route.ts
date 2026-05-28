@@ -77,21 +77,21 @@ export async function POST(request: Request) {
   }
 
   // Notify the registrant their payment plan is ready (non-blocking)
-  service
-    .from('registrations')
-    .select('first_name, email')
-    .eq('id', registration_id)
-    .single()
-    .then(({ data: reg }) => {
-      if (reg) {
-        sendEmail(
-          reg.email,
-          'Your SharkFest 2028 payment plan is ready',
-          emailPlanAllocated(reg, { total_amount: Math.round(total_amount), notes: notes?.trim() || null }, getOrigin())
-        ).catch(() => {})
-      }
-    })
-    .catch(() => {})
+  Promise.resolve(
+    service
+      .from('registrations')
+      .select('first_name, email')
+      .eq('id', registration_id)
+      .single()
+  ).then(({ data: reg }) => {
+    if (reg) {
+      sendEmail(
+        reg.email,
+        'Your SharkFest 2028 payment plan is ready',
+        emailPlanAllocated(reg, { total_amount: Math.round(total_amount), notes: notes?.trim() || null }, getOrigin())
+      ).catch(() => {})
+    }
+  }).catch(() => {})
 
   return NextResponse.json({ ok: true, plan_id: plan.id })
 }
