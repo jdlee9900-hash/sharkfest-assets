@@ -208,51 +208,54 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
         <div className="adm-modal-backdrop" onClick={() => setAllocating(null)}>
           <div className="adm-modal" onClick={e => e.stopPropagation()}>
             <div className="adm-modal-head">
-              <h2 className="adm-modal-title">Allocate payment plan</h2>
-              <button className="lb-close" style={{ position: 'static' }} onClick={() => setAllocating(null)} aria-label="Close">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              <div>
+                <h2 className="adm-modal-title">Allocate payment plan</h2>
+                {(() => {
+                  const reg = registrations.find(r => r.id === allocating)
+                  return reg ? (
+                    <p className="adm-modal-sub">{reg.first_name} {reg.surname} · {reg.email}</p>
+                  ) : null
+                })()}
+              </div>
+              <button className="adm-modal-close" onClick={() => setAllocating(null)} aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
             </div>
 
-            {(() => {
-              const reg = registrations.find(r => r.id === allocating)
-              return reg ? (
-                <p className="adm-modal-sub">{reg.first_name} {reg.surname} · {reg.email}</p>
-              ) : null
-            })()}
+            <div className="adm-modal-body">
+              {planError && (
+                <div className="auth-error">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {planError}
+                </div>
+              )}
+              {planSuccess && (
+                <div className="mb-banner mb-banner--success">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  {planSuccess}
+                </div>
+              )}
 
-            {planError && (
-              <div className="auth-error" style={{ marginBottom: '1rem' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                {planError}
-              </div>
-            )}
-            {planSuccess && (
-              <div className="mb-banner mb-banner--success" style={{ marginBottom: '1rem' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                {planSuccess}
-              </div>
-            )}
-
-            <div className="adm-plan-fields">
-              <div className="cu-field">
-                <label className="cu-label">Total cost (£) *</label>
-                <div className="adm-amount-wrap">
-                  <span className="adm-amount-prefix">£</span>
-                  <input type="number" className="cu-input adm-amount-input" min="0" step="0.01" placeholder="0.00"
-                    value={planTotal} onChange={e => setPlanTotal(e.target.value)} />
+              <div className="adm-plan-fields">
+                <div className="cu-field">
+                  <label className="cu-label">Total cost (£) *</label>
+                  <div className="adm-amount-wrap">
+                    <span className="adm-amount-prefix">£</span>
+                    <input type="number" className="cu-input adm-amount-input" min="0" step="0.01" placeholder="0.00"
+                      value={planTotal} onChange={e => setPlanTotal(e.target.value)} />
+                  </div>
+                </div>
+                <div className="cu-field">
+                  <label className="cu-label">Notes</label>
+                  <input type="text" className="cu-input" placeholder="e.g. Tent pitch + electric hookup"
+                    value={planNotes} onChange={e => setPlanNotes(e.target.value)} />
                 </div>
               </div>
-              <div className="cu-field">
-                <label className="cu-label">Notes</label>
-                <input type="text" className="cu-input" placeholder="e.g. Tent pitch + electric hookup"
-                  value={planNotes} onChange={e => setPlanNotes(e.target.value)} />
-              </div>
-            </div>
 
-            <div className="adm-deposit-note">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-              A £50 deposit will be created automatically. The attendee can then pay the remaining balance in amounts of their choice.
+              <div className="adm-deposit-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                A £50 deposit will be created automatically. The attendee can then pay the remaining balance in amounts of their choice.
+              </div>
             </div>
 
             <div className="adm-modal-actions">
