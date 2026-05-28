@@ -4,8 +4,8 @@ const SEC   = process.env.CLOUDINARY_API_SECRET ?? ''
 
 export interface CloudinaryAsset {
   public_id: string
-  width: number
-  height: number
+  width?: number
+  height?: number
   format: string
   created_at: string
   image_metadata?: Record<string, string>
@@ -107,7 +107,7 @@ async function collectPages<T extends CloudinaryAsset>(params: Record<string, st
 
 /**
  * Fetch all images from a Cloudinary folder.
- * Tries asset_folder mode first (new accounts), then prefix/ and prefix (legacy accounts).
+ * Uses prefix-based queries (works for fixed/legacy folder mode).
  * Pass { context: true } to include uploader metadata (for public-uploads).
  */
 export async function getFolder(folder: string, opts: { context?: boolean } = {}): Promise<CloudinaryAsset[]> {
@@ -120,19 +120,13 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
     ...(opts.context ? { context: 'true' } : {}),
   }
 
-  // Try 1: dynamic asset_folder mode (new Cloudinary accounts)
-  try {
-    const r = await collectPages<CloudinaryAsset>({ ...base, asset_folder: folder })
-    if (r.length > 0) return r
-  } catch { /* try next */ }
-
-  // Try 2: legacy prefix mode with trailing slash
+  // Try with trailing slash first — matches exactly this folder
   try {
     const r = await collectPages<CloudinaryAsset>({ ...base, prefix: `${folder}/` })
     if (r.length > 0) return r
   } catch { /* try next */ }
 
-  // Try 3: legacy prefix without trailing slash
+  // Fallback without trailing slash
   try {
     return await collectPages<CloudinaryAsset>({ ...base, prefix: folder })
   } catch { return [] }
