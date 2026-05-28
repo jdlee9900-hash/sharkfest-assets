@@ -31,18 +31,12 @@ export function fullUrl(publicId: string) {
 /**
  * Extracts a Date from common Android camera filename patterns.
  * iOS uses sequential IMG_XXXX filenames with no date embedded.
- *
- * Patterns handled:
- *   PXL_YYYYMMDD_HHMMSS*   — Google Pixel
- *   YYYYMMDD_HHMMSS*       — Samsung, LG, stock Android
- *   IMG_YYYYMMDD_HHMMSS*   — Huawei, OnePlus, Xiaomi
- *   IMG-YYYYMMDD-WA*       — WhatsApp saves (date only, time set to 00:00)
  */
 function parseAndroidFilename(name: string): Date | null {
   const patterns: RegExp[] = [
-    /^(?:PXL|IMG)_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,  // PXL_ / IMG_YYYYMMDD_HHMMSS
-    /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,               // YYYYMMDD_HHMMSS
-    /^IMG-(\d{4})(\d{2})(\d{2})/,                                   // WhatsApp IMG-YYYYMMDD (date only)
+    /^(?:PXL|IMG)_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,
+    /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,
+    /^IMG-(\d{4})(\d{2})(\d{2})/,
   ]
   for (const re of patterns) {
     const m = name.match(re)
@@ -57,33 +51,27 @@ function parseAndroidFilename(name: string): Date | null {
 }
 
 /**
- * Returns the best-effort date the photo was actually taken.
- * Priority: Cloudinary EXIF → PXL_ filename → context metadata → created_at.
+ * Best-effort date the photo was taken.
+ * Priority: EXIF → Android filename → context metadata → upload date.
  */
 export function photoTakenAt(asset: CloudinaryAsset & { context?: { custom?: { photo_taken_at?: string } } }): Date {
-  // 1. Cloudinary EXIF (image_metadata requested via API)
   const exif = asset.image_metadata?.DateTimeOriginal ?? asset.image_metadata?.DateTime
   if (exif) {
-    // EXIF format: "2026:05:24 09:42:19" — replace first two colons only
     const iso = exif.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
     const d = new Date(iso)
     if (!isNaN(d.getTime())) return d
   }
 
-  // 2. Parse date/time from Android camera filename patterns
-  //    iOS uses sequential IMG_XXXX with no date — EXIF above is the only option there.
   const filename = asset.public_id.split('/').pop() ?? ''
   const androidDate = parseAndroidFilename(filename)
   if (androidDate) return androidDate
 
-  // 3. Context metadata (set by community upload form)
   const ctx = asset.context?.custom?.photo_taken_at
   if (ctx) {
     const d = new Date(ctx)
     if (!isNaN(d.getTime())) return d
   }
 
-  // 4. Cloudinary upload date
   return new Date(asset.created_at)
 }
 
@@ -101,74 +89,51 @@ async function apiGet(path: string, params: Record<string, string> = {}) {
   return res.json()
 }
 
-/** List all root-level folder names in the account */
-export async function listFolders(): Promise<string[]> {
-  if (!KEY || !SEC) return []
-  const data = await apiGet('folders')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data.folders ?? []).map((f: any) => f.path as string)
-}
-
 async function fetchPage(params: Record<string, string>): Promise<{ resources: CloudinaryAsset[]; next_cursor?: string }> {
   return apiGet('resources/image', params)
 }
 
-const BASE_PARAMS = { type: 'upload', max_results: '500', image_metadata: 'true' }
-
-export async function getFolder(folder: string): Promise<CloudinaryAsset[]> {
-  if (!KEY || !SEC) return []
-
-  try {
-    const byAssetFolder = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, asset_folder: folder })
-    if (byAssetFolder.length > 0) return byAssetFolder
-  } catch { /* fall through */ }
-
-  try {
-    const byPrefix = await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: `${folder}/` })
-    if (byPrefix.length > 0) return byPrefix
-  } catch { /* fall through */ }
-
-  try {
-    return await collectPages<CloudinaryAsset>({ ...BASE_PARAMS, prefix: folder })
-  } catch { return [] }
-}
-
-export async function getCommunityPhotos(): Promise<CommunityAsset[]> {
-  if (!KEY || !SEC) return []
-
-  const opts = { ...BASE_PARAMS, context: 'true' }
-
-  try {
-    const byAsset = await collectPages<CommunityAsset>({ ...opts, asset_folder: 'public-uploads' })
-    if (byAsset.length > 0) return sortByTaken(byAsset)
-  } catch { /* fall through to next method */ }
-
-  try {
-    const byPrefix = await collectPages<CommunityAsset>({ ...opts, prefix: 'public-uploads/' })
-    if (byPrefix.length > 0) return sortByTaken(byPrefix)
-  } catch { /* fall through to next method */ }
-
-  try {
-    const byPrefix2 = await collectPages<CommunityAsset>({ ...opts, prefix: 'public-uploads' })
-    return sortByTaken(byPrefix2)
-  } catch { return [] }
-}
-
-function sortByTaken<T extends CloudinaryAsset>(assets: T[]): T[] {
-  return assets.slice().sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
-}
-
-async function collectPages<T extends CloudinaryAsset = CloudinaryAsset>(baseParams: Record<string, string>): Promise<T[]> {
+async function collectPages<T extends CloudinaryAsset>(params: Record<string, string>): Promise<T[]> {
   const all: T[] = []
   let nextCursor: string | undefined
-
   do {
-    const params = { ...baseParams, ...(nextCursor ? { next_cursor: nextCursor } : {}) }
-    const data = await fetchPage(params)
-    all.push(...(data.resources as T[] ?? []))
+    const p = { ...params, ...(nextCursor ? { next_cursor: nextCursor } : {}) }
+    const data = await fetchPage(p)
+    all.push(...(data.resources as T[]))
     nextCursor = data.next_cursor
   } while (nextCursor)
-
-  // Sort oldest first (earliest photo taken first)
   return all.sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
+}
+
+/**
+ * Fetch all images from a Cloudinary folder.
+ * Tries asset_folder mode first (new accounts), then prefix/ and prefix (legacy accounts).
+ * Pass { context: true } to include uploader metadata (for public-uploads).
+ */
+export async function getFolder(folder: string, opts: { context?: boolean } = {}): Promise<CloudinaryAsset[]> {
+  if (!KEY || !SEC) return []
+
+  const base: Record<string, string> = {
+    type: 'upload',
+    max_results: '500',
+    image_metadata: 'true',
+    ...(opts.context ? { context: 'true' } : {}),
+  }
+
+  // Try 1: dynamic asset_folder mode (new Cloudinary accounts)
+  try {
+    const r = await collectPages<CloudinaryAsset>({ ...base, asset_folder: folder })
+    if (r.length > 0) return r
+  } catch { /* try next */ }
+
+  // Try 2: legacy prefix mode with trailing slash
+  try {
+    const r = await collectPages<CloudinaryAsset>({ ...base, prefix: `${folder}/` })
+    if (r.length > 0) return r
+  } catch { /* try next */ }
+
+  // Try 3: legacy prefix without trailing slash
+  try {
+    return await collectPages<CloudinaryAsset>({ ...base, prefix: folder })
+  } catch { return [] }
 }

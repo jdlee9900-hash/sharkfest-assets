@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getCommunityPhotos, getFolder } from '@/lib/cloudinary'
+import { getFolder } from '@/lib/cloudinary'
+import type { CommunityAsset, CloudinaryAsset } from '@/lib/cloudinary'
 import { CommunityUpload }  from '@/components/CommunityUpload'
 import { CommunityGallery } from '@/components/CommunityGallery'
 
@@ -13,12 +14,12 @@ export const metadata: Metadata = {
 }
 
 export default async function CommunityPage() {
-  let photos:       Awaited<ReturnType<typeof getCommunityPhotos>> = []
-  let runClubPhotos: Awaited<ReturnType<typeof getFolder>> = []
+  let photos:        CommunityAsset[]    = []
+  let runClubPhotos: CloudinaryAsset[]   = []
 
   await Promise.allSettled([
-    getCommunityPhotos().then(r => { photos = r }).catch(() => {}),
-    getFolder('run-club').then(r => { runClubPhotos = r }).catch(() => {}),
+    getFolder('public-uploads', { context: true }).then(r => { photos = r as CommunityAsset[] }),
+    getFolder('run-club').then(r => { runClubPhotos = r }),
   ])
 
   const noCredentials = !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET
