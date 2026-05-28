@@ -42,16 +42,6 @@ export default function Page() {
 
           <p className="hero-date"><strong>Summer 2028</strong></p>
 
-          {/* Stat pills */}
-          <div className="hero-stats">
-            {[['42','acts'],['216','pitches'],['3','days'],['4th','year']].map(([v,l]) => (
-              <div key={l} className="stat-pill">
-                <span className="stat-pill-val">{v}</span>
-                <span className="stat-pill-lbl">{l}</span>
-              </div>
-            ))}
-          </div>
-
           <CountdownTimer />
 
           <div className="hero-cta">
