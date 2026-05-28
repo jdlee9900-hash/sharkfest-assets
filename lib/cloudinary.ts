@@ -128,6 +128,30 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
 
   // Fallback without trailing slash
   try {
-    return await collectPages<CloudinaryAsset>({ ...base, prefix: folder })
-  } catch { return [] }
+    const r = await collectPages<CloudinaryAsset>({ ...base, prefix: folder })
+    if (r.length > 0) return r
+  } catch { /* try next */ }
+
+  // Fallback: Cloudinary Search API — finds assets regardless of delivery type
+  try {
+    const auth = Buffer.from(`${KEY}:${SEC}`).toString('base64')
+    const res  = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD}/resources/search`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expression: `folder:${folder}`, max_results: 500 }),
+        next: { revalidate: 3600 },
+      }
+    )
+    if (res.ok) {
+      const data = await res.json()
+      const resources: CloudinaryAsset[] = data.resources ?? []
+      if (resources.length > 0) {
+        return resources.sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
+      }
+    }
+  } catch { /* ignore */ }
+
+  return []
 }
