@@ -80,7 +80,7 @@ async function apiGet(path: string, params: Record<string, string> = {}) {
   const qs = new URLSearchParams(params).toString()
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${CLOUD}/${path}${qs ? `?${qs}` : ''}`,
-    { headers: { Authorization: `Basic ${auth}` }, next: { revalidate: 3600 } }
+    { headers: { Authorization: `Basic ${auth}` }, next: { revalidate: 60 } }
   )
   if (!res.ok) {
     const body = await res.text().catch(() => '')
@@ -141,7 +141,7 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
         method: 'POST',
         headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ expression: `folder:${folder}`, max_results: 500 }),
-        next: { revalidate: 3600 },
+        next: { revalidate: 60 },
       }
     )
     if (res.ok) {
