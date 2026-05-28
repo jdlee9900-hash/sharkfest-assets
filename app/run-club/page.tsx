@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getFolder, listFolders } from '@/lib/cloudinary'
+import { getFolder } from '@/lib/cloudinary'
 import { RunClubGallery } from '@/components/RunClubGallery'
 
 export const metadata: Metadata = {
@@ -11,17 +11,12 @@ export const metadata: Metadata = {
 
 export default async function RunClubPage() {
   let images: Awaited<ReturnType<typeof getFolder>> = []
-  let folders: string[] = []
   let error: string | null = null
 
   try {
     images = await getFolder('run-club')
-    if (images.length === 0) {
-      folders = await listFolders()
-    }
   } catch (e) {
     error = e instanceof Error ? e.message : 'Unknown error'
-    try { folders = await listFolders() } catch { /* ignore */ }
   }
 
   const noCredentials =
@@ -97,16 +92,7 @@ export default async function RunClubPage() {
         {images.length === 0 && !noCredentials && !error && (
           <div className="rc-notice rc-notice--warn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>
-              No images found under the folder path <code>run-club</code>.
-              {folders.length > 0 && (
-                <>
-                  {' '}Your Cloudinary account has these folders — pick the right one and let me know:<br/>
-                  <strong>{folders.join(' · ')}</strong>
-                </>
-              )}
-              {folders.length === 0 && ' Could not list folders — images may have been uploaded without a folder.'}
-            </span>
+            <span>No images found in the <code>run-club</code> Cloudinary folder.</span>
           </div>
         )}
       </main>
