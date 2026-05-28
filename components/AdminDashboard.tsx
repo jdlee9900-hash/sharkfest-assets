@@ -14,7 +14,17 @@ const STATUS_OPTS: { value: Status; label: string; color: string }[] = [
   { value: 'cancelled', label: 'Cancelled', color: '#f87171' },
 ]
 
-export function AdminDashboard({ registrations: initial }: { registrations: Registration[] }) {
+export function AdminDashboard({
+  registrations: initial,
+  totalDue,
+  totalReceived,
+  paymentSummaries,
+}: {
+  registrations: Registration[]
+  totalDue: number
+  totalReceived: number
+  paymentSummaries: Record<string, { totalDue: number; totalPaid: number }>
+}) {
   const router = useRouter()
   const [registrations, setRegistrations] = useState(initial)
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all')
@@ -31,6 +41,10 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
 
   // Status update state
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  // Payment reminder state
+  const [remindingId, setRemindingId]     = useState<string | null>(null)
+  const [remindedIds, setRemindedIds]     = useState<Set<string>>(new Set())
 
   const filtered = useMemo(() => {
     let list = registrations
@@ -65,6 +79,17 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
     })
     setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     setUpdatingId(null)
+  }
+
+  const sendReminder = async (id: string) => {
+    setRemindingId(id)
+    await fetch('/api/admin/payment-reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registration_id: id }),
+    })
+    setRemindedIds(prev => new Set(prev).add(id))
+    setRemindingId(null)
   }
 
   const openAllocate = (id: string) => {
@@ -105,8 +130,46 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
           <h1 className="adm-title">SharkFest 2028 — Registrations</h1>
           <p className="adm-sub">{registrations.length} total registrations</p>
         </div>
-        <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
+        <div className="adm-top-actions">
+          <div className="adm-export-group">
+            <a href="/api/admin/export?format=csv"  className="adm-export-btn" download>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </a>
+            <a href="/api/admin/export?format=xlsx" className="adm-export-btn" download>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              XLSX
+            </a>
+          </div>
+          <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
+        </div>
       </div>
+
+      {/* Payment summary */}
+      {(() => {
+        const outstanding = totalDue - totalReceived
+        return (
+          <div className="adm-summary">
+            <div className="adm-stat">
+              <span className="adm-stat-label">Total allocated</span>
+              <span className="adm-stat-value">{formatAmount(totalDue)}</span>
+              <span className="adm-stat-sub">across all payment plans</span>
+            </div>
+            <div className="adm-stat">
+              <span className="adm-stat-label">Received</span>
+              <span className="adm-stat-value adm-stat-value--received">{formatAmount(totalReceived)}</span>
+              <span className="adm-stat-sub">confirmed payments</span>
+            </div>
+            <div className="adm-stat">
+              <span className="adm-stat-label">Outstanding</span>
+              <span className={`adm-stat-value ${outstanding > 0 ? 'adm-stat-value--outstanding' : 'adm-stat-value--zero'}`}>
+                {formatAmount(outstanding)}
+              </span>
+              <span className="adm-stat-sub">{outstanding > 0 ? 'still to collect' : 'all paid up'}</span>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Filters */}
       <div className="adm-filters">
@@ -175,10 +238,33 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
                   <td className="adm-date">
                     {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   </td>
-                  <td onClick={e => e.stopPropagation()}>
+                  <td onClick={e => e.stopPropagation()} className="adm-actions-cell">
                     <button className="adm-action-btn" onClick={() => openAllocate(r.id)}>
                       £ Allocate
                     </button>
+                    {(() => {
+                      const ps = paymentSummaries[r.id]
+                      if (!ps || ps.totalDue <= ps.totalPaid) return null
+                      const outstanding = ps.totalDue - ps.totalPaid
+                      const sent = remindedIds.has(r.id)
+                      return (
+                        <button
+                          className={`adm-remind-btn ${sent ? 'adm-remind-btn--sent' : ''}`}
+                          onClick={() => !sent && sendReminder(r.id)}
+                          disabled={remindingId === r.id || sent}
+                          title={`Send payment reminder — £${(outstanding / 100).toFixed(2)} outstanding`}
+                        >
+                          {remindingId === r.id ? (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                          ) : sent ? (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                          ) : (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                          )}
+                          {sent ? 'Sent' : 'Remind'}
+                        </button>
+                      )
+                    })()}
                   </td>
                 </tr>
                 {expanded === r.id && (
@@ -208,51 +294,54 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
         <div className="adm-modal-backdrop" onClick={() => setAllocating(null)}>
           <div className="adm-modal" onClick={e => e.stopPropagation()}>
             <div className="adm-modal-head">
-              <h2 className="adm-modal-title">Allocate payment plan</h2>
-              <button className="lb-close" style={{ position: 'static' }} onClick={() => setAllocating(null)} aria-label="Close">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              <div>
+                <h2 className="adm-modal-title">Allocate payment plan</h2>
+                {(() => {
+                  const reg = registrations.find(r => r.id === allocating)
+                  return reg ? (
+                    <p className="adm-modal-sub">{reg.first_name} {reg.surname} · {reg.email}</p>
+                  ) : null
+                })()}
+              </div>
+              <button className="adm-modal-close" onClick={() => setAllocating(null)} aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
             </div>
 
-            {(() => {
-              const reg = registrations.find(r => r.id === allocating)
-              return reg ? (
-                <p className="adm-modal-sub">{reg.first_name} {reg.surname} · {reg.email}</p>
-              ) : null
-            })()}
+            <div className="adm-modal-body">
+              {planError && (
+                <div className="auth-error">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {planError}
+                </div>
+              )}
+              {planSuccess && (
+                <div className="mb-banner mb-banner--success">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  {planSuccess}
+                </div>
+              )}
 
-            {planError && (
-              <div className="auth-error" style={{ marginBottom: '1rem' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                {planError}
-              </div>
-            )}
-            {planSuccess && (
-              <div className="mb-banner mb-banner--success" style={{ marginBottom: '1rem' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                {planSuccess}
-              </div>
-            )}
-
-            <div className="adm-plan-fields">
-              <div className="cu-field">
-                <label className="cu-label">Total cost (£) *</label>
-                <div className="adm-amount-wrap">
-                  <span className="adm-amount-prefix">£</span>
-                  <input type="number" className="cu-input adm-amount-input" min="0" step="0.01" placeholder="0.00"
-                    value={planTotal} onChange={e => setPlanTotal(e.target.value)} />
+              <div className="adm-plan-fields">
+                <div className="cu-field">
+                  <label className="cu-label">Total cost (£) *</label>
+                  <div className="adm-amount-wrap">
+                    <span className="adm-amount-prefix">£</span>
+                    <input type="number" className="cu-input adm-amount-input" min="0" step="0.01" placeholder="0.00"
+                      value={planTotal} onChange={e => setPlanTotal(e.target.value)} />
+                  </div>
+                </div>
+                <div className="cu-field">
+                  <label className="cu-label">Notes</label>
+                  <input type="text" className="cu-input" placeholder="e.g. Tent pitch + electric hookup"
+                    value={planNotes} onChange={e => setPlanNotes(e.target.value)} />
                 </div>
               </div>
-              <div className="cu-field">
-                <label className="cu-label">Notes</label>
-                <input type="text" className="cu-input" placeholder="e.g. Tent pitch + electric hookup"
-                  value={planNotes} onChange={e => setPlanNotes(e.target.value)} />
-              </div>
-            </div>
 
-            <div className="adm-deposit-note">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-              A £50 deposit will be created automatically. The attendee can then pay the remaining balance in amounts of their choice.
+              <div className="adm-deposit-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                A £50 deposit will be created automatically. The attendee can then pay the remaining balance in amounts of their choice.
+              </div>
             </div>
 
             <div className="adm-modal-actions">

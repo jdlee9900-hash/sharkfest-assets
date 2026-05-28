@@ -1,10 +1,23 @@
 'use client'
 
 const ITEMS = [
-  'SharkFest 2028', 'Torbay Sharks RFC', 'Devon Coast',
-  '26 – 29 May 2028', 'Three Days', 'Two Stages', 'One Pack',
-  'SharkFest 2028', 'Torbay Sharks RFC', 'Devon Coast',
-  '26 – 29 May 2028', 'Three Days', 'Two Stages', 'One Pack',
+  '🎸 The Shrine · Live in the Marquee',
+  '🏉 Super Saturday Rugby',
+  '🦈 The Shark Fin Parade',
+  '🍖 Hog Roast from the Pig Apple',
+  '🕺 FLAIRZ · 70s Tribute Night',
+  '🎧 DJ Harvs · Silent Disco',
+  '🧘 Yoga with Becky B',
+  '🌺 Hawaiian Night · Beat Break Bandits',
+  '🪄 Kids Magician Show & Balloon Shaping',
+  '🍰 Cream Tea & Pimm\'s',
+  '🎤 Rachael Sweeting · Acoustic Set',
+  '💃 Emerald Cheerleaders',
+  '🏃 Festival Run Club · Devon Coast',
+  '🎨 Kids Art Club',
+  '🏉 Torbay Sharks Ladies v Bideford Ladies',
+  '🎠 Kids Disco Fancy Dress',
+  '🏉 Torbay Sharks Vets v Barnstaple Vets',
 ]
 
 const SEP = (
