@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 import { getFolder } from '@/lib/cloudinary'
 import { RunClubGallery } from '@/components/RunClubGallery'
 
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: 'Run Club · SharkFest 2026',
   description: 'Photos from the SharkFest 2026 Run Club — Torbay Sharks RFC, Devon Coast.',
