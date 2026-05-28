@@ -1236,6 +1236,18 @@ body::after {
 .adm-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .adm-title { font-size: 1.625rem; font-weight: 700; color: var(--navy-900); margin: 0; }
 .adm-sub { font-size: 0.9rem; color: var(--grey-400); margin: 0.2rem 0 0; }
+.adm-top-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.adm-export-group { display: flex; align-items: center; gap: 0.375rem; }
+.adm-export-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.875rem; border-radius: var(--r-md);
+  font-size: 0.8125rem; font-weight: 600;
+  background: var(--white); border: 1.5px solid var(--grey-200);
+  color: var(--navy-800);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.adm-export-btn:hover { border-color: var(--gold-400); background: var(--gold-50); color: var(--navy-900); }
 
 /* Payment summary strip */
 .adm-summary {
