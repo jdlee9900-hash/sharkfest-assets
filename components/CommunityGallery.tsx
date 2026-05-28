@@ -74,7 +74,7 @@ function PhotoGrid({
               loading={idx < 12 ? 'eager' : 'lazy'}
               decoding="async"
               onLoad={() => onLoad(photo.public_id)}
-              style={{ aspectRatio: `${photo.width}/${photo.height}` }}
+              style={photo.width && photo.height ? { aspectRatio: `${photo.width}/${photo.height}` } : undefined}
             />
             <div className="rc-item-overlay" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
