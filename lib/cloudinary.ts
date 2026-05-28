@@ -20,8 +20,8 @@ export interface CommunityAsset extends CloudinaryAsset {
   }
 }
 
-export function thumbUrl(publicId: string, w = 700) {
-  return `https://res.cloudinary.com/${CLOUD}/image/upload/w_${w},c_limit,f_auto,q_auto/${publicId}`
+export function thumbUrl(publicId: string, w = 400) {
+  return `https://res.cloudinary.com/${CLOUD}/image/upload/w_${w},c_limit,f_auto,q_auto:eco/${publicId}`
 }
 
 export function fullUrl(publicId: string) {

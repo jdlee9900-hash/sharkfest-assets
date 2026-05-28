@@ -160,7 +160,7 @@ export function RunClubGallery({ images }: Props) {
                     onClick={() => setOpen(globalIdx)}
                     tabIndex={-1}
                   >
-                    <img src={thumbUrl(img.public_id)} alt="" loading="lazy" />
+                    <img src={thumbUrl(img.public_id, 100)} alt="" loading="lazy" />
                   </button>
                 )
               })}
