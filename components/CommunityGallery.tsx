@@ -69,7 +69,7 @@ function PhotoGrid({
           >
             <div className="rc-placeholder" aria-hidden="true" />
             <img
-              src={thumbUrl(photo.public_id, 600)}
+              src={thumbUrl(photo.public_id, 400)}
               alt=""
               loading={idx < 12 ? 'eager' : 'lazy'}
               decoding="async"
