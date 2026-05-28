@@ -10,17 +10,28 @@ export function getAdminEmails(): string[] {
 
 export async function sendEmail(to: string | string[], subject: string, html: string): Promise<void> {
   const key = process.env.RESEND_API_KEY
-  if (!key) return
-  await fetch(RESEND_API, {
+  if (!key) {
+    console.error('[email] RESEND_API_KEY is not set — email not sent:', subject)
+    return
+  }
+
+  const from = process.env.EMAIL_FROM ?? 'SharkFest <onboarding@resend.dev>'
+
+  const res = await fetch(RESEND_API, {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM ?? 'SharkFest <noreply@sharkfest.vercel.app>',
+      from,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
     }),
   })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    console.error('[email] Resend error', res.status, JSON.stringify(body), '— subject:', subject, '— to:', to)
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
