@@ -17,10 +17,14 @@ export default async function AdminPage() {
   if (!adminEmails().includes(user.email ?? '')) redirect('/')
 
   const service = createServiceClient()
-  const { data: registrations } = await service
-    .from('registrations')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const [regResult, planResult, payResult] = await Promise.all([
+    service.from('registrations').select('*').order('created_at', { ascending: false }),
+    service.from('payment_plans').select('total_amount'),
+    service.from('payments').select('amount').eq('status', 'paid'),
+  ])
+
+  const totalDue      = (planResult.data ?? []).reduce((s: number, p: { total_amount: number }) => s + p.total_amount, 0)
+  const totalReceived = (payResult.data  ?? []).reduce((s: number, p: { amount: number })       => s + p.amount, 0)
 
   return (
     <>
@@ -36,7 +40,11 @@ export default async function AdminPage() {
       </header>
 
       <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1400px', margin: '0 auto' }}>
-        <AdminDashboard registrations={registrations ?? []} />
+        <AdminDashboard
+          registrations={regResult.data ?? []}
+          totalDue={totalDue}
+          totalReceived={totalReceived}
+        />
       </main>
     </>
   )
