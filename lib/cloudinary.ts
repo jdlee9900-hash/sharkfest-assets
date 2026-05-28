@@ -4,8 +4,8 @@ const SEC   = process.env.CLOUDINARY_API_SECRET ?? ''
 
 export interface CloudinaryAsset {
   public_id: string
-  width: number
-  height: number
+  width?: number
+  height?: number
   format: string
   created_at: string
   image_metadata?: Record<string, string>
