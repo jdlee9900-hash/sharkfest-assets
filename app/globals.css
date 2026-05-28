@@ -253,7 +253,7 @@ body::after {
 .marquee-inner {
   display: flex;
   width: max-content;
-  animation: marquee 28s linear infinite;
+  animation: marquee 60s linear infinite;
 }
 .marquee-inner:hover { animation-play-state: paused; }
 .marquee-list { display: flex; align-items: center; }
