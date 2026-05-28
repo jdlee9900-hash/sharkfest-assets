@@ -14,7 +14,15 @@ const STATUS_OPTS: { value: Status; label: string; color: string }[] = [
   { value: 'cancelled', label: 'Cancelled', color: '#f87171' },
 ]
 
-export function AdminDashboard({ registrations: initial }: { registrations: Registration[] }) {
+export function AdminDashboard({
+  registrations: initial,
+  totalDue,
+  totalReceived,
+}: {
+  registrations: Registration[]
+  totalDue: number
+  totalReceived: number
+}) {
   const router = useRouter()
   const [registrations, setRegistrations] = useState(initial)
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all')
@@ -107,6 +115,32 @@ export function AdminDashboard({ registrations: initial }: { registrations: Regi
         </div>
         <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
       </div>
+
+      {/* Payment summary */}
+      {(() => {
+        const outstanding = totalDue - totalReceived
+        return (
+          <div className="adm-summary">
+            <div className="adm-stat">
+              <span className="adm-stat-label">Total allocated</span>
+              <span className="adm-stat-value">{formatAmount(totalDue)}</span>
+              <span className="adm-stat-sub">across all payment plans</span>
+            </div>
+            <div className="adm-stat">
+              <span className="adm-stat-label">Received</span>
+              <span className="adm-stat-value adm-stat-value--received">{formatAmount(totalReceived)}</span>
+              <span className="adm-stat-sub">confirmed payments</span>
+            </div>
+            <div className="adm-stat">
+              <span className="adm-stat-label">Outstanding</span>
+              <span className={`adm-stat-value ${outstanding > 0 ? 'adm-stat-value--outstanding' : 'adm-stat-value--zero'}`}>
+                {formatAmount(outstanding)}
+              </span>
+              <span className="adm-stat-sub">{outstanding > 0 ? 'still to collect' : 'all paid up'}</span>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Filters */}
       <div className="adm-filters">

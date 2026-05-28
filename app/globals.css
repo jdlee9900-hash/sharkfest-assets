@@ -1237,6 +1237,31 @@ body::after {
 .adm-title { font-size: 1.625rem; font-weight: 700; color: var(--navy-900); margin: 0; }
 .adm-sub { font-size: 0.9rem; color: var(--grey-400); margin: 0.2rem 0 0; }
 
+/* Payment summary strip */
+.adm-summary {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--grey-100); border-radius: var(--r-xl);
+  background: var(--white); overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.adm-stat {
+  padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.adm-stat + .adm-stat { border-left: 1px solid var(--grey-100); }
+.adm-stat-label {
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--grey-400);
+}
+.adm-stat-value {
+  font-size: 1.625rem; font-weight: 800; color: var(--navy-900);
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.adm-stat-value--received { color: #16a34a; }
+.adm-stat-value--outstanding { color: var(--gold-600); }
+.adm-stat-value--zero { color: #16a34a; }
+.adm-stat-sub { font-size: 0.75rem; color: var(--grey-400); margin-top: 0.1rem; }
+
 .adm-filters { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .adm-status-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .adm-status-tab {
