@@ -1,4 +1,4 @@
-const RESEND_API = 'https://api.resend.com/emails'
+import nodemailer from 'nodemailer'
 
 export function getOrigin(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
@@ -8,31 +8,39 @@ export function getAdminEmails(): string[] {
   return (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
 }
 
+function getTransporter() {
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+  if (!user || !pass) return null
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT ?? 587),
+    secure: false, // STARTTLS on port 587
+    auth: { user, pass },
+  })
+}
+
 export async function sendEmail(to: string | string[], subject: string, html: string): Promise<void> {
-  const key = process.env.RESEND_API_KEY
-  if (!key) {
-    console.error('[email] RESEND_API_KEY is not set — email not sent:', subject)
+  const transporter = getTransporter()
+  if (!transporter) {
+    console.error('[email] SMTP_USER or SMTP_PASS not set — email not sent:', subject)
     return
   }
 
-  const from = process.env.EMAIL_FROM ?? 'SharkFest <onboarding@resend.dev>'
+  const from = process.env.EMAIL_FROM ?? `SharkFest <${process.env.SMTP_USER}>`
 
-  const res = await fetch(RESEND_API, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  try {
+    await transporter.sendMail({
       from,
-      to: Array.isArray(to) ? to : [to],
+      to: Array.isArray(to) ? to.join(', ') : to,
       subject,
       html,
-    }),
-  })
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    console.error('[email] Resend error', res.status, JSON.stringify(body), '— subject:', subject, '— to:', to)
+    })
+  } catch (err) {
+    console.error('[email] SMTP send failed — subject:', subject, '— to:', to, '— error:', err)
   }
 }
+
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
