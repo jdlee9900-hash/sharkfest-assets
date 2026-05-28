@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
+import { sendEmail, emailPlanAllocated, getOrigin } from '@/lib/email'
 
 const DEPOSIT_AMOUNT = 5000 // £50 in pence
 
@@ -73,6 +74,21 @@ export async function POST(request: Request) {
 
   if (planErr || !plan) {
     return NextResponse.json({ error: planErr?.message ?? 'Failed to save plan' }, { status: 500 })
+  }
+
+  // Notify the registrant their payment plan is ready
+  const { data: reg } = await service
+    .from('registrations')
+    .select('first_name, email')
+    .eq('id', registration_id)
+    .single()
+
+  if (reg) {
+    await sendEmail(
+      reg.email,
+      'Your SharkFest 2028 payment plan is ready',
+      emailPlanAllocated(reg, { total_amount: Math.round(total_amount), notes: notes?.trim() || null }, getOrigin())
+    )
   }
 
   return NextResponse.json({ ok: true, plan_id: plan.id })

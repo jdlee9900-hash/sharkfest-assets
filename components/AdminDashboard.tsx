@@ -18,10 +18,12 @@ export function AdminDashboard({
   registrations: initial,
   totalDue,
   totalReceived,
+  paymentSummaries,
 }: {
   registrations: Registration[]
   totalDue: number
   totalReceived: number
+  paymentSummaries: Record<string, { totalDue: number; totalPaid: number }>
 }) {
   const router = useRouter()
   const [registrations, setRegistrations] = useState(initial)
@@ -39,6 +41,10 @@ export function AdminDashboard({
 
   // Status update state
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  // Payment reminder state
+  const [remindingId, setRemindingId]     = useState<string | null>(null)
+  const [remindedIds, setRemindedIds]     = useState<Set<string>>(new Set())
 
   const filtered = useMemo(() => {
     let list = registrations
@@ -73,6 +79,17 @@ export function AdminDashboard({
     })
     setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     setUpdatingId(null)
+  }
+
+  const sendReminder = async (id: string) => {
+    setRemindingId(id)
+    await fetch('/api/admin/payment-reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registration_id: id }),
+    })
+    setRemindedIds(prev => new Set(prev).add(id))
+    setRemindingId(null)
   }
 
   const openAllocate = (id: string) => {
@@ -221,10 +238,33 @@ export function AdminDashboard({
                   <td className="adm-date">
                     {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   </td>
-                  <td onClick={e => e.stopPropagation()}>
+                  <td onClick={e => e.stopPropagation()} className="adm-actions-cell">
                     <button className="adm-action-btn" onClick={() => openAllocate(r.id)}>
                       £ Allocate
                     </button>
+                    {(() => {
+                      const ps = paymentSummaries[r.id]
+                      if (!ps || ps.totalDue <= ps.totalPaid) return null
+                      const outstanding = ps.totalDue - ps.totalPaid
+                      const sent = remindedIds.has(r.id)
+                      return (
+                        <button
+                          className={`adm-remind-btn ${sent ? 'adm-remind-btn--sent' : ''}`}
+                          onClick={() => !sent && sendReminder(r.id)}
+                          disabled={remindingId === r.id || sent}
+                          title={`Send payment reminder — £${(outstanding / 100).toFixed(2)} outstanding`}
+                        >
+                          {remindingId === r.id ? (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                          ) : sent ? (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                          ) : (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                          )}
+                          {sent ? 'Sent' : 'Remind'}
+                        </button>
+                      )
+                    })()}
                   </td>
                 </tr>
                 {expanded === r.id && (
