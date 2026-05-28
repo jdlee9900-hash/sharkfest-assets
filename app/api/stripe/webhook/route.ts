@@ -62,15 +62,14 @@ export async function POST(request: Request) {
       }
     }
 
-    // Send payment receipt (non-blocking)
-    ;(async () => {
-      try {
-        const [regRes, planRes, paidRes] = await Promise.all([
-          service.from('registrations').select('first_name, email').eq('id', registration_id).single(),
-          service.from('payment_plans').select('total_amount').eq('registration_id', registration_id).maybeSingle(),
-          service.from('payments').select('amount').eq('registration_id', registration_id).eq('status', 'paid'),
-        ])
-        if (!regRes.data) return
+    // Send payment receipt
+    try {
+      const [regRes, planRes, paidRes] = await Promise.all([
+        service.from('registrations').select('first_name, email').eq('id', registration_id).single(),
+        service.from('payment_plans').select('total_amount').eq('registration_id', registration_id).maybeSingle(),
+        service.from('payments').select('amount').eq('registration_id', registration_id).eq('status', 'paid'),
+      ])
+      if (regRes.data) {
         const totalPaid   = (paidRes.data ?? []).reduce((s: number, p: { amount: number }) => s + p.amount, 0)
         const outstanding = planRes.data ? planRes.data.total_amount - totalPaid : 0
         await sendEmail(
@@ -78,8 +77,10 @@ export async function POST(request: Request) {
           'Payment confirmed — SharkFest 2028',
           emailPaymentReceipt(regRes.data, session.amount_total ?? 0, new Date().toISOString(), outstanding, getOrigin())
         )
-      } catch { /* silent */ }
-    })()
+      }
+    } catch (err) {
+      console.error('[email] payment receipt failed:', err)
+    }
   }
 
   if (event.type === 'checkout.session.expired' || event.type === 'payment_intent.payment_failed') {

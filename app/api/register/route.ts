@@ -45,16 +45,17 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    const origin   = getOrigin()
-    const admins   = getAdminEmails()
+    const origin = getOrigin()
+    const admins = getAdminEmails()
 
-    // Non-blocking — failures don't affect the response
-    Promise.allSettled([
+    // Await emails before returning so the serverless function doesn't
+    // terminate before the SMTP handshake completes.
+    await Promise.allSettled([
       sendEmail(data.email, 'SharkFest 2028 — Registration received', emailRegistrationUser(data, origin)),
       ...admins.map(to =>
         sendEmail(to, `New registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin(data, origin))
       ),
-    ]).catch(() => {})
+    ])
 
     return NextResponse.json({ id: data.id })
   } catch (err) {

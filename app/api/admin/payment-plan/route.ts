@@ -76,22 +76,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: planErr?.message ?? 'Failed to save plan' }, { status: 500 })
   }
 
-  // Notify the registrant their payment plan is ready (non-blocking)
-  Promise.resolve(
-    service
-      .from('registrations')
-      .select('first_name, email')
-      .eq('id', registration_id)
-      .single()
-  ).then(({ data: reg }) => {
-    if (reg) {
-      sendEmail(
-        reg.email,
-        'Your SharkFest 2028 payment plan is ready',
-        emailPlanAllocated(reg, { total_amount: Math.round(total_amount), notes: notes?.trim() || null }, getOrigin())
-      ).catch(() => {})
-    }
-  }).catch(() => {})
+  // Notify the registrant their payment plan is ready
+  const { data: reg } = await service
+    .from('registrations')
+    .select('first_name, email')
+    .eq('id', registration_id)
+    .single()
+
+  if (reg) {
+    await sendEmail(
+      reg.email,
+      'Your SharkFest 2028 payment plan is ready',
+      emailPlanAllocated(reg, { total_amount: Math.round(total_amount), notes: notes?.trim() || null }, getOrigin())
+    )
+  }
 
   return NextResponse.json({ ok: true, plan_id: plan.id })
 }
