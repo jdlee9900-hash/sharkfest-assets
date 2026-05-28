@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendEmail, emailPaymentReceipt, getOrigin } from '@/lib/email'
 
 export async function POST(request: Request) {
   const stripeKey = process.env.STRIPE_SECRET_KEY
@@ -60,6 +61,25 @@ export async function POST(request: Request) {
         })
       }
     }
+
+    // Send payment receipt (non-blocking)
+    ;(async () => {
+      try {
+        const [regRes, planRes, paidRes] = await Promise.all([
+          service.from('registrations').select('first_name, email').eq('id', registration_id).single(),
+          service.from('payment_plans').select('total_amount').eq('registration_id', registration_id).maybeSingle(),
+          service.from('payments').select('amount').eq('registration_id', registration_id).eq('status', 'paid'),
+        ])
+        if (!regRes.data) return
+        const totalPaid   = (paidRes.data ?? []).reduce((s: number, p: { amount: number }) => s + p.amount, 0)
+        const outstanding = planRes.data ? planRes.data.total_amount - totalPaid : 0
+        await sendEmail(
+          regRes.data.email,
+          'Payment confirmed — SharkFest 2028',
+          emailPaymentReceipt(regRes.data, session.amount_total ?? 0, new Date().toISOString(), outstanding, getOrigin())
+        )
+      } catch { /* silent */ }
+    })()
   }
 
   if (event.type === 'checkout.session.expired' || event.type === 'payment_intent.payment_failed') {

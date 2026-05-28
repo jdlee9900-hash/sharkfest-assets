@@ -1318,6 +1318,19 @@ body::after {
   cursor: pointer; white-space: nowrap; transition: opacity 0.15s;
 }
 .adm-action-btn:hover { opacity: 0.85; }
+.adm-actions-cell { display: flex; align-items: center; gap: 0.5rem; flex-wrap: nowrap; }
+.adm-remind-btn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: none; border: 1.5px solid var(--grey-200);
+  border-radius: var(--r-md); padding: 0.3rem 0.625rem;
+  font-size: 0.8rem; font-weight: 600; color: var(--grey-500);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.adm-remind-btn:hover:not(:disabled) { border-color: var(--gold-400); color: var(--navy-900); background: var(--gold-50); }
+.adm-remind-btn--sent { border-color: #86efac; color: #16a34a; cursor: default; }
+.adm-remind-btn:disabled { opacity: 0.6; cursor: default; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .adm-detail-row td { padding: 0; background: #fafafa; }
 .adm-detail { padding: 1rem 1.5rem; }
