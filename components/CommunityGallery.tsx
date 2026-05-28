@@ -198,10 +198,6 @@ function Lightbox({
 
 type Source = 'community' | 'runclub'
 
-function filename(p: CloudinaryAsset) {
-  return p.public_id.split('/').pop() ?? p.public_id
-}
-
 export function CommunityGallery({
   photos,
   runClubPhotos,
@@ -219,20 +215,13 @@ export function CommunityGallery({
   const switchSource = (s: Source) => { setSource(s); setActiveKey('all'); setOpenIdx(null) }
 
   // ── Community view ──────────────────────────────
-  // Exclude photos whose filename matches a run-club photo — prevents duplicates
-  // when the same files were uploaded to both folders during testing.
-  const runClubFilenames = new Set(runClubPhotos.map(filename))
-  const communityOnly    = photos.filter(p => !runClubFilenames.has(filename(p)))
-
-  const groups    = groupByDay(communityOnly)
+  const groups    = groupByDay(photos)
   const dayKeys   = ['all', ...groups.map(g => g.key)]
   const visGroups = activeKey === 'all' ? groups : groups.filter(g => g.key === activeKey)
   const flatComm  = visGroups.flatMap(g => g.photos)
 
-  // ── Run Club view — already sorted ascending from server ────────────────────
-  const rcSorted = runClubPhotos
-
-  const activeFlat = source === 'community' ? flatComm : rcSorted
+  // ── Run Club view ───────────────────────────────
+  const activeFlat = source === 'community' ? flatComm : runClubPhotos
 
   const prev  = useCallback(() => setOpenIdx(i => (i !== null && i > 0 ? i - 1 : i)), [])
   const next  = useCallback(() => setOpenIdx(i => (i !== null && i < activeFlat.length - 1 ? i + 1 : i)), [activeFlat.length])
@@ -249,7 +238,7 @@ export function CommunityGallery({
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             Your Photos
-            <span className="cg-tab-count">{communityOnly.length}</span>
+            <span className="cg-tab-count">{photos.length}</span>
           </button>
           <button
             className={`cg-source-tab ${source === 'runclub' ? 'cg-source-tab--active' : ''}`}
@@ -314,7 +303,7 @@ export function CommunityGallery({
       {source === 'runclub' && (
         <section className="cg-day">
           <PhotoGrid
-            photos={rcSorted}
+            photos={runClubPhotos}
             loaded={loaded}
             onLoad={markLoaded}
             onOpen={setOpenIdx}
