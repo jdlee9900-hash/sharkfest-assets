@@ -849,9 +849,13 @@ body::after {
 .cu-actions { display: flex; flex-direction: column; gap: 0.75rem; }
 .cu-btn { width: 100%; justify-content: center; }
 .cu-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.cu-success {
+.cu-success { display: flex; flex-direction: column; gap: 0.25rem; }
+.cu-success p {
   display: flex; align-items: center; gap: 0.5rem;
-  font-size: 0.9375rem; font-weight: 500; color: #15803d;
+  margin: 0; font-size: 0.9375rem; font-weight: 500; color: #15803d;
+}
+.cu-success-note {
+  font-size: 0.8125rem; color: #64748b; margin: 0;
 }
 
 /* ════════════════════════════════════════════════

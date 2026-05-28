@@ -246,10 +246,13 @@ export function CommunityUpload() {
       {/* Actions */}
       <div className="cu-actions">
         {allDone && doneCount > 0 && (
-          <p className="cu-success">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-            {doneCount} photo{doneCount !== 1 ? 's' : ''} uploaded — thank you!
-          </p>
+          <div className="cu-success">
+            <p>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              {doneCount} photo{doneCount !== 1 ? 's' : ''} uploaded — thank you!
+            </p>
+            <p className="cu-success-note">It takes about a minute to appear in the gallery — check back shortly.</p>
+          </div>
         )}
         <button
           className="btn btn-accent cu-btn"
