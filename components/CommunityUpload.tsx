@@ -111,7 +111,7 @@ export function CommunityUpload() {
 
       try {
         // Step 1: get a signed upload token from our server
-        let sigData: { timestamp: number; signature: string; apiKey: string; cloudName: string; folder: string; context: string }
+        let sigData: { timestamp: number; signature: string; apiKey: string; cloudName: string; folder: string; context: string; allowedFormats: string }
         try {
           const sigRes = await fetch('/api/sign-upload', {
             method: 'POST',
@@ -135,6 +135,7 @@ export function CommunityUpload() {
         fd.append('signature', sigData.signature)
         fd.append('folder',    sigData.folder)
         fd.append('context',   sigData.context)
+        fd.append('allowed_formats', sigData.allowedFormats)
 
         await xhrUpload(
           `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`,
