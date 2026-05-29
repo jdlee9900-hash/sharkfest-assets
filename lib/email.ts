@@ -186,12 +186,13 @@ Admin panel: ${url}
 
 export function emailPlanAllocated(
   reg: { first_name: string },
-  plan: { total_amount: number; notes: string | null },
+  plan: { total_amount: number; notes: string | null; member_discount_pct?: number | null },
   origin: string
 ): EmailBody {
   const remaining = Math.max(0, plan.total_amount - 5000)
   const url = `${origin}/my-booking`
   const summaryRows: [string, string][] = [
+    ...(plan.member_discount_pct ? [[`Member discount`, `${plan.member_discount_pct}% applied ✓`] as [string, string]] : []),
     ['Total cost',        fmtGBP(plan.total_amount)],
     ['Deposit due now',   '£50.00'],
     ['Remaining balance', fmtGBP(remaining)],
@@ -257,6 +258,82 @@ ${tSummary(summaryRows)}
 ${bodyNote}
 
 View your booking: ${url}
+    `),
+  }
+}
+
+export function emailMembershipWelcome(
+  member: { first_name: string },
+  plan: 'monthly' | 'annual',
+  origin: string
+): EmailBody {
+  const url = `${origin}/members`
+  const planLabel = plan === 'annual' ? 'Annual membership' : 'Monthly membership'
+  return {
+    html: htmlWrap(`
+      ${hh('Welcome to the club')}
+      ${hp(`Hi ${member.first_name},`)}
+      ${hp("Your SharkFest membership is now active — thank you for supporting Torbay Sharks RFC.")}
+      ${hSummary([['Membership', planLabel], ['Status', 'Active ✓']])}
+      ${hp('Your members area is ready: exclusive content, members events, your digital membership card, and a reduced price on SharkFest 2028 tickets.')}
+      ${hcta('Enter the members area', url)}
+    `),
+    text: textWrap('SharkFest — Welcome to the club', `
+Hi ${member.first_name},
+
+Your SharkFest membership is now active — thank you for supporting Torbay Sharks RFC.
+
+${tSummary([['Membership', planLabel], ['Status', 'Active']])}
+Your members area is ready: exclusive content, members events, your digital
+membership card, and a reduced price on SharkFest 2028 tickets.
+
+Enter the members area: ${url}
+    `),
+  }
+}
+
+export function emailMembershipPaymentFailed(
+  member: { first_name: string },
+  origin: string
+): EmailBody {
+  const url = `${origin}/members`
+  return {
+    html: htmlWrap(`
+      ${hh('We couldn’t take your membership payment')}
+      ${hp(`Hi ${member.first_name},`)}
+      ${hp('A payment for your SharkFest membership failed. Your access continues for now, but please update your payment details to avoid losing your membership.')}
+      ${hcta('Update payment details', url)}
+    `),
+    text: textWrap('SharkFest — Membership payment failed', `
+Hi ${member.first_name},
+
+A payment for your SharkFest membership failed. Your access continues for now,
+but please update your payment details to avoid losing your membership.
+
+Update payment details: ${url}
+    `),
+  }
+}
+
+export function emailMembershipCancelled(
+  member: { first_name: string },
+  origin: string
+): EmailBody {
+  const url = `${origin}/join`
+  return {
+    html: htmlWrap(`
+      ${hh('Your membership has ended')}
+      ${hp(`Hi ${member.first_name},`)}
+      ${hp("Your SharkFest membership has been cancelled and your members access has now ended. We'd love to have you back any time.")}
+      ${hcta('Rejoin', url)}
+    `),
+    text: textWrap('SharkFest — Membership ended', `
+Hi ${member.first_name},
+
+Your SharkFest membership has been cancelled and your members access has now ended.
+We'd love to have you back any time.
+
+Rejoin: ${url}
     `),
   }
 }

@@ -1,0 +1,60 @@
+import { NextResponse } from 'next/server'
+import Stripe from 'stripe'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getActiveMembership, memberPriceId } from '@/lib/membership'
+import type { MemberPlan } from '@/lib/types'
+
+export async function POST(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const stripeKey = process.env.STRIPE_SECRET_KEY
+  if (!stripeKey) return NextResponse.json({ error: 'Payments not configured' }, { status: 503 })
+
+  const body = await request.json().catch(() => ({}))
+  const plan: MemberPlan = body?.plan === 'annual' ? 'annual' : 'monthly'
+
+  // Map plan → price ID on the server; never trust a client-supplied price.
+  const price = memberPriceId(plan)
+  if (!price) return NextResponse.json({ error: 'Membership plan not configured' }, { status: 503 })
+
+  // Already a member? Send them to manage their existing subscription instead.
+  const existing = await getActiveMembership(user.id)
+  if (existing) return NextResponse.json({ error: 'You already have an active membership' }, { status: 409 })
+
+  const stripe = new Stripe(stripeKey)
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
+
+  // Reuse a Stripe customer if we've seen this user before (any membership row),
+  // otherwise create one tagged with the Supabase user id.
+  const service = createServiceClient()
+  const { data: prior } = await service
+    .from('memberships')
+    .select('stripe_customer_id')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  let customerId = prior?.stripe_customer_id as string | undefined
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      metadata: { user_id: user.id },
+    })
+    customerId = customer.id
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer: customerId,
+    line_items: [{ price, quantity: 1 }],
+    success_url: `${origin}/members?welcome=1`,
+    cancel_url: `${origin}/join?status=cancelled`,
+    metadata: { user_id: user.id, plan },
+    subscription_data: { metadata: { user_id: user.id, plan } },
+  })
+
+  return NextResponse.json({ url: session.url })
+}

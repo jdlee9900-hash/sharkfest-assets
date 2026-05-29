@@ -186,6 +186,22 @@ export default function Page() {
         </div>
       </section>
 
+      {/* ══════════════════ MEMBERSHIP ══════════════════ */}
+      <section className="join-promo" id="membership">
+        <div className="join-promo-inner">
+          <ScrollReveal>
+            <p className="join-promo-eyebrow">Membership</p>
+            <h2 className="join-promo-title">Stay part of it, all year round</h2>
+            <p className="join-promo-body">
+              SharkFest 2026 is in the books and 2028 is on its way. Become a member for
+              exclusive content, members events, your own digital membership card — and a
+              reduced price when 2028 tickets open.
+            </p>
+            <Link href="/join" className="btn btn-accent join-promo-cta">Become a member</Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ══════════════════ FOOTER ══════════════════ */}
       <footer className="footer">
         <Image src="/logo.png" alt="Torbay Sharks RFC" width={52} height={52} className="footer-logo-img" />
@@ -194,6 +210,7 @@ export default function Page() {
         <nav className="footer-links" aria-label="Footer links">
           <a href="mailto:hello@torbaySharks.co.uk">Contact</a>
           <a href="#2026">SharkFest 2026</a>
+          <Link href="/join">Membership</Link>
           <a href="#relive">Highlights</a>
           <Link href="/run-club">Run Club</Link>
           <Link href="/community">Community Photos</Link>

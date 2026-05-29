@@ -28,6 +28,8 @@ export interface PaymentPlan {
   notes: string | null
   allocated_by: string | null
   allocated_at: string
+  member_discount: number | null
+  member_discount_pct: number | null
 }
 
 export interface Instalment {
@@ -49,6 +51,38 @@ export interface Payment {
   stripe_payment_intent_id: string | null
   stripe_session_id: string | null
   paid_at: string | null
+  created_at: string
+}
+
+export type MemberPlan = 'monthly' | 'annual'
+export type MembershipStatus = 'active' | 'past_due' | 'canceled' | 'incomplete'
+export type MemberPostKind = 'news' | 'event'
+
+export interface Membership {
+  id: string
+  user_id: string
+  email: string
+  stripe_customer_id: string
+  stripe_subscription_id: string
+  stripe_price_id: string | null
+  plan: MemberPlan
+  status: MembershipStatus
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface MemberPost {
+  id: string
+  kind: MemberPostKind
+  title: string
+  body: string
+  cover_public_id: string | null
+  event_at: string | null
+  location: string | null
+  published: boolean
+  author: string | null
   created_at: string
 }
 

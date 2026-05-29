@@ -170,6 +170,14 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
                 </div>
               </div>
 
+              {paymentPlan.member_discount ? (
+                <div className="mb-member-note">
+                  <span aria-hidden="true">🎟️</span>
+                  Member price applied — you saved {formatAmount(paymentPlan.member_discount)}
+                  {paymentPlan.member_discount_pct ? ` (${paymentPlan.member_discount_pct}% member discount)` : ''}.
+                </div>
+              ) : null}
+
               {paymentPlan.notes && <p className="mb-plan-notes">{paymentPlan.notes}</p>}
 
               {payError && (
