@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 import { sendEmail, emailPlanAllocated, getOrigin } from '@/lib/email'
+import { isActiveMember, memberDiscountPercent, memberPrice } from '@/lib/membership'
 
 const DEPOSIT_AMOUNT = 5000 // £50 in pence
 
@@ -26,6 +27,16 @@ export async function POST(request: Request) {
 
   const service = createServiceClient()
 
+  // Member pricing: if the registration's owner is an active member, apply the
+  // member discount to the allocated total so the saving is genuine (it lowers
+  // what they owe overall, keeping balance accounting coherent).
+  const { data: reg0 } = await service
+    .from('registrations').select('user_id, is_member').eq('id', registration_id).maybeSingle()
+  const memberish = Boolean(reg0?.is_member) || (reg0?.user_id ? await isActiveMember(reg0.user_id) : false)
+  const memberPct = memberish ? memberDiscountPercent() : 0
+  const finalTotal = memberish ? memberPrice(amount, memberPct) : amount
+  const memberDiscount = amount - finalTotal
+
   // Check if a plan already exists for this registration
   const { data: existing } = await service
     .from('payment_plans')
@@ -41,8 +52,10 @@ export async function POST(request: Request) {
     const { data, error } = await service
       .from('payment_plans')
       .update({
-        total_amount: amount,
+        total_amount: finalTotal,
         notes: safeNotes,
+        member_discount: memberDiscount || null,
+        member_discount_pct: memberPct || null,
         allocated_by: user.email,
         allocated_at: new Date().toISOString(),
       })
@@ -57,8 +70,10 @@ export async function POST(request: Request) {
       .from('payment_plans')
       .insert({
         registration_id,
-        total_amount: amount,
+        total_amount: finalTotal,
         notes: safeNotes,
+        member_discount: memberDiscount || null,
+        member_discount_pct: memberPct || null,
         allocated_by: user.email,
       })
       .select('id')
@@ -93,7 +108,7 @@ export async function POST(request: Request) {
     await sendEmail(
       reg.email,
       'Your SharkFest 2028 payment plan is ready',
-      emailPlanAllocated(reg, { total_amount: amount, notes: safeNotes }, getOrigin())
+      emailPlanAllocated(reg, { total_amount: finalTotal, notes: safeNotes, member_discount_pct: memberPct || null }, getOrigin())
     )
   }
 

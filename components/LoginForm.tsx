@@ -8,6 +8,8 @@ export function LoginForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/my-booking'
   const hasError = searchParams.get('error') === 'auth'
+  // Members-branded variant when signing in to join or enter the members club.
+  const members = next.startsWith('/members') || next.startsWith('/join')
 
   const [email, setEmail]     = useState('')
   const [sent, setSent]       = useState(false)
@@ -37,12 +39,20 @@ export function LoginForm() {
   }
 
   return (
-    <div className="auth-card">
+    <div className={`auth-card${members ? ' auth-card--members' : ''}`}>
+      {members && <p className="auth-members-tag">Torbay Sharks · Membership</p>}
       <div className="auth-icon" aria-hidden="true">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-          <rect x="2" y="4" width="20" height="16" rx="2"/>
-          <path d="m22 7-10 7L2 7"/>
-        </svg>
+        {members ? (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+            <path d="M12 2 4 5v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V5l-8-3Z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        ) : (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-10 7L2 7"/>
+          </svg>
+        )}
       </div>
 
       {sent ? (
@@ -59,8 +69,12 @@ export function LoginForm() {
         </>
       ) : (
         <>
-          <h1 className="auth-title">Sign in to SharkFest</h1>
-          <p className="auth-sub">Enter your email and we&apos;ll send you a magic link.</p>
+          <h1 className="auth-title">{members ? 'Members sign in' : 'Sign in to SharkFest'}</h1>
+          <p className="auth-sub">
+            {members
+              ? 'Sign in to access exclusive content, your digital membership card and member ticket prices.'
+              : "Enter your email and we'll send you a magic link."}
+          </p>
 
           {error && (
             <div className="auth-error" role="alert">

@@ -40,6 +40,12 @@ export async function GET(request: NextRequest) {
         .update({ user_id: user.id })
         .eq('email', user.email)
         .is('user_id', null)
+
+      // Keep the member flag on this user's registrations in sync with their
+      // current membership, so member pricing applies when a plan is allocated.
+      const { isActiveMember } = await import('@/lib/membership')
+      const member = await isActiveMember(user.id)
+      await service.from('registrations').update({ is_member: member }).eq('user_id', user.id)
     }
 
     if (!error) {

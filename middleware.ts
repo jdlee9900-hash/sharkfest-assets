@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     const pathname = request.nextUrl.pathname
-    if (pathname.startsWith('/my-booking') || pathname.startsWith('/admin')) {
+    if (pathname.startsWith('/my-booking') || pathname.startsWith('/admin') || pathname.startsWith('/members')) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('next', pathname)
@@ -38,5 +38,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/my-booking/:path*', '/admin/:path*'],
+  matcher: ['/my-booking/:path*', '/admin/:path*', '/members/:path*'],
 }
