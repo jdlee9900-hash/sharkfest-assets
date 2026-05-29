@@ -146,13 +146,13 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
   try {
     const r = await collectPages<CloudinaryAsset>({ ...base, prefix: `${folder}/` })
     if (r.length > 0) return r
-  } catch { /* try next */ }
+  } catch (err) { console.warn(`[cloudinary] prefix "${folder}/" failed:`, err instanceof Error ? err.message : err) }
 
   // Fallback without trailing slash
   try {
     const r = await collectPages<CloudinaryAsset>({ ...base, prefix: folder })
     if (r.length > 0) return r
-  } catch { /* try next */ }
+  } catch (err) { console.warn(`[cloudinary] prefix "${folder}" failed:`, err instanceof Error ? err.message : err) }
 
   // Fallback: Cloudinary Search API — finds assets regardless of delivery type
   try {
@@ -173,7 +173,8 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
         return resources.sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
       }
     }
-  } catch { /* ignore */ }
+  } catch (err) { console.warn(`[cloudinary] search for folder "${folder}" failed:`, err instanceof Error ? err.message : err) }
 
+  console.warn(`[cloudinary] no assets found for folder "${folder}" via any strategy`)
   return []
 }

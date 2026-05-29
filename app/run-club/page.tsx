@@ -81,7 +81,7 @@ export default async function RunClubPage() {
               <strong>Could not load photos.</strong><br/>
               <code style={{fontSize:'0.8em',wordBreak:'break-all'}}>{error}</code><br/><br/>
               If you see <em>404</em> the cloud name is wrong. Find it at{' '}
-              <a href="https://cloudinary.com/console" target="_blank" rel="noopener" style={{textDecoration:'underline'}}>cloudinary.com/console</a>
+              <a href="https://cloudinary.com/console" target="_blank" rel="noopener noreferrer" style={{textDecoration:'underline'}}>cloudinary.com/console</a>
               {' '}— it&apos;s shown at the top of your dashboard, or in any image URL after <code>res.cloudinary.com/</code>.
             </span>
           </div>
