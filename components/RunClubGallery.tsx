@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { CloudinaryAsset } from '@/lib/cloudinary'
-import { thumbUrl, fullUrl } from '@/lib/cloudinary'
+import { thumbUrl, fullUrl, thumbSrcSet, fullSrcSet, GRID_SIZES, LIGHTBOX_SIZES } from '@/lib/cloudinary'
 
 interface Props {
   images: CloudinaryAsset[]
@@ -41,6 +41,18 @@ export function RunClubGallery({ images }: Props) {
     if (open !== null) closeRef.current?.focus()
   }, [open])
 
+  // Warm the neighbouring full images so prev/next navigation is instant.
+  useEffect(() => {
+    if (open === null) return
+    for (const j of [open - 1, open + 1]) {
+      const neighbour = images[j]
+      if (neighbour) {
+        const img = new Image()
+        img.src = fullUrl(neighbour.public_id)
+      }
+    }
+  }, [open, images])
+
   return (
     <>
       {/* Masonry grid */}
@@ -59,6 +71,8 @@ export function RunClubGallery({ images }: Props) {
               <div className="rc-placeholder" aria-hidden="true" />
               <img
                 src={thumbUrl(img.public_id)}
+                srcSet={thumbSrcSet(img.public_id)}
+                sizes={GRID_SIZES}
                 alt=""
                 loading={i < 12 ? 'eager' : 'lazy'}
                 decoding="async"
@@ -118,6 +132,10 @@ export function RunClubGallery({ images }: Props) {
             >
               <img
                 src={fullUrl(images[open].public_id)}
+                srcSet={fullSrcSet(images[open].public_id)}
+                sizes={LIGHTBOX_SIZES}
+                width={images[open].width}
+                height={images[open].height}
                 alt={`Run club photo ${open + 1}`}
                 className="lb-img"
               />

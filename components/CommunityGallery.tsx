@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { thumbUrl, fullUrl, photoTakenAt } from '@/lib/cloudinary'
+import { thumbUrl, fullUrl, thumbSrcSet, fullSrcSet, GRID_SIZES, LIGHTBOX_SIZES, photoTakenAt } from '@/lib/cloudinary'
 import type { CommunityAsset, CloudinaryAsset } from '@/lib/cloudinary'
 
 // ── Day-grouping helpers ─────────────────────────────────────────────────────
@@ -70,6 +70,8 @@ function PhotoGrid({
             <div className="rc-placeholder" aria-hidden="true" />
             <img
               src={thumbUrl(photo.public_id, 400)}
+              srcSet={thumbSrcSet(photo.public_id)}
+              sizes={GRID_SIZES}
               alt=""
               loading={idx < 12 ? 'eager' : 'lazy'}
               decoding="async"
@@ -122,6 +124,16 @@ function Lightbox({
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
+  // Warm the neighbouring full images so prev/next navigation is instant.
+  useEffect(() => {
+    for (const j of [openIdx - 1, openIdx + 1]) {
+      const neighbour = photos[j]
+      if (neighbour) {
+        const img = new Image()
+        img.src = fullUrl(neighbour.public_id)
+      }
+    }
+  }, [openIdx, photos])
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') onNext()
@@ -155,7 +167,15 @@ function Lightbox({
         transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
         onClick={e => e.stopPropagation()}
       >
-        <img src={fullUrl(current.public_id)} alt={uploaderName ? `Photo by ${uploaderName}` : 'Photo'} className="lb-img" />
+        <img
+          src={fullUrl(current.public_id)}
+          srcSet={fullSrcSet(current.public_id)}
+          sizes={LIGHTBOX_SIZES}
+          width={current.width}
+          height={current.height}
+          alt={uploaderName ? `Photo by ${uploaderName}` : 'Photo'}
+          className="lb-img"
+        />
         {uploaderName && (
           <div className="lb-uploader">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
