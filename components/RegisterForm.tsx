@@ -32,6 +32,9 @@ export function RegisterForm() {
   const [agreed, setAgreed]       = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]         = useState('')
+  // Honeypot — real users never see or fill this; bots that auto-fill every
+  // field will populate it, letting the server reject them silently.
+  const [hp, setHp]               = useState('')
 
   const [form, setForm] = useState<FormData>({
     first_name: '', surname: '', email: '', mobile: '',
@@ -54,7 +57,7 @@ export function RegisterForm() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, company: hp }),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? 'Registration failed')
@@ -162,6 +165,18 @@ export function RegisterForm() {
       )}
 
       <form onSubmit={handleSubmit} className="reg-form" noValidate>
+
+        {/* Honeypot: hidden from users, attractive to bots. */}
+        <input
+          type="text"
+          name="company"
+          value={hp}
+          onChange={e => setHp(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+        />
 
         {/* Name */}
         <div className="reg-row">

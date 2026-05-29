@@ -14,9 +14,15 @@ export async function POST(request: Request) {
   }
 
   const { registration_id, total_amount, notes } = await request.json()
-  if (!registration_id || !total_amount) {
+  if (!registration_id || typeof registration_id !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
   }
+  // Reject NaN / negative / absurd totals (pence; cap at £100,000).
+  const amount = Math.round(Number(total_amount))
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 10_000_000) {
+    return NextResponse.json({ error: 'Invalid total amount' }, { status: 400 })
+  }
+  const safeNotes = typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 1000) : null
 
   const service = createServiceClient()
 
@@ -35,8 +41,8 @@ export async function POST(request: Request) {
     const { data, error } = await service
       .from('payment_plans')
       .update({
-        total_amount: Math.round(total_amount),
-        notes: notes?.trim() || null,
+        total_amount: amount,
+        notes: safeNotes,
         allocated_by: user.email,
         allocated_at: new Date().toISOString(),
       })
@@ -51,8 +57,8 @@ export async function POST(request: Request) {
       .from('payment_plans')
       .insert({
         registration_id,
-        total_amount: Math.round(total_amount),
-        notes: notes?.trim() || null,
+        total_amount: amount,
+        notes: safeNotes,
         allocated_by: user.email,
       })
       .select('id')
@@ -87,7 +93,7 @@ export async function POST(request: Request) {
     await sendEmail(
       reg.email,
       'Your SharkFest 2028 payment plan is ready',
-      emailPlanAllocated(reg, { total_amount: Math.round(total_amount), notes: notes?.trim() || null }, getOrigin())
+      emailPlanAllocated(reg, { total_amount: amount, notes: safeNotes }, getOrigin())
     )
   }
 
