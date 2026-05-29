@@ -1,18 +1,38 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, getOrigin, getAdminEmails } from '@/lib/email'
+import { rateLimit, clientIp } from '@/lib/rate-limit'
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: Request) {
   try {
+    // Public endpoint that writes to the DB and sends email — throttle abuse.
+    const limit = rateLimit(`register:${clientIp(request)}`, 5, 10 * 60_000)
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: 'Too many attempts — please wait a few minutes and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+      )
+    }
+
     const body = await request.json()
     const {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
-      vehicle_reg, notes,
+      vehicle_reg, notes, company,
     } = body
+
+    // Honeypot: a filled hidden field means a bot. Pretend success, write nothing.
+    if (typeof company === 'string' && company.trim() !== '') {
+      return NextResponse.json({ id: 'ok' })
+    }
 
     if (!first_name?.trim() || !surname?.trim() || !email?.trim() || !mobile?.trim()) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    if (!EMAIL_RE.test(email.trim()) || email.trim().length > 254) {
+      return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 })
     }
     if (!['Tent', 'Caravan', 'Mobile Home', 'Campervan'].includes(accommodation)) {
       return NextResponse.json({ error: 'Invalid accommodation type' }, { status: 400 })
@@ -20,23 +40,26 @@ export async function POST(request: Request) {
 
     const service = createServiceClient()
 
-    const parsedAdults = Math.max(1, parseInt(adults) || 1)
-    const parsedKids   = Math.max(0, parseInt(kids)   || 0)
+    // Clamp counts and cap free-text so a single request can't store absurd values.
+    const parsedAdults = Math.min(20, Math.max(1, parseInt(adults) || 1))
+    const parsedKids   = Math.min(20, Math.max(0, parseInt(kids)   || 0))
     const parsedHookup = Boolean(electric_hookup)
+    const cap = (v: unknown, n: number) =>
+      typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null
 
     const { data, error } = await service
       .from('registrations')
       .insert({
-        first_name: first_name.trim(),
-        surname: surname.trim(),
-        email: email.trim().toLowerCase(),
-        mobile: mobile.trim(),
+        first_name: first_name.trim().slice(0, 100),
+        surname: surname.trim().slice(0, 100),
+        email: email.trim().toLowerCase().slice(0, 254),
+        mobile: mobile.trim().slice(0, 30),
         adults: parsedAdults,
         kids: parsedKids,
         accommodation,
         electric_hookup: parsedHookup,
-        vehicle_reg: vehicle_reg?.trim() || null,
-        notes: notes?.trim() || null,
+        vehicle_reg: cap(vehicle_reg, 16),
+        notes: cap(notes, 1000),
         year: 2028,
         status: 'pending',
       })

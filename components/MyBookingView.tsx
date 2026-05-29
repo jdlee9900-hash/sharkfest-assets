@@ -13,6 +13,17 @@ interface Props {
   payments: Payment[]
 }
 
+// Only ever hand the browser off to a genuine Stripe Checkout URL, even though
+// the URL comes from our own API — defends against a tampered/unexpected response.
+function redirectToStripe(url: unknown) {
+  if (typeof url !== 'string') throw new Error('Payment setup failed')
+  const parsed = new URL(url)
+  if (parsed.protocol !== 'https:' || !/(^|\.)stripe\.com$/.test(parsed.hostname)) {
+    throw new Error('Payment setup failed')
+  }
+  window.location.href = url
+}
+
 const STATUS_COLORS: Record<string, string> = {
   pending:   'var(--gold-400)',
   confirmed: '#22c55e',
@@ -48,7 +59,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? 'Payment setup failed')
-      window.location.href = body.url
+      redirectToStripe(body.url)
     } catch (err) {
       setPayError(err instanceof Error ? err.message : 'Something went wrong')
       setPaying(null)
@@ -68,7 +79,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? 'Payment setup failed')
-      window.location.href = body.url
+      redirectToStripe(body.url)
     } catch (err) {
       setPayError(err instanceof Error ? err.message : 'Something went wrong')
       setPaying(null)

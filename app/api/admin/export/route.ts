@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
+
+// Build a worksheet from an array of plain row objects (keys become headers).
+function addSheet(wb: ExcelJS.Workbook, name: string, rows: Record<string, string | number>[]) {
+  const ws = wb.addWorksheet(name)
+  if (rows.length === 0) return
+  const headers = Object.keys(rows[0])
+  ws.columns = headers.map(h => ({ header: h, key: h }))
+  ws.addRows(rows)
+}
 
 function fmtDate(iso: string | null): string {
   if (!iso) return ''
@@ -119,11 +128,11 @@ export async function GET(request: Request) {
     }
   })
 
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(bookingRows),  'Bookings')
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(paymentRows),  'Payments')
+  const wb = new ExcelJS.Workbook()
+  addSheet(wb, 'Bookings', bookingRows)
+  addSheet(wb, 'Payments', paymentRows)
 
-  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
+  const buf = await wb.xlsx.writeBuffer()
 
   return new Response(buf, {
     headers: {

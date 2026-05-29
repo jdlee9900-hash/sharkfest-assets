@@ -22,6 +22,7 @@ export function SharkPhotoGrid({ photos, view = 'grid', className }: SharkPhotoG
     a.href = photo.src
     a.download = photo.filename ?? photo.alt
     a.target = '_blank'
+    a.rel = 'noopener noreferrer'
     a.click()
   }
 

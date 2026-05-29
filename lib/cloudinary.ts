@@ -24,9 +24,31 @@ export function thumbUrl(publicId: string, w = 400) {
   return `https://res.cloudinary.com/${CLOUD}/image/upload/w_${w},c_limit,f_auto,q_auto:eco/${publicId}`
 }
 
-export function fullUrl(publicId: string) {
-  return `https://res.cloudinary.com/${CLOUD}/image/upload/w_1920,c_limit,f_auto,q_auto/${publicId}`
+export function fullUrl(publicId: string, w = 1920) {
+  return `https://res.cloudinary.com/${CLOUD}/image/upload/w_${w},c_limit,f_auto,q_auto/${publicId}`
 }
+
+// Candidate widths (px) for responsive `srcset`. The browser picks the best
+// one for the device's viewport and pixel-density, so a 390px phone no longer
+// downloads a 1920px image, and a 2× display still gets a crisp thumbnail.
+const THUMB_WIDTHS = [200, 400, 600, 800, 1200]
+const FULL_WIDTHS  = [640, 960, 1280, 1600, 1920]
+
+/** `srcset` of eco-quality thumbnails for masonry grid `<img>`. */
+export function thumbSrcSet(publicId: string): string {
+  return THUMB_WIDTHS.map(w => `${thumbUrl(publicId, w)} ${w}w`).join(', ')
+}
+
+/** `srcset` of full-quality images for the lightbox `<img>`. */
+export function fullSrcSet(publicId: string): string {
+  return FULL_WIDTHS.map(w => `${fullUrl(publicId, w)} ${w}w`).join(', ')
+}
+
+// `sizes` hints matching the layouts in globals.css.
+// Masonry columns: 1 ≤480px, 2 ≤768px, 3 ≤1200px, else ~4 cols of a 1400px max.
+export const GRID_SIZES = '(max-width: 480px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 350px'
+// Lightbox: max-width min(90vw, 1280px).
+export const LIGHTBOX_SIZES = '(max-width: 1422px) 90vw, 1280px'
 
 /**
  * Extracts a Date from common Android camera filename patterns.
@@ -124,13 +146,13 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
   try {
     const r = await collectPages<CloudinaryAsset>({ ...base, prefix: `${folder}/` })
     if (r.length > 0) return r
-  } catch { /* try next */ }
+  } catch (err) { console.warn(`[cloudinary] prefix "${folder}/" failed:`, err instanceof Error ? err.message : err) }
 
   // Fallback without trailing slash
   try {
     const r = await collectPages<CloudinaryAsset>({ ...base, prefix: folder })
     if (r.length > 0) return r
-  } catch { /* try next */ }
+  } catch (err) { console.warn(`[cloudinary] prefix "${folder}" failed:`, err instanceof Error ? err.message : err) }
 
   // Fallback: Cloudinary Search API — finds assets regardless of delivery type
   try {
@@ -151,7 +173,8 @@ export async function getFolder(folder: string, opts: { context?: boolean } = {}
         return resources.sort((a, b) => photoTakenAt(a).getTime() - photoTakenAt(b).getTime())
       }
     }
-  } catch { /* ignore */ }
+  } catch (err) { console.warn(`[cloudinary] search for folder "${folder}" failed:`, err instanceof Error ? err.message : err) }
 
+  console.warn(`[cloudinary] no assets found for folder "${folder}" via any strategy`)
   return []
 }
