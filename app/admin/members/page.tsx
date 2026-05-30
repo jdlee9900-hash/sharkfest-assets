@@ -1,5 +1,3 @@
-import Image from 'next/image'
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -25,33 +23,21 @@ export default async function AdminMembersPage() {
   const active = members.filter(m => m.status === 'active' || m.status === 'past_due')
 
   return (
-    <>
-      <header className="rc-header">
-        <Link href="/" className="rc-header-logo" aria-label="Back to SharkFest">
-          <Image src="/logo.png" alt="Torbay Sharks RFC" width={36} height={36} />
-          <span>SharkFest</span>
-        </Link>
-        <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/admin">Registrations</Link>
-          <Link href="/admin/events">Events</Link>
-          <Link href="/">Home</Link>
-        </nav>
-      </header>
+    <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div>
+        <h1 className="mb-title">Members</h1>
+        <p className="mb-email">{active.length} active · {members.length} total</p>
+      </div>
 
-      <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div>
-          <h1 className="mb-title">Members</h1>
-          <p className="mb-email">{active.length} active · {members.length} total</p>
-        </div>
+      <AdminCompMembership />
 
-        <AdminCompMembership />
-
-        {/* ── Member list ───────────────────────────────────────────────── */}
-        <div className="mb-card">
-          <h2 className="mb-card-title" style={{ marginBottom: '1rem' }}>Member list</h2>
-          {members.length === 0 ? (
-            <p style={{ color: 'var(--grey-400)', fontSize: '0.9375rem' }}>No members yet.</p>
-          ) : (
+      {/* ── Member list ───────────────────────────────────────────────── */}
+      <div className="mb-card">
+        <h2 className="mb-card-title" style={{ marginBottom: '1rem' }}>Member list</h2>
+        {members.length === 0 ? (
+          <p style={{ color: 'var(--grey-400)', fontSize: '0.9375rem' }}>No members yet.</p>
+        ) : (
+          <div className="mb-table-scroll">
             <table className="mb-pay-table">
               <thead><tr><th>Email</th><th>Plan</th><th>Status</th><th>Renews</th></tr></thead>
               <tbody>
@@ -65,9 +51,9 @@ export default async function AdminMembersPage() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-      </main>
-    </>
+          </div>
+        )}
+      </div>
+    </main>
   )
 }

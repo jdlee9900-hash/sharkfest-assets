@@ -1,5 +1,3 @@
-import Image from 'next/image'
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -39,28 +37,13 @@ export default async function AdminPage() {
   }
 
   return (
-    <>
-      <header className="rc-header">
-        <Link href="/" className="rc-header-logo" aria-label="Back to SharkFest">
-          <Image src="/logo.png" alt="Torbay Sharks RFC" width={36} height={36} />
-          <span>SharkFest</span>
-        </Link>
-        <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/admin/members">Members</Link>
-          <Link href="/admin/events">Events</Link>
-          <Link href="/">Home</Link>
-          <Link href="/register">Register 2028</Link>
-        </nav>
-      </header>
-
-      <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1400px', margin: '0 auto' }}>
-        <AdminDashboard
-          registrations={regResult.data ?? []}
-          totalDue={totalDue}
-          totalReceived={totalReceived}
-          paymentSummaries={paymentSummaries}
-        />
-      </main>
-    </>
+    <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1400px', margin: '0 auto' }}>
+      <AdminDashboard
+        registrations={regResult.data ?? []}
+        totalDue={totalDue}
+        totalReceived={totalReceived}
+        paymentSummaries={paymentSummaries}
+      />
+    </main>
   )
 }

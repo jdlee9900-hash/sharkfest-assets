@@ -1,5 +1,3 @@
-import Image from 'next/image'
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -35,48 +33,34 @@ export default async function AdminEventsPage() {
   }
 
   return (
-    <>
-      <header className="rc-header">
-        <Link href="/" className="rc-header-logo" aria-label="Back to SharkFest">
-          <Image src="/logo.png" alt="Torbay Sharks RFC" width={36} height={36} />
-          <span>SharkFest</span>
-        </Link>
-        <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/admin">Registrations</Link>
-          <Link href="/admin/members">Members</Link>
-          <Link href="/">Home</Link>
-        </nav>
-      </header>
+    <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div>
+        <h1 className="mb-title">Events</h1>
+        <p className="mb-email">{eventPosts.length} event{eventPosts.length !== 1 ? 's' : ''} · {newsPosts.length} news post{newsPosts.length !== 1 ? 's' : ''}</p>
+      </div>
 
-      <main style={{ padding: '2rem 1rem 4rem', maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div>
-          <h1 className="mb-title">Events</h1>
-          <p className="mb-email">{eventPosts.length} event{eventPosts.length !== 1 ? 's' : ''} · {newsPosts.length} news post{newsPosts.length !== 1 ? 's' : ''}</p>
-        </div>
+      {/* ── Exclusive content ─────────────────────────────────────────── */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <h2 className="mb-title" style={{ fontSize: '1.25rem' }}>Exclusive content</h2>
+        <AdminMemberContent kind="news" posts={newsPosts} />
+      </section>
 
-        {/* ── Exclusive content ─────────────────────────────────────────── */}
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h2 className="mb-title" style={{ fontSize: '1.25rem' }}>Exclusive content</h2>
-          <AdminMemberContent kind="news" posts={newsPosts} />
-        </section>
+      {/* ── Member events ─────────────────────────────────────────────── */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <h2 className="mb-title" style={{ fontSize: '1.25rem' }}>Member events</h2>
+        <AdminMemberContent kind="event" posts={eventPosts} />
 
-        {/* ── Member events ─────────────────────────────────────────────── */}
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h2 className="mb-title" style={{ fontSize: '1.25rem' }}>Member events</h2>
-          <AdminMemberContent kind="event" posts={eventPosts} />
-
-          {eventPosts.length > 0 && (
-            <div className="mb-card">
-              <h3 className="mb-card-title" style={{ marginBottom: '1rem' }}>Who&apos;s interested</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {eventPosts.map(p => (
-                  <AdminEventRsvps key={p.id} title={p.title} rsvps={rsvpsByEvent.get(p.id) ?? []} />
-                ))}
-              </div>
+        {eventPosts.length > 0 && (
+          <div className="mb-card">
+            <h3 className="mb-card-title" style={{ marginBottom: '1rem' }}>Who&apos;s interested</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {eventPosts.map(p => (
+                <AdminEventRsvps key={p.id} title={p.title} rsvps={rsvpsByEvent.get(p.id) ?? []} />
+              ))}
             </div>
-          )}
-        </section>
-      </main>
-    </>
+          </div>
+        )}
+      </section>
+    </main>
   )
 }
