@@ -6,6 +6,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 import type { Membership } from '@/lib/types'
 import { AdminMemberPosts } from '@/components/AdminMemberPosts'
+import { AdminCompMembership } from '@/components/AdminCompMembership'
 
 export const metadata: Metadata = { title: 'Members · Admin · SharkFest' }
 export const dynamic = 'force-dynamic'
@@ -44,6 +45,8 @@ export default async function AdminMembersPage() {
           <p className="mb-email">{active.length} active · {members.length} total</p>
         </div>
 
+        <AdminCompMembership />
+
         <AdminMemberPosts />
 
         <div className="mb-card">
@@ -78,7 +81,7 @@ export default async function AdminMembersPage() {
                 {members.map(m => (
                   <tr key={m.id}>
                     <td>{m.email}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{m.plan}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{m.plan}{m.stripe_customer_id === 'comp' ? ' · comp' : ''}</td>
                     <td style={{ textTransform: 'capitalize' }}>{m.status.replace('_', ' ')}</td>
                     <td>{m.current_period_end ? new Date(m.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
                   </tr>
