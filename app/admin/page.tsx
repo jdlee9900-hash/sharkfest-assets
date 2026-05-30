@@ -47,6 +47,7 @@ export default async function AdminPage() {
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/admin/members">Members</Link>
+          <Link href="/admin/events">Events</Link>
           <Link href="/">Home</Link>
           <Link href="/register">Register 2028</Link>
         </nav>
