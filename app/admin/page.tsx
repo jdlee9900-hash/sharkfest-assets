@@ -46,6 +46,7 @@ export default async function AdminPage() {
           <span>SharkFest</span>
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
+          <Link href="/admin/members">Members</Link>
           <Link href="/">Home</Link>
           <Link href="/register">Register 2028</Link>
         </nav>
