@@ -78,7 +78,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           <h1 className="members-title">Welcome back{card.name ? `, ${card.name.split(' ')[0]}` : ''}</h1>
           <p className="members-email">{email}</p>
         </div>
-        <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
+        <button className="mb-signout" onClick={handleSignOut}>Log out</button>
       </div>
 
       {justJoined && (
