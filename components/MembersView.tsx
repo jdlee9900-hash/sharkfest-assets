@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
 
 function redirectToStripe(url: unknown) {
@@ -16,6 +17,7 @@ function redirectToStripe(url: unknown) {
 export interface FeedPost {
   id: string
   title: string
+  summary: string | null
   body: string
   coverUrl: string | null
   event_at: string | null

@@ -77,9 +77,11 @@ export interface MemberPost {
   id: string
   kind: MemberPostKind
   title: string
+  summary: string | null
   body: string
   cover_public_id: string | null
   event_at: string | null
+  event_end: string | null
   location: string | null
   published: boolean
   author: string | null
