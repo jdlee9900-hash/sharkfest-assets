@@ -30,9 +30,16 @@ const RELIVE = [
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const isMember = user ? await isActiveMember(user.id) : false
+  // The landing page is public — never let an auth/membership lookup failure
+  // (e.g. a missing service key or transient DB error) crash the whole site.
+  let isMember = false
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    isMember = user ? await isActiveMember(user.id) : false
+  } catch (err) {
+    console.error('[home] membership check failed:', err)
+  }
 
   return (
     <>
