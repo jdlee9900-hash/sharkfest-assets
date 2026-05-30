@@ -151,7 +151,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
         ) : (
           <div className="members-events">
             {events.map(e => (
-              <div className="members-event" key={e.id}>
+              <Link href={`/members/events/${e.id}`} className="members-event" key={e.id}>
                 <div className="members-event-date" aria-hidden="true">
                   {e.event_at
                     ? new Date(e.event_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
@@ -163,9 +163,10 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
                     {e.event_at && new Date(e.event_at).toLocaleString('en-GB', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
                     {e.location ? ` · ${e.location}` : ''}
                   </p>
-                  {e.body && <p className="members-event-text">{e.body}</p>}
+                  {(e.summary ?? e.body) && <p className="members-event-text">{e.summary ?? e.body}</p>}
                 </div>
-              </div>
+                <span className="members-event-go" aria-hidden="true">→</span>
+              </Link>
             ))}
           </div>
         )}
