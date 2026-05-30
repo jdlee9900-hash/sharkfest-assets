@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Registration } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
@@ -141,6 +142,7 @@ export function AdminDashboard({
               XLSX
             </a>
           </div>
+          <Link href="/admin/members" className="btn btn-accent">Manage members</Link>
           <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
         </div>
       </div>

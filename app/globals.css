@@ -1635,3 +1635,14 @@ body::after {
 .rsvp-pill { font-size: 0.78rem; font-weight: 600; padding: 0.18rem 0.6rem; border-radius: 999px; background: var(--grey-100, #f1f5f9); color: var(--grey-600, #475569); white-space: nowrap; }
 .rsvp-pill--going { background: #dcfce7; color: #166534; }
 .rsvp-pill--no { background: #f1f5f9; color: #64748b; }
+
+/* ── Admin member content: image upload + row actions ──────────────────── */
+.mc-image { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.mc-image-preview { width: 160px; height: 100px; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--grey-200, #e2e8f0); }
+.mc-image-empty { width: 160px; height: 100px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); border: 1px dashed var(--grey-300, #cbd5e1); color: var(--grey-400, #94a3b8); font-size: 0.85rem; background: var(--grey-50, #f8fafc); }
+.mc-image-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.mc-link { background: none; border: none; padding: 0 0.5rem; color: var(--gold-600, #b45309); font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+.mc-link:hover { text-decoration: underline; }
+.mc-link-danger { background: none; border: none; padding: 0 0.5rem; color: #dc2626; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+.mc-link-danger:hover { text-decoration: underline; }
+.mc-link-danger:disabled { opacity: 0.5; cursor: default; }
