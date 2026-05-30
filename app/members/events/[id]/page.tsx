@@ -5,8 +5,9 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getActiveMembership } from '@/lib/membership'
 import { adminEmails } from '@/lib/types'
-import type { MemberPost } from '@/lib/types'
+import type { MemberPost, EventRsvp as EventRsvpRow } from '@/lib/types'
 import { fullUrl } from '@/lib/cloudinary'
+import { EventRsvp } from '@/components/EventRsvp'
 
 export const metadata: Metadata = { title: 'Member event · SharkFest' }
 export const dynamic = 'force-dynamic'
@@ -51,6 +52,12 @@ export default async function MemberEventPage({ params }: { params: Promise<{ id
   if (!event.published && !isAdmin) notFound()
 
   const cover = event.cover_public_id ? fullUrl(event.cover_public_id) : null
+
+  // This member's existing RSVP (if any), so the form opens pre-filled.
+  const { data: rsvpData } = membership
+    ? await service.from('event_rsvps').select('*').eq('event_id', id).eq('user_id', user.id).maybeSingle()
+    : { data: null }
+  const rsvp = rsvpData as EventRsvpRow | null
 
   return (
     <>
@@ -105,6 +112,22 @@ export default async function MemberEventPage({ params }: { params: Promise<{ id
                 <p key={i}>{para}</p>
               ))}
             </div>
+          )}
+
+          {membership && event.published && (
+            <EventRsvp
+              eventId={event.id}
+              initial={{
+                response: rsvp?.response ?? null,
+                adults: rsvp?.adults ?? 1,
+                kids: rsvp?.kids ?? 0,
+                note: rsvp?.note ?? '',
+              }}
+            />
+          )}
+
+          {isAdmin && !membership && (
+            <p className="event-admin-note">RSVP is shown to members here. View responses in the admin members area.</p>
           )}
         </article>
       </main>

@@ -5,8 +5,10 @@ import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 import type { Membership } from '@/lib/types'
+import type { EventRsvp } from '@/lib/types'
 import { AdminMemberPosts } from '@/components/AdminMemberPosts'
 import { AdminCompMembership } from '@/components/AdminCompMembership'
+import { AdminEventRsvps } from '@/components/AdminEventRsvps'
 
 export const metadata: Metadata = { title: 'Members · Admin · SharkFest' }
 export const dynamic = 'force-dynamic'
@@ -31,15 +33,25 @@ export default async function AdminMembersPage() {
   if (!adminEmails().includes(user.email ?? '')) redirect('/')
 
   const service = createServiceClient()
-  const [memRes, postRes] = await Promise.all([
+  const [memRes, postRes, rsvpRes] = await Promise.all([
     service.from('memberships').select('*').order('created_at', { ascending: false }),
     service.from('member_posts').select('id, kind, title, published, created_at, event_at, location').order('created_at', { ascending: false }).limit(50),
+    service.from('event_rsvps').select('*').order('updated_at', { ascending: false }),
   ])
   const members = (memRes.data ?? []) as Membership[]
   const active = members.filter(m => m.status === 'active' || m.status === 'past_due')
   const posts = (postRes.data ?? []) as PostRow[]
   const newsPosts = posts.filter(p => p.kind === 'news')
   const eventPosts = posts.filter(p => p.kind === 'event')
+
+  // Group RSVPs by event so each event shows its own interest list.
+  const rsvps = (rsvpRes.data ?? []) as EventRsvp[]
+  const rsvpsByEvent = new Map<string, EventRsvp[]>()
+  for (const r of rsvps) {
+    const arr = rsvpsByEvent.get(r.event_id) ?? []
+    arr.push(r)
+    rsvpsByEvent.set(r.event_id, arr)
+  }
 
   return (
     <>
@@ -112,6 +124,17 @@ export default async function AdminMembersPage() {
               </table>
             )}
           </div>
+
+          {eventPosts.length > 0 && (
+            <div className="mb-card">
+              <h3 className="mb-card-title" style={{ marginBottom: '1rem' }}>Who&apos;s interested</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {eventPosts.map(p => (
+                  <AdminEventRsvps key={p.id} title={p.title} rsvps={rsvpsByEvent.get(p.id) ?? []} />
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* ── Member list ───────────────────────────────────────────────── */}
