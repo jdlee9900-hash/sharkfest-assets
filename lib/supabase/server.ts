@@ -11,9 +11,16 @@ export async function createClient() {
       cookies: {
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // `setAll` is called when Supabase refreshes the auth token. In a
+            // Server Component render, writing cookies throws — this is safe to
+            // ignore because the middleware refreshes the session on protected
+            // routes. Without this guard the whole page render crashes.
+          }
         },
       },
     }

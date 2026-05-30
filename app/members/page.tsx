@@ -44,6 +44,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   const toFeed = (p: MemberPost): FeedPost => ({
     id: p.id,
     title: p.title,
+    summary: p.summary,
     body: p.body,
     coverUrl: p.cover_public_id ? thumbUrl(p.cover_public_id, 800) : null,
     event_at: p.event_at,

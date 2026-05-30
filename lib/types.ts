@@ -57,6 +57,21 @@ export interface Payment {
 export type MemberPlan = 'monthly' | 'annual'
 export type MembershipStatus = 'active' | 'past_due' | 'canceled' | 'incomplete'
 export type MemberPostKind = 'news' | 'event'
+export type RsvpResponse = 'going' | 'not_going'
+
+export interface EventRsvp {
+  id: string
+  event_id: string
+  user_id: string
+  email: string
+  name: string | null
+  response: RsvpResponse
+  adults: number
+  kids: number
+  note: string | null
+  created_at: string
+  updated_at: string
+}
 
 export interface Membership {
   id: string
@@ -77,9 +92,11 @@ export interface MemberPost {
   id: string
   kind: MemberPostKind
   title: string
+  summary: string | null
   body: string
   cover_public_id: string | null
   event_at: string | null
+  event_end: string | null
   location: string | null
   published: boolean
   author: string | null

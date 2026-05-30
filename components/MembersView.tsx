@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
 
 function redirectToStripe(url: unknown) {
@@ -16,6 +17,7 @@ function redirectToStripe(url: unknown) {
 export interface FeedPost {
   id: string
   title: string
+  summary: string | null
   body: string
   coverUrl: string | null
   event_at: string | null
@@ -78,7 +80,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           <h1 className="members-title">Welcome back{card.name ? `, ${card.name.split(' ')[0]}` : ''}</h1>
           <p className="members-email">{email}</p>
         </div>
-        <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
+        <button className="mb-signout" onClick={handleSignOut}>Log out</button>
       </div>
 
       {justJoined && (
@@ -149,7 +151,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
         ) : (
           <div className="members-events">
             {events.map(e => (
-              <div className="members-event" key={e.id}>
+              <Link href={`/members/events/${e.id}`} className="members-event" key={e.id}>
                 <div className="members-event-date" aria-hidden="true">
                   {e.event_at
                     ? new Date(e.event_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
@@ -161,9 +163,10 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
                     {e.event_at && new Date(e.event_at).toLocaleString('en-GB', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
                     {e.location ? ` · ${e.location}` : ''}
                   </p>
-                  {e.body && <p className="members-event-text">{e.body}</p>}
+                  {(e.summary ?? e.body) && <p className="members-event-text">{e.summary ?? e.body}</p>}
                 </div>
-              </div>
+                <span className="members-event-go" aria-hidden="true">→</span>
+              </Link>
             ))}
           </div>
         )}

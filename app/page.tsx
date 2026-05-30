@@ -1,5 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { isActiveMember } from '@/lib/membership'
 import { CountdownTimer }   from '@/components/CountdownTimer'
 import { OceanCanvas }      from '@/components/OceanCanvas'
 import { Marquee }           from '@/components/Marquee'
@@ -25,7 +27,20 @@ const RELIVE = [
   { num: '03', icon: '📝', tag: 'Recap',        title: 'Read the wrap-up',        body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.', href: null },
 ]
 
-export default function Page() {
+export const dynamic = 'force-dynamic'
+
+export default async function Page() {
+  // The landing page is public — never let an auth/membership lookup failure
+  // (e.g. a missing service key or transient DB error) crash the whole site.
+  let isMember = false
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    isMember = user ? await isActiveMember(user.id) : false
+  } catch (err) {
+    console.error('[home] membership check failed:', err)
+  }
+
   return (
     <>
       {/* ══════════════════ HERO ══════════════════ */}
@@ -45,6 +60,12 @@ export default function Page() {
           <CountdownTimer />
 
           <div className="hero-cta">
+            {isMember && (
+              <Link href="/members" className="btn btn-accent">
+                Access Membership
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </Link>
+            )}
             <a href="#2026" className="btn btn-outline">
               Relive 2026
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
