@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
-      vehicle_reg, notes, company, year,
+      vehicle_reg, notes, company, year, camp_near,
     } = body
 
     // Resolve which festival this registration is for. Unknown/missing years
@@ -74,6 +74,25 @@ export async function POST(request: Request) {
     const cap = (v: unknown, n: number) =>
       typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null
 
+    // "Camp near" — up to two existing registrations for the same event. Validate
+    // the ids really exist for this year before storing, and never trust order/count.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const requested = Array.isArray(camp_near)
+      ? [...new Set(camp_near.filter((v: unknown): v is string => typeof v === 'string' && UUID_RE.test(v)))].slice(0, 2)
+      : []
+    let campNear1: string | null = null
+    let campNear2: string | null = null
+    if (requested.length > 0) {
+      const { data: matches } = await service
+        .from('registrations')
+        .select('id')
+        .eq('year', event.year)
+        .in('id', requested)
+      const valid = requested.filter(id => (matches ?? []).some(m => m.id === id))
+      campNear1 = valid[0] ?? null
+      campNear2 = valid[1] ?? null
+    }
+
     const { data, error } = await service
       .from('registrations')
       .insert({
@@ -89,6 +108,10 @@ export async function POST(request: Request) {
         notes: cap(notes, 1000),
         year: event.year,
         status: 'pending',
+        // Only sent when chosen, so registrations without a pick keep working
+        // even before the camp_near migration (0004) is applied.
+        ...(campNear1 ? { camp_near_1: campNear1 } : {}),
+        ...(campNear2 ? { camp_near_2: campNear2 } : {}),
         ...(userId ? { user_id: userId } : {}),
       })
       .select('id, email, first_name, surname, mobile, adults, kids, accommodation, electric_hookup')

@@ -59,6 +59,13 @@ export function AdminDashboard({
     return list
   }, [registrations, filterStatus, search])
 
+  // Resolve a "camp near" registration id to a display name for the detail view.
+  const nameById = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const r of registrations) m.set(r.id, `${r.first_name} ${r.surname}`.trim())
+    return m
+  }, [registrations])
+
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: registrations.length }
     for (const r of registrations) c[r.status] = (c[r.status] ?? 0) + 1
@@ -279,6 +286,14 @@ export function AdminDashboard({
                         <dl className="mb-detail-grid">
                           <div><dt>Mobile</dt><dd>{r.mobile}</dd></div>
                           {r.vehicle_reg && <div><dt>Vehicle</dt><dd>{r.vehicle_reg}</dd></div>}
+                          {(() => {
+                            const near = [r.camp_near_1, r.camp_near_2]
+                              .filter((id): id is string => !!id)
+                              .map(id => nameById.get(id) ?? 'Unknown')
+                            return near.length > 0 ? (
+                              <div><dt>Camp near</dt><dd>{near.join(', ')}</dd></div>
+                            ) : null
+                          })()}
                           {r.notes && <div className="mb-full"><dt>Notes</dt><dd>{r.notes}</dd></div>}
                         </dl>
                       </div>

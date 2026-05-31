@@ -45,6 +45,7 @@ export async function GET(request: Request) {
   const payments      = payRes.data ?? []
 
   // Index plans and payments by registration_id for O(1) lookups
+  const nameByRegId = new Map(registrations.map(r => [r.id, `${r.first_name} ${r.surname}`.trim()]))
   const planByReg = new Map(plans.map(p => [p.registration_id, p]))
   const paysByReg = new Map<string, typeof payments>()
   for (const p of payments) {
@@ -74,6 +75,8 @@ export async function GET(request: Request) {
       'Kids':              r.kids,
       'Accommodation':     r.accommodation,
       'Electric Hookup':   r.electric_hookup ? 'Yes' : 'No',
+      'Camp Near 1':       r.camp_near_1 ? (nameByRegId.get(r.camp_near_1) ?? '') : '',
+      'Camp Near 2':       r.camp_near_2 ? (nameByRegId.get(r.camp_near_2) ?? '') : '',
       'Vehicle Reg':       r.vehicle_reg ?? '',
       'Notes':             r.notes ?? '',
       'Status':            r.status,
