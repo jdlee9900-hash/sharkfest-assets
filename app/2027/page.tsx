@@ -96,6 +96,14 @@ export default function Festival2027Page() {
             A quarter of a century of the festival we love — celebrated in glistening
             silver. Three nights of music, dancing and one very special anniversary party.
           </p>
+
+          <div className="f27-hero-cta">
+            <Link href="/register?year=2027" className="f27-btn f27-btn--silver">
+              Register your pitch
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <a href="#weekend" className="f27-btn f27-btn--ghost">See the weekend</a>
+          </div>
         </div>
 
         <div className="f27-wave" aria-hidden="true">
@@ -106,7 +114,7 @@ export default function Festival2027Page() {
       </section>
 
       {/* ── The Weekend ─────────────────────────── */}
-      <section className="f27-weekend">
+      <section className="f27-weekend" id="weekend">
         <div className="f27-inner">
           <ScrollReveal>
             <div className="f27-section-label">
@@ -164,6 +172,28 @@ export default function Festival2027Page() {
               <span className="f27-pill f27-pill--lg">💿 Metallics</span>
               <span className="f27-pill f27-pill--lg">🌟 Glitter</span>
             </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ── Register ────────────────────────────── */}
+      <section className="f27-register">
+        <div className="f27-sparkles" aria-hidden="true" />
+        <div className="f27-inner f27-register-inner">
+          <ScrollReveal>
+            <p className="f27-dress-eyebrow">Be there for the silver one</p>
+            <h2 className="f27-register-title">Register for SharkFest 2027</h2>
+            <p className="f27-register-body">
+              Reserve your pitch for the 25th Anniversary weekend. Tell us your party size
+              and accommodation, and we&apos;ll be in touch with pricing and your payment plan.
+            </p>
+            <Link href="/register?year=2027" className="f27-btn f27-btn--silver f27-btn--lg">
+              Register your pitch
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <p className="f27-register-note">
+              Already registered? <Link href="/login?next=/my-booking" className="f27-register-link">Sign in to your booking</Link>
+            </p>
           </ScrollReveal>
         </div>
       </section>

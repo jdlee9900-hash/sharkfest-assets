@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, getOrigin, getAdminEmails } from '@/lib/email'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { getEvent } from '@/lib/events'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -20,8 +21,12 @@ export async function POST(request: Request) {
     const {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
-      vehicle_reg, notes, company,
+      vehicle_reg, notes, company, year,
     } = body
+
+    // Resolve which festival this registration is for. Unknown/missing years
+    // fall back to the default event, so older clients keep working.
+    const event = getEvent(year)
 
     // Honeypot: a filled hidden field means a bot. Pretend success, write nothing.
     if (typeof company === 'string' && company.trim() !== '') {
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
         electric_hookup: parsedHookup,
         vehicle_reg: cap(vehicle_reg, 16),
         notes: cap(notes, 1000),
-        year: 2028,
+        year: event.year,
         status: 'pending',
       })
       .select('id, email, first_name, surname, mobile, adults, kids, accommodation, electric_hookup')
@@ -74,9 +79,9 @@ export async function POST(request: Request) {
     // Await emails before returning so the serverless function doesn't
     // terminate before the SMTP handshake completes.
     await Promise.allSettled([
-      sendEmail(data.email, 'SharkFest 2028 — Registration received', emailRegistrationUser(data, origin)),
+      sendEmail(data.email, `${event.name} — Registration received`, emailRegistrationUser(data, origin, event)),
       ...admins.map(to =>
-        sendEmail(to, `New registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin(data, origin))
+        sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin(data, origin, event))
       ),
     ])
 

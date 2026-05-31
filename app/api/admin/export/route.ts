@@ -65,6 +65,7 @@ export async function GET(request: Request) {
 
     return {
       'Registration ID':   r.id,
+      'Event Year':        r.year,
       'First Name':        r.first_name,
       'Surname':           r.surname,
       'Email':             r.email,

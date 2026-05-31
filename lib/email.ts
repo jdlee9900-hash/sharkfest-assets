@@ -1,4 +1,9 @@
 import nodemailer from 'nodemailer'
+import type { FestivalEvent } from './events'
+
+// Default event for templates that don't (yet) take one — keeps existing
+// payment/receipt emails unchanged while registration emails go per-event.
+const DEFAULT_EVENT: Pick<FestivalEvent, 'name'> = { name: 'SharkFest 2028' }
 
 export function getOrigin(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
@@ -59,18 +64,18 @@ const CONTACT = 'sharkfest2025@gmail.com'
 
 // ── HTML helpers ──────────────────────────────────────────────────────────────
 
-function htmlWrap(body: string): string {
+function htmlWrap(body: string, eventName = 'SharkFest 2028'): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SharkFest 2028</title></head>
+<title>${eventName}</title></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#0f172a;-webkit-font-smoothing:antialiased">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px">
   <tr><td align="center">
     <table cellpadding="0" cellspacing="0" style="width:100%;max-width:540px">
       <tr><td style="background:#0f172a;border-radius:8px 8px 0 0;padding:24px 32px">
         <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#fbbf24">Torbay Sharks RFC</p>
-        <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.01em">SharkFest 2028</p>
+        <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.01em">${eventName}</p>
       </td></tr>
       <tr><td style="background:#ffffff;padding:32px">${body}</td></tr>
       <tr><td style="background:#ffffff;border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;padding:16px 32px 24px">
@@ -123,22 +128,23 @@ function tSummary(rows: [string, string][]): string {
 
 export function emailRegistrationUser(
   reg: { first_name: string },
-  origin: string
+  origin: string,
+  event: Pick<FestivalEvent, 'name'> = DEFAULT_EVENT
 ): EmailBody {
   const url = `${origin}/my-booking`
   return {
     html: htmlWrap(`
       ${hh('Registration received')}
       ${hp(`Hi ${reg.first_name},`)}
-      ${hp("Thank you for registering for SharkFest 2028. We've received your details and will review your booking shortly.")}
+      ${hp(`Thank you for registering for ${event.name}. We've received your details and will review your booking shortly.`)}
       ${hp("Once reviewed, we'll set up a payment plan and send you the total cost with instructions on how to pay the deposit to secure your place.")}
       ${hp('You can check your booking status at any time:')}
       ${hcta('View my booking', url)}
-    `),
-    text: textWrap('SharkFest 2028 — Registration received', `
+    `, event.name),
+    text: textWrap(`${event.name} — Registration received`, `
 Hi ${reg.first_name},
 
-Thank you for registering for SharkFest 2028. We've received your details
+Thank you for registering for ${event.name}. We've received your details
 and will review your booking shortly.
 
 Once reviewed, we'll set up a payment plan and send you the total cost with
@@ -151,16 +157,18 @@ View your booking: ${url}
 
 export function emailRegistrationAdmin(
   reg: { id: string; first_name: string; surname: string; email: string; mobile: string; adults: number; kids: number; accommodation: string; electric_hookup: boolean },
-  origin: string
+  origin: string,
+  event: Pick<FestivalEvent, 'name'> = DEFAULT_EVENT
 ): EmailBody {
   const party = `${reg.adults} adult${reg.adults !== 1 ? 's' : ''}${reg.kids ? `, ${reg.kids} child${reg.kids !== 1 ? 'ren' : ''}` : ''}`
   const accom = `${reg.accommodation}${reg.electric_hookup ? ' + electric hookup' : ''}`
   const url   = `${origin}/admin`
   return {
     html: htmlWrap(`
-      ${hh('New registration')}
-      ${hp('A new registration has been submitted and is awaiting review.')}
+      ${hh(`New ${event.name} registration`)}
+      ${hp(`A new ${event.name} registration has been submitted and is awaiting review.`)}
       ${hSummary([
+        ['Event',         event.name],
         ['Name',          `${reg.first_name} ${reg.surname}`],
         ['Email',         reg.email],
         ['Mobile',        reg.mobile],
@@ -168,11 +176,12 @@ export function emailRegistrationAdmin(
         ['Accommodation', accom],
       ])}
       ${hcta('Open admin panel', url)}
-    `),
-    text: textWrap('SharkFest 2028 — New registration', `
-A new registration is awaiting review.
+    `, event.name),
+    text: textWrap(`${event.name} — New registration`, `
+A new ${event.name} registration is awaiting review.
 
 ${tSummary([
+  ['Event',         event.name],
   ['Name',          `${reg.first_name} ${reg.surname}`],
   ['Email',         reg.email],
   ['Mobile',        reg.mobile],

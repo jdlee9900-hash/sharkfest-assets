@@ -2,15 +2,26 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { RegisterForm } from '@/components/RegisterForm'
+import { getEvent, isRegistrationOpen } from '@/lib/events'
 
-export const metadata: Metadata = {
-  title: 'Register · SharkFest 2028',
-  description: 'Register for SharkFest 2028 — Torbay Sharks RFC, Devon Coast, 22–25 May 2028.',
+export async function generateMetadata(
+  { searchParams }: { searchParams: Promise<{ year?: string }> }
+): Promise<Metadata> {
+  const event = getEvent((await searchParams).year)
+  return {
+    title: `Register · ${event.name}`,
+    description: `Register for ${event.name} — ${event.location}, ${event.dates}.`,
+    // 2027 page is direct-link only for now — don't surface its register page either.
+    ...(event.year === 2027 ? { robots: { index: false, follow: false } } : {}),
+  }
 }
 
-const isOpen = process.env.REGISTRATION_OPEN === 'true'
+export default async function RegisterPage(
+  { searchParams }: { searchParams: Promise<{ year?: string }> }
+) {
+  const event = getEvent((await searchParams).year)
+  const isOpen = isRegistrationOpen(event.year)
 
-export default function RegisterPage() {
   return (
     <>
       <header className="rc-header">
@@ -32,14 +43,14 @@ export default function RegisterPage() {
         <div className="rc-hero-inner">
           <div className="section-label" style={{ color: 'var(--gold-400)', justifyContent: 'center' }}>
             <span className="section-label-line" />
-            SharkFest 2028
+            {event.name}
             <span className="section-label-line" />
           </div>
           <h1 className="rc-hero-title">
             {isOpen ? 'Register' : 'Coming Soon'}
           </h1>
           <p className="rc-hero-sub">
-            22–25 May 2028 · Torbay Sharks RFC · Devon Coast
+            {event.dates} · {event.location}
           </p>
         </div>
         <div className="hero-wave" style={{ zIndex: 2 }} aria-hidden="true">
@@ -51,13 +62,13 @@ export default function RegisterPage() {
 
       <main className="rc-gallery-wrap" style={{ paddingTop: '3rem' }}>
         {isOpen ? (
-          <RegisterForm />
+          <RegisterForm event={event} />
         ) : (
           <div className="reg-coming-soon">
             <div className="reg-cs-icon" aria-hidden="true">🦈</div>
             <h2 className="reg-cs-title">Registrations open soon</h2>
             <p className="reg-cs-sub">
-              SharkFest 2028 registrations will open shortly.<br/>
+              {event.name} registrations will open shortly.<br/>
               Keep an eye on our socials for the announcement.
             </p>
             <p className="reg-cs-sub" style={{ fontSize: '0.9rem', color: 'var(--grey-400)' }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { getEvent, type FestivalEvent } from '@/lib/events'
 
 type Step = 'welcome' | 'form' | 'success'
 type Accommodation = 'Tent' | 'Caravan' | 'Mobile Home' | 'Campervan'
@@ -27,7 +28,7 @@ const ACCOMMODATIONS: { value: Accommodation; label: string; icon: string; hint:
 
 const ELECTRIC_TYPES: Accommodation[] = ['Caravan', 'Mobile Home', 'Campervan']
 
-export function RegisterForm() {
+export function RegisterForm({ event = getEvent(undefined) }: { event?: FestivalEvent }) {
   const [step, setStep]           = useState<Step>('welcome')
   const [agreed, setAgreed]       = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -57,7 +58,7 @@ export function RegisterForm() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, company: hp }),
+        body: JSON.stringify({ ...form, company: hp, year: event.year }),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? 'Registration failed')
@@ -77,7 +78,7 @@ export function RegisterForm() {
         </div>
         <h2 className="reg-success-title">You&apos;re registered!</h2>
         <p className="reg-success-sub">
-          Thanks for signing up for <strong>SharkFest 2028</strong>.<br/>
+          Thanks for signing up for <strong>{event.name}</strong>.<br/>
           We&apos;ll be in touch with your pitch details and payment plan shortly.
         </p>
         <p className="reg-success-hint">
@@ -94,12 +95,12 @@ export function RegisterForm() {
       <div className="reg-card">
         <div className="section-label" style={{ justifyContent: 'center', marginBottom: '0.75rem' }}>
           <span className="section-label-line" />
-          SharkFest 2028
+          {event.name}
           <span className="section-label-line" />
         </div>
-        <h2 className="reg-card-title">Register for SharkFest 2028</h2>
+        <h2 className="reg-card-title">Register for {event.name}</h2>
         <p className="reg-card-sub">
-          22–25 May 2028 · Torbay Sharks RFC · Devon Coast
+          {event.dates} · {event.location}
         </p>
 
         <div className="reg-tc">
@@ -107,7 +108,7 @@ export function RegisterForm() {
 
           <div className="reg-tc-body">
             <p><strong>Registration</strong><br/>
-            Completing this form reserves your pitch at SharkFest 2028, held at the Torbay Sharks RFC ground on the Devon Coast from 22–25 May 2028. Your place is not confirmed until a deposit has been received.</p>
+            Completing this form reserves your pitch at {event.name}, held at the Torbay Sharks RFC ground on the Devon Coast from {event.dates}. Your place is not confirmed until a deposit has been received.</p>
 
             <p><strong>Pricing &amp; Payment</strong><br/>
             Costs vary by pitch type, party size, and requirements. Our team will allocate your personal pricing and send a breakdown to your email within 7 days. Payment can be made in full or in agreed instalments through your booking portal.</p>

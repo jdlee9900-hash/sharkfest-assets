@@ -219,7 +219,10 @@ export function AdminDashboard({
                   className={`adm-row ${expanded === r.id ? 'adm-row--expanded' : ''}`}
                   onClick={() => setExpanded(e => e === r.id ? null : r.id)}
                 >
-                  <td className="adm-name">{r.first_name} {r.surname}</td>
+                  <td className="adm-name">
+                    {r.first_name} {r.surname}
+                    <span className={`adm-year-tag${r.year !== 2028 ? ' adm-year-tag--alt' : ''}`}>{r.year}</span>
+                  </td>
                   <td className="adm-email">{r.email}</td>
                   <td>{r.adults}A {r.kids > 0 ? `${r.kids}C` : ''}</td>
                   <td>{r.accommodation}{r.electric_hookup ? ' ⚡' : ''}</td>
