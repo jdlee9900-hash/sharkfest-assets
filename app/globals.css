@@ -1646,3 +1646,342 @@ body::after {
 .mc-link-danger { background: none; border: none; padding: 0 0.5rem; color: #dc2626; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
 .mc-link-danger:hover { text-decoration: underline; }
 .mc-link-danger:disabled { opacity: 0.5; cursor: default; }
+
+/* ══════════════════════════════════════════════════
+   SHARKFEST 2027 · SILVER 25TH ANNIVERSARY
+   Scoped under .f27 — a glistening silver take on the
+   site theme (gold → silver). Self-contained so the
+   rest of the site is untouched.
+══════════════════════════════════════════════════ */
+.f27 {
+  /* silver / metallic palette */
+  --slv-50:  #f7f9fc;
+  --slv-100: #eef2f7;
+  --slv-200: #dde4ec;
+  --slv-300: #c3cdd9;
+  --slv-400: #a7b4c4;
+  --slv-500: #8b99ab;
+  --slv-600: #6c7889;
+  --slv-glint: #ffffff;
+  /* metallic silver gradient for shimmering text */
+  --slv-metal: linear-gradient(120deg,
+    #ffffff 0%, #cfd8e3 16%, #9aa7b8 32%,
+    #ffffff 50%, #c0ccda 66%, #8d9bad 82%, #ffffff 100%);
+  background: var(--off-white);
+}
+
+/* ── Header ───────────────────────────────────── */
+.f27-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10,15,30,0.88);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(199,205,217,0.14);
+  padding: 0.75rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.f27-header-logo {
+  display: flex; align-items: center; gap: 0.625rem;
+  font-family: var(--font-d); font-size: 1.1rem;
+  letter-spacing: 0.08em; color: #fff; transition: opacity 0.15s;
+}
+.f27-header-logo:hover { opacity: 0.75; }
+.f27-header-badge {
+  font-family: var(--font-d); font-size: 0.72rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--slv-300);
+  border: 1px solid rgba(199,205,217,0.25);
+  border-radius: var(--r-full);
+  padding: 0.3rem 0.9rem;
+}
+
+/* ── Hero ─────────────────────────────────────── */
+.f27-hero {
+  position: relative; overflow: hidden;
+  text-align: center;
+  padding: 5.5rem 1.5rem 6rem;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(199,205,217,0.18) 0%, transparent 60%),
+    linear-gradient(180deg, #11182b 0%, #0a0f1e 100%);
+}
+.f27-hero-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle 50% at 50% 35%, rgba(221,228,236,0.10), transparent 70%);
+}
+.f27-hero-inner { position: relative; z-index: 2; }
+
+.f27-hero-logo {
+  width: clamp(88px, 13vw, 150px); height: auto;
+  margin: 0 auto 1.25rem;
+  filter: drop-shadow(0 0 28px rgba(221,228,236,0.45));
+  animation: logo-float 5s ease-in-out infinite;
+}
+
+.f27-eyebrow {
+  font-family: var(--font-d);
+  font-size: 0.75rem; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--slv-300); margin-bottom: 0.875rem;
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+}
+.f27-eyebrow::before, .f27-eyebrow::after {
+  content: ''; display: block; width: 28px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--slv-300));
+}
+.f27-eyebrow::after { transform: scaleX(-1); }
+
+.f27-title {
+  font-family: var(--font-d);
+  font-size: clamp(4.25rem, 16vw, 11rem);
+  line-height: 0.88; letter-spacing: -0.01em;
+  background-image: var(--slv-metal);
+  background-size: 220% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: shimmer 5s linear infinite;
+  margin-bottom: 0.15em;
+  filter: drop-shadow(0 2px 18px rgba(221,228,236,0.25));
+}
+
+/* anniversary medallion */
+.f27-anniversary {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  margin: 0.25rem 0 1.1rem;
+  padding: 0.5rem 1.25rem 0.5rem 0.75rem;
+  border: 1px solid rgba(199,205,217,0.28);
+  border-radius: var(--r-full);
+  background: rgba(221,228,236,0.05);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.f27-anniversary-num {
+  font-family: var(--font-d); font-size: 2.4rem; line-height: 1;
+  background-image: var(--slv-metal); background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+.f27-anniversary-txt {
+  font-family: var(--font-d); font-size: 0.78rem; line-height: 1.05;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--slv-300); text-align: left;
+}
+
+.f27-date {
+  font-family: var(--font-d);
+  font-size: clamp(1.1rem, 3vw, 1.7rem);
+  letter-spacing: 0.1em; color: rgba(255,255,255,0.55);
+  margin-bottom: 1.75rem;
+}
+.f27-date strong { color: #fff; }
+
+.f27-hero-sub {
+  font-size: 1.0625rem; color: var(--slv-400);
+  max-width: 560px; margin: 2rem auto 0; line-height: 1.7;
+}
+
+/* countdown — silver flip cards */
+.f27-countdown-sep {
+  font-family: var(--font-d);
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  color: rgba(199,205,217,0.35); line-height: 1; margin-top: 0.05em;
+}
+.f27-flip-card {
+  position: relative;
+  width: clamp(3.5rem, 10vw, 5.5rem);
+  height: clamp(4.5rem, 13vw, 7rem);
+  border-radius: var(--r-lg);
+  background: linear-gradient(160deg, rgba(221,228,236,0.12), rgba(221,228,236,0.04));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(199,205,217,0.3);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(199,205,217,0.1), inset 0 1px 0 rgba(255,255,255,0.14);
+}
+.f27-flip-digit {
+  position: absolute;
+  font-family: var(--font-d);
+  font-size: clamp(2.25rem, 7vw, 4rem);
+  color: #fff; line-height: 1; backface-visibility: hidden;
+}
+.f27-flip-label {
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--slv-500);
+}
+
+/* glitter / sparkle layer */
+.f27-sparkles {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 78% 14%, rgba(221,228,236,0.85), transparent),
+    radial-gradient(1px 1px   at 33% 68%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px   at 64% 78%, rgba(255,255,255,0.85), transparent),
+    radial-gradient(1px 1px   at 88% 52%, rgba(221,228,236,0.8), transparent),
+    radial-gradient(1.5px 1.5px at 47% 34%, rgba(255,255,255,0.85), transparent),
+    radial-gradient(1px 1px   at 22% 84%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 6% 56%, rgba(221,228,236,0.8), transparent),
+    radial-gradient(1px 1px   at 92% 88%, rgba(255,255,255,0.75), transparent),
+    radial-gradient(2px 2px   at 55% 8%,  rgba(255,255,255,0.8), transparent);
+  animation: f27-twinkle 3.2s ease-in-out infinite;
+}
+.f27-sparkles--soft { opacity: 0.5; }
+@keyframes f27-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.9; }
+}
+
+.f27-wave { position: absolute; bottom: -1px; left: 0; right: 0; line-height: 0; z-index: 2; }
+.f27-wave svg { width: 100%; display: block; }
+
+/* ── Shared layout bits ───────────────────────── */
+.f27-inner { max-width: 1100px; margin: 0 auto; }
+
+.f27-section-label {
+  display: flex; align-items: center; justify-content: center; gap: 0.875rem;
+  font-family: var(--font-d); font-size: 0.7rem;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--slv-600); margin-bottom: 1.1rem;
+}
+.f27-label-line { width: 48px; height: 1px; background: var(--slv-400); opacity: 0.55; }
+
+.f27-section-title {
+  font-family: var(--font-d);
+  font-size: clamp(2.5rem, 6.5vw, 5rem);
+  line-height: 0.92; letter-spacing: -0.01em;
+  color: var(--navy-900); text-align: center; margin-bottom: 1.1rem;
+}
+.f27-section-sub {
+  font-size: 1.0625rem; color: var(--grey-500);
+  max-width: 560px; margin: 0 auto; line-height: 1.65; text-align: center;
+}
+
+/* ── The Weekend ──────────────────────────────── */
+.f27-weekend { background: var(--off-white); padding: 6rem 1.5rem; }
+
+.f27-days {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem; margin-top: 3.5rem;
+}
+@media (max-width: 720px) { .f27-days { grid-template-columns: 1fr; } }
+
+.f27-day-card {
+  position: relative; overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--slv-200);
+  border-radius: var(--r-3xl);
+  padding: 2.25rem 2rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+  box-shadow: 0 6px 24px rgba(108,120,137,0.06);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.f27-day-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--slv-400), var(--slv-glint), var(--slv-400), transparent);
+  opacity: 0; transition: opacity 0.3s var(--ease);
+}
+.f27-day-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 44px rgba(108,120,137,0.16);
+  border-color: var(--slv-300);
+}
+.f27-day-card:hover::before { opacity: 1; }
+
+.f27-day-card--feature {
+  background: linear-gradient(165deg, #0f172a 0%, #1b2540 100%);
+  border-color: rgba(199,205,217,0.28);
+  box-shadow: 0 18px 50px rgba(15,23,42,0.28);
+}
+.f27-day-card--feature::before { opacity: 1; }
+.f27-day-card--feature .f27-day-title { color: #fff; }
+.f27-day-card--feature .f27-day-body { color: var(--slv-300); }
+.f27-day-card--feature .f27-day-name { color: #fff; }
+.f27-day-card--feature .f27-pill {
+  background: rgba(221,228,236,0.1); color: var(--slv-200);
+  border-color: rgba(199,205,217,0.3);
+}
+
+.f27-day-num {
+  position: absolute; top: 1rem; right: 1.5rem;
+  font-family: var(--font-d); font-size: 3.5rem; line-height: 1;
+  color: rgba(108,120,137,0.08); pointer-events: none; user-select: none;
+}
+.f27-day-card--feature .f27-day-num { color: rgba(221,228,236,0.08); }
+.f27-day-icon { font-size: 1.9rem; }
+.f27-day-meta { display: flex; align-items: baseline; gap: 0.6rem; }
+.f27-day-name {
+  font-family: var(--font-d); font-size: 1.5rem; letter-spacing: 0.04em;
+  color: var(--navy-900);
+}
+.f27-day-date {
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--slv-500);
+}
+.f27-day-tag {
+  font-family: var(--font-d); font-size: 0.68rem;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--slv-500);
+}
+.f27-day-card--feature .f27-day-tag { color: var(--slv-300); }
+.f27-day-title {
+  font-family: var(--font-d); font-size: clamp(1.7rem, 3vw, 2.1rem);
+  line-height: 1.05; color: var(--navy-900);
+}
+.f27-day-body { font-size: 0.9375rem; color: var(--grey-500); line-height: 1.6; flex: 1; }
+
+.f27-day-pills { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.f27-pill {
+  font-size: 0.75rem; font-weight: 600;
+  background: var(--slv-100); color: var(--slv-600);
+  border: 1px solid var(--slv-200);
+  border-radius: var(--r-full); padding: 0.28rem 0.75rem; white-space: nowrap;
+}
+.f27-pill--lg { font-size: 0.875rem; padding: 0.4rem 1rem; }
+
+/* ── Silver dress theme ───────────────────────── */
+.f27-dress {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #0a0f1e 0%, #161f38 55%, #0a0f1e 100%);
+  padding: 6rem 1.5rem;
+  text-align: center;
+}
+.f27-dress-inner { position: relative; z-index: 2; }
+.f27-dress-eyebrow {
+  font-family: var(--font-d); font-size: 0.72rem;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--slv-400); margin-bottom: 1rem;
+}
+.f27-dress-title {
+  font-family: var(--font-d); font-size: clamp(2.5rem, 7vw, 5rem);
+  line-height: 0.95; color: #fff; margin-bottom: 1.5rem;
+}
+.f27-shine {
+  background-image: var(--slv-metal); background-size: 220% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+.f27-dress-body {
+  font-size: 1.0625rem; color: var(--slv-300);
+  max-width: 620px; margin: 0 auto 2rem; line-height: 1.75;
+}
+.f27-dress-body strong { color: #fff; }
+.f27-dress-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
+
+/* ── Footer ───────────────────────────────────── */
+.f27-footer {
+  background: var(--navy-950);
+  padding: 3.5rem 1.5rem 2.5rem; text-align: center;
+  border-top: 1px solid rgba(199,205,217,0.06);
+}
+.f27-footer-wordmark {
+  font-family: var(--font-d); font-size: 1.35rem; letter-spacing: 0.12em;
+  background-image: var(--slv-metal); background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: shimmer 5s linear infinite;
+  margin-bottom: 0.35rem;
+}
+.f27-footer-sub { font-size: 0.8125rem; color: var(--slv-500); margin-bottom: 1rem; }
+.f27-footer-note {
+  font-size: 0.8rem; color: var(--slv-600); font-style: italic;
+  max-width: 420px; margin: 0 auto 1.5rem; line-height: 1.5;
+}
+
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .f27-title, .f27-shine, .f27-anniversary-num, .f27-footer-wordmark,
+  .f27-sparkles, .f27-hero-logo { animation: none; }
+}
