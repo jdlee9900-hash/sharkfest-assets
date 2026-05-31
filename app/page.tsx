@@ -23,7 +23,7 @@ const NIGHTS = [
 const RELIVE = [
   { num: '01', icon: '📸', tag: 'Your Photos',  title: 'Community gallery',       body: 'Upload your shots from the weekend — the good, the muddy, the golden.', href: '/community' },
   { num: '02', icon: '🏃', tag: 'Run Club',     title: 'Festival run photos',     body: '182 photos from the morning run — Devon coast at its finest.',             href: '/run-club'  },
-  { num: '03', icon: '📝', tag: 'Recap',        title: 'Read the wrap-up',        body: 'Numbers, stories, and honest reflections on what made SharkFest 2026 special.', href: null },
+  { num: '03', icon: '📝', tag: 'Recap',        title: 'Read the wrap-up',        body: 'A thank-you from Russ — the people who made it the best one yet, and a big bit of news for 2027.', href: '/wrap-up' },
 ]
 
 export const dynamic = 'force-dynamic'
