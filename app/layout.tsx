@@ -3,11 +3,11 @@ import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
 
 export const metadata: Metadata = {
-  title: 'SharkFest 2028 — Torbay Sharks RFC',
-  description: 'Three days, two stages, one pack of sharks. Devon Coast, 26–29 May 2028.',
+  title: 'SharkFest — Torbay Sharks RFC',
+  description: 'Three days, two marquees, one community on the Devon Coast. Relive SharkFest 2026.',
   openGraph: {
-    title: 'SharkFest 2028',
-    description: 'Three days, two stages, one pack of sharks. Devon Coast, 26–29 May 2028.',
+    title: 'SharkFest — Torbay Sharks RFC',
+    description: 'Three days, two marquees, one community on the Devon Coast. Relive SharkFest 2026.',
     type: 'website',
   },
 }

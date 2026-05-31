@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { isActiveMember } from '@/lib/membership'
-import { CountdownTimer }   from '@/components/CountdownTimer'
 import { OceanCanvas }      from '@/components/OceanCanvas'
 import { Marquee }           from '@/components/Marquee'
 import { ScrollReveal }      from '@/components/ScrollReveal'
@@ -53,11 +52,9 @@ export default async function Page() {
 
           <p className="hero-eyebrow">Torbay Sharks RFC · Devon Coast</p>
 
-          <h1 className="hero-title">SharkFest 2028</h1>
+          <h1 className="hero-title">SharkFest 2026</h1>
 
-          <p className="hero-date"><strong>Summer 2028</strong></p>
-
-          <CountdownTimer />
+          <p className="hero-sub">Thank you for an unforgettable weekend.<br />Relive it all below.</p>
 
           <div className="hero-cta">
             {isMember && (
@@ -214,9 +211,9 @@ export default async function Page() {
             <p className="join-promo-eyebrow">Membership</p>
             <h2 className="join-promo-title">Stay part of it, all year round</h2>
             <p className="join-promo-body">
-              SharkFest 2026 is in the books and 2028 is on its way. Become a member for
-              exclusive content, members events, your own digital membership card — and a
-              reduced price when 2028 tickets open.
+              SharkFest 2026 is in the books. Become a member for exclusive content,
+              members events, your own digital membership card — and a reduced price
+              when the next festival&apos;s tickets open.
             </p>
             <Link href="/join" className="btn btn-accent join-promo-cta">Become a member</Link>
           </ScrollReveal>

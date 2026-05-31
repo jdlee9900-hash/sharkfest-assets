@@ -138,6 +138,15 @@ body::after {
 }
 .hero-date strong { color: var(--gold-400); }
 
+/* ── Hero subtitle ────────────── */
+.hero-sub {
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  line-height: 1.6;
+  color: rgba(255,255,255,0.62);
+  max-width: 480px;
+  margin: 1.25rem auto 0.5rem;
+}
+
 /* ── Stats pills ──────────── */
 .hero-stats {
   display: flex; flex-wrap: wrap;
