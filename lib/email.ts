@@ -3,7 +3,7 @@ import type { FestivalEvent } from './events'
 
 // Default event for templates that don't (yet) take one — keeps existing
 // payment/receipt emails unchanged while registration emails go per-event.
-const DEFAULT_EVENT: Pick<FestivalEvent, 'name'> = { name: 'SharkFest 2028' }
+const DEFAULT_EVENT: Pick<FestivalEvent, 'name'> = { name: 'SharkFest 2027' }
 
 export function getOrigin(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
@@ -64,7 +64,7 @@ const CONTACT = 'sharkfest2025@gmail.com'
 
 // ── HTML helpers ──────────────────────────────────────────────────────────────
 
-function htmlWrap(body: string, eventName = 'SharkFest 2028'): string {
+function htmlWrap(body: string, eventName = 'SharkFest 2027'): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -211,15 +211,15 @@ export function emailPlanAllocated(
     html: htmlWrap(`
       ${hh('Your payment plan is ready')}
       ${hp(`Hi ${reg.first_name},`)}
-      ${hp('Your SharkFest 2028 booking has been reviewed and your payment plan is now set up.')}
+      ${hp('Your SharkFest 2027 booking has been reviewed and your payment plan is now set up.')}
       ${hSummary(summaryRows)}
       ${hp('To secure your place, please pay the <strong>£50 deposit</strong> as soon as possible. You can pay the remaining balance at any time in amounts that suit you.')}
       ${hcta('Pay deposit now', url)}
     `),
-    text: textWrap('SharkFest 2028 — Your payment plan is ready', `
+    text: textWrap('SharkFest 2027 — Your payment plan is ready', `
 Hi ${reg.first_name},
 
-Your SharkFest 2028 booking has been reviewed and your payment plan is now set up.
+Your SharkFest 2027 booking has been reviewed and your payment plan is now set up.
 
 ${tSummary(summaryRows)}
 To secure your place, please pay the £50 deposit as soon as possible.
@@ -245,7 +245,7 @@ export function emailPaymentReceipt(
   ]
   const bodyNote = outstanding > 0
     ? `You have an outstanding balance of ${fmtGBP(outstanding)}. You can pay this at any time through your booking page.`
-    : "Your balance is now fully paid — nothing more to do. We look forward to seeing you at SharkFest 2028!"
+    : "Your balance is now fully paid — nothing more to do. We look forward to seeing you at SharkFest 2027!"
   return {
     html: htmlWrap(`
       ${hh('Payment confirmed')}
@@ -254,11 +254,11 @@ export function emailPaymentReceipt(
       ${hSummary(summaryRows)}
       ${hp(outstanding > 0
         ? `You have an outstanding balance of <strong>${fmtGBP(outstanding)}</strong>. You can pay this at any time through your booking page.`
-        : "Your balance is now fully paid — nothing more to do. We look forward to seeing you at SharkFest 2028!"
+        : "Your balance is now fully paid — nothing more to do. We look forward to seeing you at SharkFest 2027!"
       )}
       ${hcta('View my booking', url)}
     `),
-    text: textWrap('SharkFest 2028 — Payment confirmed', `
+    text: textWrap('SharkFest 2027 — Payment confirmed', `
 Hi ${reg.first_name},
 
 We've received your payment. Here's a summary:
@@ -284,7 +284,7 @@ export function emailMembershipWelcome(
       ${hp(`Hi ${member.first_name},`)}
       ${hp("Your SharkFest membership is now active — thank you for supporting Torbay Sharks RFC.")}
       ${hSummary([['Membership', planLabel], ['Status', 'Active ✓']])}
-      ${hp('Your members area is ready: exclusive content, members events, your digital membership card, and a reduced price on SharkFest 2028 tickets.')}
+      ${hp('Your members area is ready: exclusive content, members events, your digital membership card, and a reduced price on SharkFest 2027 tickets.')}
       ${hcta('Enter the members area', url)}
     `),
     text: textWrap('SharkFest — Welcome to the club', `
@@ -294,7 +294,7 @@ Your SharkFest membership is now active — thank you for supporting Torbay Shar
 
 ${tSummary([['Membership', planLabel], ['Status', 'Active']])}
 Your members area is ready: exclusive content, members events, your digital
-membership card, and a reduced price on SharkFest 2028 tickets.
+membership card, and a reduced price on SharkFest 2027 tickets.
 
 Enter the members area: ${url}
     `),
@@ -357,14 +357,14 @@ export function emailPaymentReminder(
     html: htmlWrap(`
       ${hh('Friendly payment reminder')}
       ${hp(`Hi ${reg.first_name},`)}
-      ${hp(`This is a friendly reminder that your SharkFest 2028 booking has an outstanding balance of <strong>${fmtGBP(outstanding)}</strong>.`)}
+      ${hp(`This is a friendly reminder that your SharkFest 2027 booking has an outstanding balance of <strong>${fmtGBP(outstanding)}</strong>.`)}
       ${hp("You can log in to your booking page to make a payment at any time. There's no requirement to pay the full balance in one go.")}
       ${hcta('Pay now', url)}
     `),
-    text: textWrap('SharkFest 2028 — Friendly payment reminder', `
+    text: textWrap('SharkFest 2027 — Friendly payment reminder', `
 Hi ${reg.first_name},
 
-This is a friendly reminder that your SharkFest 2028 booking has an
+This is a friendly reminder that your SharkFest 2027 booking has an
 outstanding balance of ${fmtGBP(outstanding)}.
 
 You can log in to your booking page to make a payment at any time.

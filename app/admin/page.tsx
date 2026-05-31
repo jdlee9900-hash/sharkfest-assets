@@ -6,7 +6,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AdminDashboard } from '@/components/AdminDashboard'
 import { adminEmails } from '@/lib/types'
 
-export const metadata: Metadata = { title: 'Admin · SharkFest 2028' }
+export const metadata: Metadata = { title: 'Admin · SharkFest 2027' }
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
@@ -48,7 +48,6 @@ export default async function AdminPage() {
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/admin/members">Members</Link>
           <Link href="/">Home</Link>
-          <Link href="/register">Register 2028</Link>
         </nav>
       </header>
 

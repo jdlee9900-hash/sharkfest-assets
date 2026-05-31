@@ -72,7 +72,7 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
         </p>
         <p className="join-plan-note">
           {plan === 'annual'
-            ? 'Billed once a year — the best value, and you stay a member straight through to SharkFest 2028.'
+            ? 'Billed once a year — the best value, and you stay a member straight through to SharkFest 2027.'
             : 'Billed monthly. Cancel any time from your members area.'}
         </p>
 
@@ -87,7 +87,7 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
           {loading ? 'Redirecting…' : 'Become a member'}
         </button>
         <p className="join-plan-fineprint">
-          Secure payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2028 tickets
+          Secure payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2027 tickets
         </p>
       </div>
     </div>

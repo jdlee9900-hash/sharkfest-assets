@@ -195,7 +195,7 @@ export async function POST(request: Request) {
         const outstanding = planRes.data ? planRes.data.total_amount - totalPaid : 0
         await sendEmail(
           regRes.data.email,
-          'Payment confirmed — SharkFest 2028',
+          'Payment confirmed — SharkFest 2027',
           emailPaymentReceipt(regRes.data, session.amount_total ?? 0, new Date().toISOString(), outstanding, getOrigin())
         )
       }

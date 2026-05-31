@@ -197,7 +197,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
                     <p className="mb-deposit-sub">
                       {depositPaid
                         ? `${formatAmount(depositIns.amount)} deposit received`
-                        : `Pay a ${formatAmount(depositIns.amount)} deposit to confirm your place at SharkFest 2028`}
+                        : `Pay a ${formatAmount(depositIns.amount)} deposit to confirm your place at SharkFest 2027`}
                     </p>
                   </div>
                   {!depositPaid && (
@@ -247,7 +247,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
               {balance === 0 && (
                 <div className="mb-paid-full">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                  Paid in full — see you at SharkFest 2028!
+                  Paid in full — see you at SharkFest 2027!
                 </div>
               )}
             </div>

@@ -35,8 +35,8 @@ export default async function RunClubPage() {
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/#2026">2026</Link>
           <Link href="/#relive">Highlights</Link>
-          <Link href="/" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Register 2028
+          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+            Become a member
           </Link>
         </nav>
       </header>

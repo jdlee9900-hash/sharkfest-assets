@@ -7,7 +7,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { MyBookingView } from '@/components/MyBookingView'
 
 export const metadata: Metadata = {
-  title: 'My Booking · SharkFest 2028',
+  title: 'My Booking · SharkFest 2027',
 }
 
 export default async function MyBookingPage() {
@@ -52,8 +52,8 @@ export default async function MyBookingPage() {
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
           <Link href="/members">Members</Link>
-          <Link href="/register" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Register 2028
+          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+            Become a member
           </Link>
         </nav>
       </header>
@@ -76,7 +76,7 @@ export default async function MyBookingPage() {
         <p className="footer-sub">Torbay Sharks RFC · Devon Coast</p>
         <nav className="footer-links">
           <Link href="/">Home</Link>
-          <Link href="/register">Register 2028</Link>
+          <Link href="/members">Members area</Link>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
       </footer>

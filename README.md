@@ -1,12 +1,12 @@
 # sharkfest-assets
 
-SharkFest 2028 — Next.js 15 (App Router) + Supabase + Stripe + Cloudinary.
+SharkFest 2027 — Next.js 15 (App Router) + Supabase + Stripe + Cloudinary.
 
 ## Membership (subscriptions + members area)
 
 Paid membership (`/join`) unlocks a gated members area (`/members`) with a digital
 membership card, an exclusive content feed, members events, and a **reduced price on
-SharkFest 2028 registration** (applied automatically when the payment plan is allocated).
+SharkFest 2027 registration** (applied automatically when the payment plan is allocated).
 
 ### Setup
 
@@ -26,7 +26,7 @@ SharkFest 2028 registration** (applied automatically when the payment plan is al
    | --- | --- | --- |
    | `STRIPE_PRICE_MONTHLY` | Stripe Price ID for the monthly plan | — (required) |
    | `STRIPE_PRICE_ANNUAL` | Stripe Price ID for the annual plan | — (required) |
-   | `MEMBER_DISCOUNT_PERCENT` | % members save on 2028 registration | `10` |
+   | `MEMBER_DISCOUNT_PERCENT` | % members save on 2027 registration | `10` |
 
    Reuses `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `NEXT_PUBLIC_SITE_URL`.
 

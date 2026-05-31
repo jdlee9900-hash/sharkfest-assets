@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Registration } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
+import { DEFAULT_EVENT_YEAR } from '@/lib/events'
 
 type Status = 'pending' | 'confirmed' | 'waitlist' | 'cancelled'
 
@@ -135,7 +136,7 @@ export function AdminDashboard({
     <div className="adm-wrap">
       <div className="adm-top">
         <div>
-          <h1 className="adm-title">SharkFest 2028 — Registrations</h1>
+          <h1 className="adm-title">SharkFest 2027 — Registrations</h1>
           <p className="adm-sub">{registrations.length} total registrations</p>
         </div>
         <div className="adm-top-actions">
@@ -228,7 +229,7 @@ export function AdminDashboard({
                 >
                   <td className="adm-name">
                     {r.first_name} {r.surname}
-                    <span className={`adm-year-tag${r.year !== 2028 ? ' adm-year-tag--alt' : ''}`}>{r.year}</span>
+                    <span className={`adm-year-tag${r.year !== DEFAULT_EVENT_YEAR ? ' adm-year-tag--alt' : ''}`}>{r.year}</span>
                   </td>
                   <td className="adm-email">{r.email}</td>
                   <td>{r.adults}A {r.kids > 0 ? `${r.kids}C` : ''}</td>

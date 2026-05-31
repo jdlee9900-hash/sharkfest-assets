@@ -25,17 +25,10 @@ export const EVENTS: Record<number, FestivalEvent> = {
     tagline: '25th Anniversary',
     membersOnly: true,
   },
-  2028: {
-    year: 2028,
-    name: 'SharkFest 2028',
-    dates: '22–25 May 2028',
-    location: 'Torbay Sharks RFC · Devon Coast',
-  },
 }
 
-// The event the rest of the site defaults to when no year is specified. Keeping
-// this at 2028 means existing links (/register with no query) are unchanged.
-export const DEFAULT_EVENT_YEAR = 2028
+// The confirmed festival — what the site defaults to when no year is specified.
+export const DEFAULT_EVENT_YEAR = 2027
 
 export function isValidEventYear(year: unknown): boolean {
   return Object.prototype.hasOwnProperty.call(EVENTS, Number(year))
@@ -48,12 +41,11 @@ export function getEvent(year: unknown): FestivalEvent {
 }
 
 /**
- * Whether registration is open for a given event year. 2028 keeps the original
- * `REGISTRATION_OPEN` flag for backward compatibility; other years are gated by
- * `REGISTRATION_OPEN_<year>` (e.g. `REGISTRATION_OPEN_2027`) so each event can be
- * opened independently.
+ * Whether registration is open for a given event. Booking is open by default for
+ * any confirmed event; set `REGISTRATION_OPEN_<year>=false` (e.g.
+ * `REGISTRATION_OPEN_2027=false`) to pause it without a code change.
  */
 export function isRegistrationOpen(year: number): boolean {
-  if (year === DEFAULT_EVENT_YEAR) return process.env.REGISTRATION_OPEN === 'true'
-  return process.env[`REGISTRATION_OPEN_${year}`] === 'true'
+  if (!isValidEventYear(year)) return false
+  return process.env[`REGISTRATION_OPEN_${year}`] !== 'false'
 }

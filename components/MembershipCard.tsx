@@ -62,7 +62,7 @@ export function MembershipCard({ name, membershipNumber, plan, status, memberSin
         )}
       </div>
 
-      <p className="mcard-foot">SHARKFEST · TORBAY · 2028</p>
+      <p className="mcard-foot">SHARKFEST · TORBAY · 2027</p>
     </div>
   )
 }
