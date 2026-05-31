@@ -1,8 +1,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { RegisterForm } from '@/components/RegisterForm'
 import { getEvent, isRegistrationOpen } from '@/lib/events'
+import { createClient } from '@/lib/supabase/server'
+import { isActiveMember } from '@/lib/membership'
 
 export async function generateMetadata(
   { searchParams }: { searchParams: Promise<{ year?: string }> }
@@ -20,6 +23,15 @@ export default async function RegisterPage(
   { searchParams }: { searchParams: Promise<{ year?: string }> }
 ) {
   const event = getEvent((await searchParams).year)
+
+  // Members-only events can only be reached by a logged-in active member.
+  if (event.membersOnly) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect(`/login?next=${encodeURIComponent(`/register?year=${event.year}`)}`)
+    if (!(await isActiveMember(user.id))) redirect('/join')
+  }
+
   const isOpen = isRegistrationOpen(event.year)
 
   return (

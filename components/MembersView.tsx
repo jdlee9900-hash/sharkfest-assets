@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
+import { Countdown2027 } from '@/components/Countdown2027'
 
 function redirectToStripe(url: unknown) {
   if (typeof url !== 'string') throw new Error('Could not open billing')
@@ -41,10 +42,16 @@ interface Props {
 }
 
 const BENEFITS = (discountPercent: number) => [
-  { icon: '🎟️', title: 'Member ticket price', body: `Save ${discountPercent}% on SharkFest 2028 — applied automatically to your booking.` },
+  { icon: '🎟️', title: 'Member ticket price', body: `Save ${discountPercent}% on your SharkFest 2027 pitch — applied automatically to your booking.` },
   { icon: '📸', title: 'Exclusive content', body: 'Behind-the-scenes stories, photos and updates between festivals.' },
   { icon: '🎉', title: 'Members events', body: 'Invitations to socials and gatherings through the year.' },
   { icon: '🦈', title: 'Support the club', body: 'Every membership helps Torbay Sharks RFC keep SharkFest going.' },
+]
+
+const F27_HIGHLIGHTS = [
+  { icon: '🎸', day: 'Fri', label: 'Indie covers band' },
+  { icon: '🪩', day: 'Sat', label: '25th party · silver theme' },
+  { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
 export function MembersView({ card, email, justJoined, discountPercent, news, events }: Props) {
@@ -89,6 +96,47 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           You&apos;re in — welcome to the club!
         </div>
       )}
+
+      {/* ✦ SharkFest 2027 — members-exclusive showcase ✦ */}
+      <section className="m27 f27" aria-label="SharkFest 2027 — members exclusive">
+        <div className="f27-sparkles m27-sparkles" aria-hidden="true" />
+        <div className="m27-glow" aria-hidden="true" />
+
+        <div className="m27-inner">
+          <span className="m27-badge">✦ Members Exclusive</span>
+
+          <p className="m27-eyebrow">The Silver 25th Anniversary</p>
+          <h2 className="m27-title">SharkFest 2027</h2>
+          <p className="m27-dates">28–31 May 2027 · May Bank Holiday Weekend</p>
+
+          <p className="m27-lead">
+            Twenty-five years of SharkFest, celebrated in glistening silver — and your
+            membership is your key to the gate. Registration is exclusive to members.
+          </p>
+
+          <Countdown2027 />
+
+          <ul className="m27-highlights">
+            {F27_HIGHLIGHTS.map(h => (
+              <li className="m27-highlight" key={h.day}>
+                <span className="m27-highlight-icon" aria-hidden="true">{h.icon}</span>
+                <span className="m27-highlight-day">{h.day}</span>
+                <span className="m27-highlight-label">{h.label}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="m27-cta">
+            <Link href="/register?year=2027" className="f27-btn f27-btn--silver f27-btn--lg">
+              Register your pitch
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <Link href="/2027" className="f27-btn f27-btn--ghost">Explore the weekend</Link>
+          </div>
+
+          <p className="m27-note">Your member ticket discount is applied automatically when we set up your booking.</p>
+        </div>
+      </section>
 
       {/* Membership card centrepiece */}
       <div className="members-card-stage">

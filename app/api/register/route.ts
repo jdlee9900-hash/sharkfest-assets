@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, getOrigin, getAdminEmails } from '@/lib/email'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvent } from '@/lib/events'
+import { isActiveMember } from '@/lib/membership'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -31,6 +32,27 @@ export async function POST(request: Request) {
     // Honeypot: a filled hidden field means a bot. Pretend success, write nothing.
     if (typeof company === 'string' && company.trim() !== '') {
       return NextResponse.json({ id: 'ok' })
+    }
+
+    // Members-only events (e.g. the 2027 25th anniversary) can only be booked by a
+    // logged-in active member. Enforce server-side and tie the booking to them.
+    let userId: string | null = null
+    if (event.membersOnly) {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Please sign in to register for this members-only event.' },
+          { status: 401 }
+        )
+      }
+      if (!(await isActiveMember(user.id))) {
+        return NextResponse.json(
+          { error: `${event.name} registration is exclusive to members. Join the club to book your pitch.` },
+          { status: 403 }
+        )
+      }
+      userId = user.id
     }
 
     if (!first_name?.trim() || !surname?.trim() || !email?.trim() || !mobile?.trim()) {
@@ -67,6 +89,7 @@ export async function POST(request: Request) {
         notes: cap(notes, 1000),
         year: event.year,
         status: 'pending',
+        ...(userId ? { user_id: userId } : {}),
       })
       .select('id, email, first_name, surname, mobile, adults, kids, accommodation, electric_hookup')
       .single()

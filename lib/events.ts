@@ -12,6 +12,8 @@ export interface FestivalEvent {
   location: string
   /** Optional flourish shown alongside the name, e.g. "25th Anniversary" */
   tagline?: string
+  /** When true, only logged-in active members can view/register for this event. */
+  membersOnly?: boolean
 }
 
 export const EVENTS: Record<number, FestivalEvent> = {
@@ -21,6 +23,7 @@ export const EVENTS: Record<number, FestivalEvent> = {
     dates: '28–31 May 2027',
     location: 'Torbay Sharks RFC · Devon Coast',
     tagline: '25th Anniversary',
+    membersOnly: true,
   },
   2028: {
     year: 2028,

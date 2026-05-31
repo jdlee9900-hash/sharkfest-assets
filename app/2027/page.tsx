@@ -1,17 +1,22 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { ScrollReveal } from '@/components/ScrollReveal'
 import { Countdown2027 } from '@/components/Countdown2027'
+import { createClient } from '@/lib/supabase/server'
+import { isActiveMember } from '@/lib/membership'
 
-// Direct-link only while we build it out — keep it off search engines and
-// don't link it from anywhere on the main site yet.
+// Members-only exclusive — reachable only through the members area, and kept
+// off search engines.
 export const metadata: Metadata = {
   title: 'SharkFest 2027 · 25th Anniversary — Torbay Sharks RFC',
   description:
     'SharkFest 2027 — our Silver 25th Anniversary. May Bank Holiday, 28–31 May 2027. Devon Coast.',
   robots: { index: false, follow: false },
 }
+
+export const dynamic = 'force-dynamic'
 
 const DAYS = [
   {
@@ -57,16 +62,22 @@ const DAYS = [
   },
 ]
 
-export default function Festival2027Page() {
+export default async function Festival2027Page() {
+  // Exclusive to members — non-members are routed to sign in or join.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login?next=/2027')
+  if (!(await isActiveMember(user.id))) redirect('/join')
+
   return (
     <div className="f27">
       {/* ── Topbar ──────────────────────────────── */}
       <header className="f27-header">
-        <Link href="/" className="f27-header-logo" aria-label="Back to SharkFest">
+        <Link href="/members" className="f27-header-logo" aria-label="Back to members area">
           <Image src="/logo.png" alt="Torbay Sharks RFC" width={36} height={36} />
           <span>SharkFest</span>
         </Link>
-        <span className="f27-header-badge">Planning · 2027</span>
+        <span className="f27-header-badge">✦ Members Exclusive</span>
       </header>
 
       {/* ── Hero ────────────────────────────────── */}
