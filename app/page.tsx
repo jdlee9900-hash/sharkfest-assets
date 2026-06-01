@@ -82,6 +82,23 @@ export default async function Page() {
         </div>
       </section>
 
+      {/* ══════════════════ 2027 TEASER BANNER ══════════════════ */}
+      <div className="teaser-2027" aria-label="SharkFest 2027 announcement">
+        <div className="teaser-2027-inner">
+          <span className="teaser-2027-badge">25th Anniversary</span>
+          <div className="teaser-2027-text">
+            <span className="teaser-2027-title">SharkFest 2027</span>
+            <span className="teaser-2027-sep" aria-hidden="true">·</span>
+            <span className="teaser-2027-sub">Signups opening soon — members get first access</span>
+          </div>
+          <Link href="/join" className="teaser-2027-cta">
+            Become a member
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </Link>
+        </div>
+        <div className="teaser-2027-shimmer" aria-hidden="true" />
+      </div>
+
       {/* ══════════════════ MARQUEE ══════════════════ */}
       <Marquee />
 
