@@ -5,6 +5,7 @@ import { getFolder } from '@/lib/cloudinary'
 import type { CommunityAsset, CloudinaryAsset } from '@/lib/cloudinary'
 import { CommunityUpload }  from '@/components/CommunityUpload'
 import { CommunityGallery } from '@/components/CommunityGallery'
+import { HeaderMemberCta }  from '@/components/HeaderMemberCta'
 
 export const revalidate = 60
 
@@ -34,9 +35,7 @@ export default async function CommunityPage() {
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/run-club">Run Club</Link>
-          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Become a member
-          </Link>
+          <HeaderMemberCta />
         </nav>
       </header>
 

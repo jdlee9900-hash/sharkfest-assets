@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getFolder } from '@/lib/cloudinary'
 import { RunClubGallery } from '@/components/RunClubGallery'
+import { HeaderMemberCta } from '@/components/HeaderMemberCta'
 
 export const revalidate = 60
 
@@ -34,9 +35,7 @@ export default async function RunClubPage() {
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/#relive">Highlights</Link>
-          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Become a member
-          </Link>
+          <HeaderMemberCta />
         </nav>
       </header>
 
