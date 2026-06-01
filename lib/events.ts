@@ -14,6 +14,12 @@ export interface FestivalEvent {
   tagline?: string
   /** When true, only logged-in active members can view/register for this event. */
   membersOnly?: boolean
+  /**
+   * Default registration state when no `REGISTRATION_OPEN_<year>` env override is
+   * set. Defaults to closed ("coming soon") so a missing env var never silently
+   * opens booking before you're ready.
+   */
+  registrationOpen?: boolean
 }
 
 export const EVENTS: Record<number, FestivalEvent> = {
@@ -24,6 +30,9 @@ export const EVENTS: Record<number, FestivalEvent> = {
     location: 'Torbay Sharks RFC · Devon Coast',
     tagline: '25th Anniversary',
     membersOnly: true,
+    // "Signups coming soon" — flip to true (or set REGISTRATION_OPEN_2027=true)
+    // when you're ready to take festival bookings.
+    registrationOpen: false,
   },
 }
 
@@ -41,11 +50,15 @@ export function getEvent(year: unknown): FestivalEvent {
 }
 
 /**
- * Whether registration is open for a given event. Booking is open by default for
- * any confirmed event; set `REGISTRATION_OPEN_<year>=false` (e.g.
- * `REGISTRATION_OPEN_2027=false`) to pause it without a code change.
+ * Whether registration is open for a given event. The env var
+ * `REGISTRATION_OPEN_<year>` overrides either way (`=true` opens, `=false` closes);
+ * with no override it falls back to the event's `registrationOpen` default
+ * (closed unless explicitly set), so a forgotten env var can't open booking early.
  */
 export function isRegistrationOpen(year: number): boolean {
   if (!isValidEventYear(year)) return false
-  return process.env[`REGISTRATION_OPEN_${year}`] !== 'false'
+  const override = process.env[`REGISTRATION_OPEN_${year}`]
+  if (override === 'true') return true
+  if (override === 'false') return false
+  return EVENTS[year].registrationOpen ?? false
 }

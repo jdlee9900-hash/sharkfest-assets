@@ -576,6 +576,13 @@ body::after {
   color: var(--grey-400); transition: color 0.15s;
 }
 .rc-header-nav a:hover { color: #fff; }
+.rc-header-signout {
+  font-size: 0.875rem; font-weight: 500;
+  color: var(--grey-400); transition: color 0.15s;
+  background: none; border: none; cursor: pointer;
+  padding: 0; font-family: inherit;
+}
+.rc-header-signout:hover { color: #fff; }
 
 /* ── Hero ─────────────────────────────────────── */
 .rc-hero {
@@ -2360,3 +2367,190 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 .mb-camp-intro { font-size: 0.9375rem; color: var(--grey-500); line-height: 1.6; margin-bottom: 1rem; }
 .mb-camp-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; flex-wrap: wrap; }
 .mb-camp-saved { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; font-weight: 600; color: #22c55e; }
+
+/* Membership tiers — two side-by-side cards on the join page */
+.join-tiers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+@media (max-width: 560px) { .join-tiers { grid-template-columns: 1fr; } }
+.join-tier-card { display: flex; flex-direction: column; gap: 0.5rem; height: 100%; }
+.join-tier-card .join-cta { margin-top: auto; }
+
+/* My Booking — partner / shared access banner */
+.mb-banner--partner {
+  background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* My Booking — partner email input row */
+.mb-partner-row { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; }
+.mb-partner-row .cu-input { height: 2.25rem; font-size: 0.9375rem; }
+.mb-partner-hint {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  margin-top: 0.75rem; font-size: 0.875rem; color: var(--grey-500);
+}
+
+/* My Booking — pay full balance + custom amount */
+.mb-pay-full { width: 100%; justify-content: center; margin-bottom: 0.25rem; }
+.mb-pay-or {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin: 0.9rem 0 0.75rem;
+  font-size: 0.8125rem; color: var(--grey-400);
+}
+.mb-pay-or::before, .mb-pay-or::after {
+  content: ''; flex: 1; height: 1px; background: var(--grey-200, #e2e8f0);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Homepage — SharkFest 2027 teaser banner (silver / anniversary)
+═══════════════════════════════════════════════════════════════════ */
+.teaser-2027 {
+  position: relative;
+  background: var(--navy-950);
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* sweeping silver shimmer layer */
+.teaser-2027-shimmer {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg,
+    transparent 0%, transparent 35%,
+    rgba(203,213,225,0.06) 45%,
+    rgba(255,255,255,0.1) 50%,
+    rgba(203,213,225,0.06) 55%,
+    transparent 65%, transparent 100%);
+  background-size: 200% 100%;
+  animation: teaserShimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes teaserShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.teaser-2027-inner {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  padding: 1.25rem 2rem;
+  display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;
+}
+
+.teaser-2027-badge {
+  flex-shrink: 0;
+  font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.3rem 0.75rem; border-radius: 999px;
+  border: 1px solid rgba(192,204,218,0.45);
+  background: rgba(192,204,218,0.08);
+  color: #c0ccda;
+  white-space: nowrap;
+}
+
+.teaser-2027-text {
+  flex: 1; min-width: 0;
+  display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+}
+
+.teaser-2027-title {
+  font-family: var(--font-d);
+  font-size: 1.65rem; letter-spacing: 0.04em;
+  background: linear-gradient(120deg,
+    #ffffff 0%, #cfd8e3 18%, #9aa7b8 35%,
+    #ffffff 50%, #c0ccda 68%, #8d9bad 84%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: teaserShimmer 5s linear infinite;
+  white-space: nowrap;
+}
+
+.teaser-2027-sep {
+  color: rgba(192,204,218,0.35);
+  font-size: 1.1rem;
+}
+
+.teaser-2027-sub {
+  font-size: 0.9375rem; color: #a7b4c4; line-height: 1.4;
+}
+
+.teaser-2027-cta {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  background: linear-gradient(135deg, #c0ccda 0%, #8d9bad 50%, #c0ccda 100%);
+  background-size: 200% auto;
+  color: var(--navy-950);
+  font-size: 0.8125rem; font-weight: 700;
+  padding: 0.55rem 1.1rem; border-radius: 6px;
+  text-decoration: none; white-space: nowrap;
+  transition: background-position 0.4s var(--ease), opacity 0.2s;
+}
+.teaser-2027-cta:hover {
+  background-position: right center;
+  opacity: 0.92;
+}
+
+@media (max-width: 640px) {
+  .teaser-2027-inner { padding: 1rem 1.25rem; gap: 0.75rem; }
+  .teaser-2027-title { font-size: 1.35rem; }
+  .teaser-2027-sub   { font-size: 0.875rem; }
+  .teaser-2027-sep   { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PWA install prompt — dismissible card, fixed bottom on mobile
+═══════════════════════════════════════════════════════════════════ */
+.pwa-prompt {
+  position: fixed;
+  left: 50%; bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 200;
+  width: calc(100% - 2rem); max-width: 420px;
+  background: linear-gradient(160deg, #131b30 0%, #0a0f1e 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  padding: 1.1rem 1.1rem 1.15rem;
+  color: #fff;
+  animation: pwaSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pwaSlideUp {
+  from { opacity: 0; transform: translate(-50%, 1.5rem); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.pwa-prompt-close {
+  position: absolute; top: 0.6rem; right: 0.6rem;
+  width: 1.9rem; height: 1.9rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--grey-400); background: rgba(255,255,255,0.06);
+  transition: color 0.15s, background 0.15s;
+}
+.pwa-prompt-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
+
+.pwa-prompt-body { display: flex; align-items: flex-start; gap: 0.9rem; padding-right: 1.5rem; }
+.pwa-prompt-icon {
+  width: 48px; height: 48px; border-radius: 11px; flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+.pwa-prompt-text { min-width: 0; }
+.pwa-prompt-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+.pwa-prompt-sub { font-size: 0.85rem; line-height: 1.5; color: var(--grey-300); }
+.pwa-prompt-sub strong { color: #fff; font-weight: 600; }
+
+.pwa-share-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.35rem; height: 1.35rem; vertical-align: middle;
+  border-radius: 5px; background: rgba(96,165,250,0.18); color: #60a5fa;
+  margin: 0 0.1rem;
+}
+
+.pwa-prompt-actions {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-top: 0.95rem; padding-left: 0;
+}
+.pwa-prompt-cta { height: 2.4rem; padding: 0 1.4rem; font-size: 0.875rem; flex: 1; justify-content: center; }
+.pwa-prompt-later {
+  font-size: 0.85rem; font-weight: 500; color: var(--grey-400);
+  padding: 0 0.5rem; transition: color 0.15s;
+}
+.pwa-prompt-later:hover { color: #fff; }

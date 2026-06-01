@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
 import { Countdown2027 } from '@/components/Countdown2027'
+import { PartnerEmailCard } from '@/components/PartnerEmailCard'
+import { SignOutButton } from '@/components/SignOutButton'
+import type { MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
   if (typeof url !== 'string') throw new Error('Could not open billing')
@@ -29,7 +32,7 @@ interface Props {
   card: {
     name: string
     membershipNumber: string
-    plan: 'monthly' | 'annual'
+    plan: MemberPlan
     status: string
     memberSince: string | null
     qrDataUrl: string | null
@@ -39,6 +42,8 @@ interface Props {
   discountPercent: number
   news: FeedPost[]
   events: FeedPost[]
+  partnerEmail: string | null
+  isPartner: boolean
 }
 
 const BENEFITS = (discountPercent: number) => [
@@ -54,7 +59,7 @@ const F27_HIGHLIGHTS = [
   { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
-export function MembersView({ card, email, justJoined, discountPercent, news, events }: Props) {
+export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -73,12 +78,6 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
     }
   }
 
-  const handleSignOut = async () => {
-    const { createClient } = await import('@/lib/supabase/client')
-    await createClient().auth.signOut()
-    router.push('/')
-  }
-
   return (
     <div className="members-wrap">
       <div className="members-head">
@@ -87,7 +86,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           <h1 className="members-title">Welcome back{card.name ? `, ${card.name.split(' ')[0]}` : ''}</h1>
           <p className="members-email">{email}</p>
         </div>
-        <button className="mb-signout" onClick={handleSignOut}>Log out</button>
+        <SignOutButton>Log out</SignOutButton>
       </div>
 
       {justJoined && (
@@ -167,6 +166,11 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           </div>
         ))}
       </div>
+
+      {/* Shared booking access — only shown to the primary member, not their partner */}
+      {!isPartner && (
+        <PartnerEmailCard initial={partnerEmail} />
+      )}
 
       {/* Exclusive content */}
       <section className="members-section">

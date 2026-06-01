@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import type { FestivalEvent } from './events'
+import type { MemberPlan } from './types'
 
 // Default event for templates that don't (yet) take one — keeps existing
 // payment/receipt emails unchanged while registration emails go per-event.
@@ -273,11 +274,11 @@ View your booking: ${url}
 
 export function emailMembershipWelcome(
   member: { first_name: string },
-  plan: 'monthly' | 'annual',
+  plan: MemberPlan,
   origin: string
 ): EmailBody {
   const url = `${origin}/members`
-  const planLabel = plan === 'annual' ? 'Annual membership' : 'Monthly membership'
+  const planLabel = plan === 'family' ? 'Family membership' : 'Individual / Couple membership'
   return {
     html: htmlWrap(`
       ${hh('Welcome to the club')}
@@ -343,6 +344,33 @@ Your SharkFest membership has been cancelled and your members access has now end
 We'd love to have you back any time.
 
 Rejoin: ${url}
+    `),
+  }
+}
+
+export function emailPartnerInvite(
+  primaryName: string,
+  partnerEmail: string,
+  origin: string
+): EmailBody {
+  const url = `${origin}/login?next=/my-booking`
+  return {
+    html: htmlWrap(`
+      ${hh("You've been added to a SharkFest booking")}
+      ${hp(`Hi,`)}
+      ${hp(`<strong>${primaryName}</strong> has added you as a co-holder of their SharkFest 2027 booking. You can log in with your email address (${partnerEmail}) to view the booking, track payments, and manage your camp-near preferences.`)}
+      ${hp('Just click the button below and we\'ll send you a magic-link sign-in — no password needed.')}
+      ${hcta('View the shared booking', url)}
+    `),
+    text: textWrap('SharkFest 2027 — Shared booking access', `
+Hi,
+
+${primaryName} has added you as a co-holder of their SharkFest 2027 booking.
+You can log in with your email address (${partnerEmail}) to view the booking,
+track payments, and manage your camp-near preferences.
+
+Visit this link to sign in with a magic link (no password needed):
+${url}
     `),
   }
 }

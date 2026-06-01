@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'That user already has an active paid membership' }, { status: 409 })
   }
 
-  const plan: MemberPlan = body?.plan === 'monthly' ? 'monthly' : 'annual'
+  const plan: MemberPlan = body?.plan === 'family' ? 'family' : 'individual'
   // Far-future period so the gate treats it as active; one comp row per user.
   const periodEnd = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString()
   await service.from('memberships').upsert({

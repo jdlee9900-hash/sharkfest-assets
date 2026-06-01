@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { MyBookingView } from '@/components/MyBookingView'
+import { InstallPrompt } from '@/components/InstallPrompt'
 
 export const metadata: Metadata = {
   title: 'My Booking · SharkFest 2027',
@@ -18,13 +19,31 @@ export default async function MyBookingPage() {
 
   const service = createServiceClient()
 
-  const { data: registration } = await service
+  // Primary lookup: registration that belongs to this user.
+  const { data: primaryReg } = await service
     .from('registrations')
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+
+  // Partner fallback: this user was added as a second login on someone else's booking.
+  let isPartner = false
+  let registration = primaryReg
+  if (!registration) {
+    const { data: partnerReg } = await service
+      .from('registrations')
+      .select('*')
+      .eq('partner_user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (partnerReg) {
+      registration = partnerReg
+      isPartner = true
+    }
+  }
 
   let paymentPlan = null
   let instalments: unknown[] = []
@@ -68,9 +87,6 @@ export default async function MyBookingPage() {
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
           <Link href="/members">Members</Link>
-          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Become a member
-          </Link>
         </nav>
       </header>
 
@@ -83,6 +99,7 @@ export default async function MyBookingPage() {
             instalments={instalments as never[]}
             payments={payments as never[]}
             campNearInitial={campNearInitial}
+            isPartner={isPartner}
           />
         </Suspense>
       </main>
@@ -97,6 +114,8 @@ export default async function MyBookingPage() {
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
       </footer>
+
+      <InstallPrompt />
     </>
   )
 }

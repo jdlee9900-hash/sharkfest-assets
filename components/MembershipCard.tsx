@@ -1,9 +1,10 @@
 import Image from 'next/image'
+import type { MemberPlan } from '@/lib/types'
 
 interface Props {
   name: string
   membershipNumber: string
-  plan: 'monthly' | 'annual'
+  plan: MemberPlan
   status: string
   memberSince: string | null
   qrDataUrl: string | null
@@ -16,7 +17,7 @@ function fmtDate(iso: string | null): string {
 
 // A premium, credit-card-style digital membership pass. Presentational only.
 export function MembershipCard({ name, membershipNumber, plan, status, memberSince, qrDataUrl }: Props) {
-  const tier = plan === 'annual' ? 'Annual Member' : 'Member'
+  const tier = plan === 'family' ? 'Family Member' : 'Member'
   const live = status === 'active' || status === 'past_due'
 
   return (

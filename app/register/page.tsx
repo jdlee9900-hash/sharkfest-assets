@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { RegisterForm } from '@/components/RegisterForm'
 import { getEvent, isRegistrationOpen } from '@/lib/events'
 import { createClient } from '@/lib/supabase/server'
-import { isActiveMember } from '@/lib/membership'
+import { isActiveMemberOrPartner } from '@/lib/membership'
 
 export async function generateMetadata(
   { searchParams }: { searchParams: Promise<{ year?: string }> }
@@ -29,7 +29,7 @@ export default async function RegisterPage(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect(`/login?next=${encodeURIComponent(`/register?year=${event.year}`)}`)
-    if (!(await isActiveMember(user.id))) redirect('/join')
+    if (!(await isActiveMemberOrPartner(user.id))) redirect('/join')
   }
 
   const isOpen = isRegistrationOpen(event.year)

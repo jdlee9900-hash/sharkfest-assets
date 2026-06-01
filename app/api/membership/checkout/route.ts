@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   if (!stripeKey) return NextResponse.json({ error: 'Payments not configured' }, { status: 503 })
 
   const body = await request.json().catch(() => ({}))
-  const plan: MemberPlan = body?.plan === 'annual' ? 'annual' : 'monthly'
+  const plan: MemberPlan = body?.plan === 'family' ? 'family' : 'individual'
 
   // Map plan → price ID on the server; never trust a client-supplied price.
   const price = memberPriceId(plan)
@@ -50,7 +50,9 @@ export async function POST(request: Request) {
     mode: 'subscription',
     customer: customerId,
     line_items: [{ price, quantity: 1 }],
-    success_url: `${origin}/members?welcome=1`,
+    // session_id lets the members page reconcile straight from Stripe if it loads
+    // before the webhook has written the membership row.
+    success_url: `${origin}/members?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/join?status=cancelled`,
     metadata: { user_id: user.id, plan },
     subscription_data: { metadata: { user_id: user.id, plan } },

@@ -7,17 +7,18 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveMembership, memberPriceId, memberDiscountPercent } from '@/lib/membership'
 import { LoginForm } from '@/components/LoginForm'
 import { MembershipPlans } from '@/components/MembershipPlans'
+import { SignOutButton } from '@/components/SignOutButton'
 
 export const metadata: Metadata = {
   title: 'Become a member · SharkFest',
 }
 
 // Look up the real recurring prices so the page shows accurate amounts.
-async function fetchPrices(): Promise<{ monthly: number | null; annual: number | null }> {
+async function fetchPrices(): Promise<{ individual: number | null; family: number | null }> {
   const key = process.env.STRIPE_SECRET_KEY
-  const monthlyId = memberPriceId('monthly')
-  const annualId = memberPriceId('annual')
-  if (!key || (!monthlyId && !annualId)) return { monthly: null, annual: null }
+  const individualId = memberPriceId('individual')
+  const familyId = memberPriceId('family')
+  if (!key || (!individualId && !familyId)) return { individual: null, family: null }
   const stripe = new Stripe(key)
   const get = async (id: string | null) => {
     if (!id) return null
@@ -28,8 +29,8 @@ async function fetchPrices(): Promise<{ monthly: number | null; annual: number |
       return null
     }
   }
-  const [monthly, annual] = await Promise.all([get(monthlyId), get(annualId)])
-  return { monthly, annual }
+  const [individual, family] = await Promise.all([get(individualId), get(familyId)])
+  return { individual, family }
 }
 
 const BENEFITS = [
@@ -42,6 +43,7 @@ const BENEFITS = [
 export default async function JoinPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const isLoggedIn = !!user
   const membership = user ? await getActiveMembership(user.id) : null
   const prices = await fetchPrices()
   const discount = memberDiscountPercent()
@@ -56,9 +58,17 @@ export default async function JoinPage() {
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
-          <Link href="/members" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Members area
-          </Link>
+          {membership ? (
+            <>
+              <Link href="/members" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>Members area</Link>
+              <SignOutButton className="rc-header-signout" />
+            </>
+          ) : isLoggedIn ? (
+            <>
+              <Link href="/my-booking" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--grey-400)' }}>My booking</Link>
+              <SignOutButton className="rc-header-signout" />
+            </>
+          ) : null}
         </nav>
       </header>
 
@@ -94,7 +104,9 @@ export default async function JoinPage() {
             <MembershipPlans prices={prices} discountPercent={discount} />
           ) : (
             <Suspense fallback={<div className="auth-card" style={{ minHeight: 260 }} />}>
-              <LoginForm />
+              {/* Send them back to /join after sign-in so they land on the plan
+                  picker (not the empty booking page) to finish becoming a member. */}
+              <LoginForm defaultNext="/join" />
             </Suspense>
           )}
         </section>

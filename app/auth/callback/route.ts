@@ -29,17 +29,26 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && user?.email) {
-      // Link any registrations with this email that aren't yet tied to a user account
       const service = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
         { auth: { autoRefreshToken: false, persistSession: false } }
       )
+
+      // Link any registrations with this email that aren't yet tied to a user account.
       await service
         .from('registrations')
         .update({ user_id: user.id })
         .eq('email', user.email)
         .is('user_id', null)
+
+      // Stamp partner_user_id when a partner first logs in — lets them access
+      // the shared booking going forward without needing the email match each time.
+      await service
+        .from('registrations')
+        .update({ partner_user_id: user.id })
+        .ilike('partner_email', user.email)
+        .is('partner_user_id', null)
 
       // Keep the member flag on this user's registrations in sync with their
       // current membership, so member pricing applies when a plan is allocated.
