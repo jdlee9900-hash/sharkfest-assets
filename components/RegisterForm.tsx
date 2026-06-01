@@ -38,8 +38,8 @@ const MAX_CAMP_NEAR = 2
  * as their registration id, so it's properly linked in the database.
  */
 function CampNearPicker({
-  year, picked, onChange,
-}: { year: number; picked: Picked[]; onChange: (next: Picked[]) => void }) {
+  year, eventName, picked, onChange,
+}: { year: number; eventName: string; picked: Picked[]; onChange: (next: Picked[]) => void }) {
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<Picked[]>([])
   const [loading, setLoading] = useState(false)
@@ -118,7 +118,7 @@ function CampNearPicker({
             <ul className="cn-results">
               {loading && <li className="cn-result cn-result--note">Searching…</li>}
               {!loading && results.length === 0 && (
-                <li className="cn-result cn-result--note">No matches yet — they may not have registered.</li>
+                <li className="cn-result cn-result--note">No one by that name has registered for {eventName} yet.</li>
               )}
               {results.map(r => (
                 <li key={r.id}>
@@ -136,7 +136,7 @@ function CampNearPicker({
       <p className="cn-hint">
         {full
           ? `You've chosen ${MAX_CAMP_NEAR} people. Remove one to change your selection.`
-          : 'Pick up to two people you’d like to be pitched near. They must have registered already.'}
+          : `Optional — pick up to two people you’d like to be pitched near. You can only choose people who’ve already registered for ${eventName}, so if you’re one of the first there may be no one to pick yet. Feel free to leave this blank.`}
       </p>
     </div>
   )
@@ -379,8 +379,8 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
 
         {/* Camp near */}
         <div className="cu-field">
-          <p className="cu-label">Who would you like to camp near?</p>
-          <CampNearPicker year={event.year} picked={campNear} onChange={setCampNear} />
+          <p className="cu-label">Who would you like to camp near? <span className="cu-optional">(optional)</span></p>
+          <CampNearPicker year={event.year} eventName={event.name} picked={campNear} onChange={setCampNear} />
         </div>
 
         {/* Vehicle reg */}

@@ -2293,3 +2293,6 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 .cn-result--note { color: var(--grey-400); font-size: 0.875rem; cursor: default; }
 
 .cn-hint { font-size: 0.8125rem; color: var(--grey-400); line-height: 1.5; }
+
+/* small "(optional)" qualifier on field labels */
+.cu-optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--grey-400); }
