@@ -20,6 +20,7 @@ export interface Registration {
   user_id: string | null
   camp_near_1: string | null
   camp_near_2: string | null
+  payment_method: 'full' | 'instalments' | null
   created_at: string
 }
 

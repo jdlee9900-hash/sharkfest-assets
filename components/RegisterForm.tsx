@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { getEvent, type FestivalEvent } from '@/lib/events'
 import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
+import { isInstalmentAvailable, calculateInstalmentSchedule, INSTALMENT_CUTOFF } from '@/lib/instalments'
 
 type Step = 'welcome' | 'form' | 'success'
 type Accommodation = 'Tent' | 'Caravan' | 'Mobile Home' | 'Campervan'
@@ -46,6 +47,12 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
 
   const [campNear, setCampNear]       = useState<Picked[]>([])
   const [partnerEmail, setPartnerEmail] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<'full' | 'instalments'>('full')
+
+  const showInstalments = isInstalmentAvailable(new Date())
+  const previewSchedule = showInstalments
+    ? calculateInstalmentSchedule(new Date(), 0)  // amounts unknown; preview dates only
+    : []
 
   const patch = (key: keyof FormData, value: FormData[keyof FormData]) =>
     setForm(prev => ({ ...prev, [key]: value }))
@@ -62,7 +69,7 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, company: hp, year: event.year, camp_near: campNear.map(p => p.id), partner_email: partnerEmail.trim() || undefined }),
+        body: JSON.stringify({ ...form, company: hp, year: event.year, camp_near: campNear.map(p => p.id), partner_email: partnerEmail.trim() || undefined, payment_method: paymentMethod }),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? 'Registration failed')
@@ -296,6 +303,51 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
             value={form.notes} onChange={e => patch('notes', e.target.value)}
             placeholder="Anything else we should know — accessibility requirements, preferred location, etc."
             rows={3} />
+        </div>
+
+        {/* Payment method */}
+        <div className="cu-field">
+          <p className="cu-label">Payment method</p>
+          <div className="reg-pay-grid">
+            <button
+              type="button"
+              className={`reg-pay-option ${paymentMethod === 'full' ? 'reg-pay-option--active' : ''}`}
+              onClick={() => setPaymentMethod('full')}
+            >
+              <span className="reg-pay-icon" aria-hidden="true">💳</span>
+              <span className="reg-pay-label">Deposit + balance</span>
+              <span className="reg-pay-hint">£50 deposit to secure your place, then pay the rest whenever you're ready.</span>
+            </button>
+
+            {showInstalments ? (
+              <button
+                type="button"
+                className={`reg-pay-option ${paymentMethod === 'instalments' ? 'reg-pay-option--active' : ''}`}
+                onClick={() => setPaymentMethod('instalments')}
+              >
+                <span className="reg-pay-icon" aria-hidden="true">📅</span>
+                <span className="reg-pay-label">3 equal instalments</span>
+                <span className="reg-pay-hint">
+                  Split into 3 equal payments, due approximately:
+                  {previewSchedule.map(s => (
+                    <span key={s.dueDateIso} className="reg-pay-date">
+                      {s.dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  ))}
+                  Amounts confirmed once your booking is reviewed.
+                </span>
+              </button>
+            ) : (
+              <div className="reg-pay-option reg-pay-option--disabled">
+                <span className="reg-pay-icon" aria-hidden="true">📅</span>
+                <span className="reg-pay-label">3 equal instalments</span>
+                <span className="reg-pay-hint">
+                  No longer available — bookings within 4 months of the event require full payment.
+                  Cut-off was {INSTALMENT_CUTOFF.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="reg-actions">

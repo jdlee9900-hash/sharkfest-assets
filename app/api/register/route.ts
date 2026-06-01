@@ -4,6 +4,7 @@ import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, emailPartnerI
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvent } from '@/lib/events'
 import { isActiveMemberOrPartner } from '@/lib/membership'
+import { isInstalmentAvailable } from '@/lib/instalments'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -23,7 +24,12 @@ export async function POST(request: Request) {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
       vehicle_reg, notes, company, year, camp_near, partner_email,
+      payment_method: rawPaymentMethod,
     } = body
+
+    // Validate and normalise payment method. Default to 'full' if not supplied.
+    const paymentMethod: 'full' | 'instalments' =
+      rawPaymentMethod === 'instalments' ? 'instalments' : 'full'
 
     // Resolve which festival this registration is for. Unknown/missing years
     // fall back to the default event, so older clients keep working.
@@ -116,6 +122,9 @@ export async function POST(request: Request) {
         ...(typeof partner_email === 'string' && EMAIL_RE.test(partner_email.trim()) && partner_email.trim().toLowerCase() !== email.trim().toLowerCase()
           ? { partner_email: partner_email.trim().toLowerCase().slice(0, 254) }
           : {}),
+        // Only store 'instalments' if the cut-off hasn't passed; silently
+        // fall back to 'full' if someone submits an outdated form.
+        payment_method: paymentMethod === 'instalments' && isInstalmentAvailable(new Date()) ? 'instalments' : 'full',
       })
       .select('id, email, first_name, surname, mobile, adults, kids, accommodation, electric_hookup')
       .single()
@@ -130,7 +139,7 @@ export async function POST(request: Request) {
       : null
 
     await Promise.allSettled([
-      sendEmail(data.email, `${event.name} — Registration received`, emailRegistrationUser(data, origin, event)),
+      sendEmail(data.email, `${event.name} — Registration received`, emailRegistrationUser(data, origin, event, paymentMethod)),
       ...admins.map(to =>
         sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin(data, origin, event))
       ),

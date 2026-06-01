@@ -130,15 +130,22 @@ function tSummary(rows: [string, string][]): string {
 export function emailRegistrationUser(
   reg: { first_name: string },
   origin: string,
-  event: Pick<FestivalEvent, 'name'> = DEFAULT_EVENT
+  event: Pick<FestivalEvent, 'name'> = DEFAULT_EVENT,
+  paymentMethod?: 'full' | 'instalments' | null,
 ): EmailBody {
   const url = `${origin}/my-booking`
+  const paymentNote = paymentMethod === 'instalments'
+    ? "You've chosen to pay in <strong>3 equal instalments</strong>. Once we've reviewed your booking, we'll send your confirmed payment schedule with amounts and due dates."
+    : "Once reviewed, we'll set up a payment plan and send you the total cost with instructions on how to pay the deposit to secure your place."
+  const paymentNoteText = paymentMethod === 'instalments'
+    ? "You've chosen to pay in 3 equal instalments. Once we've reviewed your booking,\nwe'll send your confirmed payment schedule with amounts and due dates."
+    : "Once reviewed, we'll set up a payment plan and send you the total cost with\ninstructions on how to pay the deposit to secure your place."
   return {
     html: htmlWrap(`
       ${hh('Registration received')}
       ${hp(`Hi ${reg.first_name},`)}
       ${hp(`Thank you for registering for ${event.name}. We've received your details and will review your booking shortly.`)}
-      ${hp("Once reviewed, we'll set up a payment plan and send you the total cost with instructions on how to pay the deposit to secure your place.")}
+      ${hp(paymentNote)}
       ${hp('You can check your booking status at any time:')}
       ${hcta('View my booking', url)}
     `, event.name),
@@ -148,8 +155,7 @@ Hi ${reg.first_name},
 Thank you for registering for ${event.name}. We've received your details
 and will review your booking shortly.
 
-Once reviewed, we'll set up a payment plan and send you the total cost with
-instructions on how to pay the deposit to secure your place.
+${paymentNoteText}
 
 View your booking: ${url}
     `),
@@ -197,10 +203,51 @@ Admin panel: ${url}
 export function emailPlanAllocated(
   reg: { first_name: string },
   plan: { total_amount: number; notes: string | null; member_discount_pct?: number | null },
-  origin: string
+  origin: string,
+  instalmentSchedule?: { label: string; amount: number; dueDateIso: string }[] | null,
 ): EmailBody {
-  const remaining = Math.max(0, plan.total_amount - 5000)
   const url = `${origin}/my-booking`
+
+  if (instalmentSchedule?.length) {
+    // Instalment payment plan
+    const discountRows: [string, string][] = plan.member_discount_pct
+      ? [['Member discount', `${plan.member_discount_pct}% applied ✓`]]
+      : []
+    const scheduleRows: [string, string][] = instalmentSchedule.map(i => [
+      i.label,
+      `${fmtGBP(i.amount)} — due ${fmtDate(i.dueDateIso)}`,
+    ])
+    const summaryRows: [string, string][] = [
+      ...discountRows,
+      ['Total cost', fmtGBP(plan.total_amount)],
+      ...scheduleRows,
+      ...(plan.notes ? [['Notes', plan.notes] as [string, string]] : []),
+    ]
+    return {
+      html: htmlWrap(`
+        ${hh('Your instalment schedule is ready')}
+        ${hp(`Hi ${reg.first_name},`)}
+        ${hp('Your SharkFest 2027 booking has been reviewed and your instalment schedule is confirmed.')}
+        ${hSummary(summaryRows)}
+        ${hp('Pay each instalment by its due date via your booking page. You can pay ahead of schedule at any time.')}
+        ${hcta('View payment schedule', url)}
+      `),
+      text: textWrap('SharkFest 2027 — Your instalment schedule is ready', `
+Hi ${reg.first_name},
+
+Your SharkFest 2027 booking has been reviewed and your instalment schedule is confirmed.
+
+${tSummary(summaryRows)}
+Pay each instalment by its due date via your booking page.
+You can pay ahead of schedule at any time.
+
+View your booking: ${url}
+      `),
+    }
+  }
+
+  // Full / deposit plan (default)
+  const remaining = Math.max(0, plan.total_amount - 5000)
   const summaryRows: [string, string][] = [
     ...(plan.member_discount_pct ? [[`Member discount`, `${plan.member_discount_pct}% applied ✓`] as [string, string]] : []),
     ['Total cost',        fmtGBP(plan.total_amount)],
@@ -371,6 +418,43 @@ track payments, and manage your camp-near preferences.
 
 Visit this link to sign in with a magic link (no password needed):
 ${url}
+    `),
+  }
+}
+
+export function emailInstalmentReminder(
+  reg: { first_name: string },
+  due: { id: string; label: string; amount: number; due_date: string | null },
+  allInstalments: { id: string; label: string; amount: number; due_date: string | null }[],
+  paidIds: Set<string>,
+  origin: string,
+): EmailBody {
+  const url = `${origin}/my-booking`
+
+  // Build schedule rows — mark paid with ✓, the due one with ←
+  const scheduleRows: [string, string][] = allInstalments.map(i => {
+    const paid = paidIds.has(i.id)
+    const isCurrent = i.id === due.id
+    const status = paid ? '✓ Paid' : isCurrent ? '← Due today' : fmtDate(i.due_date)
+    return [i.label, `${fmtGBP(i.amount)} — ${status}`]
+  })
+
+  return {
+    html: htmlWrap(`
+      ${hh(`Payment due — ${due.label}`)}
+      ${hp(`Hi ${reg.first_name},`)}
+      ${hp(`Your <strong>${due.label}</strong> of <strong>${fmtGBP(due.amount)}</strong> for SharkFest 2027 is due today.`)}
+      ${hSummary(scheduleRows)}
+      ${hp('Log in to your booking page to pay securely by card.')}
+      ${hcta('Pay now', url)}
+    `),
+    text: textWrap(`SharkFest 2027 — ${due.label} due today`, `
+Hi ${reg.first_name},
+
+Your ${due.label} of ${fmtGBP(due.amount)} for SharkFest 2027 is due today.
+
+${tSummary(scheduleRows)}
+Log in to pay: ${url}
     `),
   }
 }

@@ -1085,6 +1085,23 @@ body::after {
 .reg-accom-label { font-size: 0.875rem; font-weight: 700; color: var(--navy-900); }
 .reg-accom-hint { font-size: 0.75rem; color: var(--grey-400); line-height: 1.3; }
 
+/* Payment method selector ── registration form ─────────────────────────── */
+.reg-pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 520px) { .reg-pay-grid { grid-template-columns: 1fr; } }
+.reg-pay-option {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  padding: 0.875rem 1rem; border-radius: var(--r-lg);
+  border: 1.5px solid var(--grey-100); background: #fff;
+  cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s;
+}
+.reg-pay-option:hover:not(.reg-pay-option--disabled) { border-color: var(--grey-300); }
+.reg-pay-option--active { border-color: var(--gold-400) !important; background: #fffbea; }
+.reg-pay-option--disabled { cursor: not-allowed; opacity: 0.55; background: var(--grey-50); }
+.reg-pay-icon { font-size: 1.5rem; }
+.reg-pay-label { font-size: 0.9375rem; font-weight: 700; color: var(--navy-900); }
+.reg-pay-hint { font-size: 0.8rem; color: var(--grey-500); line-height: 1.4; display: flex; flex-direction: column; gap: 0.15rem; }
+.reg-pay-date { font-weight: 600; color: var(--navy-900); }
+
 /* Form actions */
 .reg-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.5rem; }
 .reg-back-btn {

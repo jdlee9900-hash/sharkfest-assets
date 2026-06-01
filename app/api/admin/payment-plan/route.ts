@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 import { sendEmail, emailPlanAllocated, getOrigin } from '@/lib/email'
 import { isActiveMember, memberDiscountPercent, memberPrice } from '@/lib/membership'
+import { calculateInstalmentSchedule } from '@/lib/instalments'
 
 const DEPOSIT_AMOUNT = 5000 // £50 in pence
 
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   // member discount to the allocated total so the saving is genuine (it lowers
   // what they owe overall, keeping balance accounting coherent).
   const { data: reg0 } = await service
-    .from('registrations').select('user_id, is_member').eq('id', registration_id).maybeSingle()
+    .from('registrations').select('user_id, is_member, payment_method, created_at').eq('id', registration_id).maybeSingle()
   const memberish = Boolean(reg0?.is_member) || (reg0?.user_id ? await isActiveMember(reg0.user_id) : false)
   const memberPct = memberish ? memberDiscountPercent() : 0
   const finalTotal = memberish ? memberPrice(amount, memberPct) : amount
@@ -81,15 +82,34 @@ export async function POST(request: Request) {
     plan = data
     planErr = error
 
-    // Auto-create deposit instalment on first allocation
+    // Auto-create instalment rows on first allocation.
+    // Instalment bookings get 3 equal monthly instalments; all others get the
+    // standard £50 deposit row.
     if (!error && data) {
-      await service.from('instalments').insert({
-        payment_plan_id: data.id,
-        registration_id,
-        label: 'Deposit',
-        amount: DEPOSIT_AMOUNT,
-        due_date: null,
-      })
+      const useInstalments = reg0?.payment_method === 'instalments'
+      if (useInstalments && reg0?.created_at) {
+        const schedule = calculateInstalmentSchedule(
+          new Date(reg0.created_at),
+          finalTotal,
+        )
+        await service.from('instalments').insert(
+          schedule.map(item => ({
+            payment_plan_id: data.id,
+            registration_id,
+            label: item.label,
+            amount: item.amount,
+            due_date: item.dueDateIso,
+          }))
+        )
+      } else {
+        await service.from('instalments').insert({
+          payment_plan_id: data.id,
+          registration_id,
+          label: 'Deposit',
+          amount: DEPOSIT_AMOUNT,
+          due_date: null,
+        })
+      }
     }
   }
 
@@ -105,10 +125,21 @@ export async function POST(request: Request) {
     .single()
 
   if (reg) {
+    const instalmentSchedule = reg0?.payment_method === 'instalments' && reg0?.created_at
+      ? calculateInstalmentSchedule(new Date(reg0.created_at), finalTotal)
+      : null
+    const subject = instalmentSchedule
+      ? 'Your SharkFest 2027 instalment schedule is ready'
+      : 'Your SharkFest 2027 payment plan is ready'
     await sendEmail(
       reg.email,
-      'Your SharkFest 2027 payment plan is ready',
-      emailPlanAllocated(reg, { total_amount: finalTotal, notes: safeNotes, member_discount_pct: memberPct || null }, getOrigin())
+      subject,
+      emailPlanAllocated(
+        reg,
+        { total_amount: finalTotal, notes: safeNotes, member_discount_pct: memberPct || null },
+        getOrigin(),
+        instalmentSchedule,
+      )
     )
   }
 
