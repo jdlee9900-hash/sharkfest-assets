@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { MyBookingView } from '@/components/MyBookingView'
+import { InstallPrompt } from '@/components/InstallPrompt'
 
 export const metadata: Metadata = {
   title: 'My Booking · SharkFest 2027',
@@ -113,6 +114,8 @@ export default async function MyBookingPage() {
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
       </footer>
+
+      <InstallPrompt />
     </>
   )
 }

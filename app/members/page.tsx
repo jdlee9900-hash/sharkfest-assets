@@ -8,6 +8,7 @@ import { getMembershipOrPartnerMembership, getActiveMembership, reconcileCheckou
 import { thumbUrl } from '@/lib/cloudinary'
 import { getOrigin } from '@/lib/email'
 import { MembersView, type FeedPost } from '@/components/MembersView'
+import { InstallPrompt } from '@/components/InstallPrompt'
 import type { MemberPost } from '@/lib/types'
 
 export const metadata: Metadata = {
@@ -143,6 +144,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
       </footer>
+
+      <InstallPrompt />
     </>
   )
 }

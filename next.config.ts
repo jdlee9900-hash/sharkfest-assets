@@ -20,6 +20,9 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
+  // PWA: same-origin service worker + web app manifest.
+  "worker-src 'self'",
+  "manifest-src 'self'",
 ].join('; ')
 
 const securityHeaders = [

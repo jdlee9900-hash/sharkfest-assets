@@ -2495,3 +2495,62 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
   .teaser-2027-sub   { font-size: 0.875rem; }
   .teaser-2027-sep   { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   PWA install prompt — dismissible card, fixed bottom on mobile
+═══════════════════════════════════════════════════════════════════ */
+.pwa-prompt {
+  position: fixed;
+  left: 50%; bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 200;
+  width: calc(100% - 2rem); max-width: 420px;
+  background: linear-gradient(160deg, #131b30 0%, #0a0f1e 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  padding: 1.1rem 1.1rem 1.15rem;
+  color: #fff;
+  animation: pwaSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pwaSlideUp {
+  from { opacity: 0; transform: translate(-50%, 1.5rem); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.pwa-prompt-close {
+  position: absolute; top: 0.6rem; right: 0.6rem;
+  width: 1.9rem; height: 1.9rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--grey-400); background: rgba(255,255,255,0.06);
+  transition: color 0.15s, background 0.15s;
+}
+.pwa-prompt-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
+
+.pwa-prompt-body { display: flex; align-items: flex-start; gap: 0.9rem; padding-right: 1.5rem; }
+.pwa-prompt-icon {
+  width: 48px; height: 48px; border-radius: 11px; flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+.pwa-prompt-text { min-width: 0; }
+.pwa-prompt-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+.pwa-prompt-sub { font-size: 0.85rem; line-height: 1.5; color: var(--grey-300); }
+.pwa-prompt-sub strong { color: #fff; font-weight: 600; }
+
+.pwa-share-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.35rem; height: 1.35rem; vertical-align: middle;
+  border-radius: 5px; background: rgba(96,165,250,0.18); color: #60a5fa;
+  margin: 0 0.1rem;
+}
+
+.pwa-prompt-actions {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-top: 0.95rem; padding-left: 0;
+}
+.pwa-prompt-cta { height: 2.4rem; padding: 0 1.4rem; font-size: 0.875rem; flex: 1; justify-content: center; }
+.pwa-prompt-later {
+  font-size: 0.85rem; font-weight: 500; color: var(--grey-400);
+  padding: 0 0.5rem; transition: color 0.15s;
+}
+.pwa-prompt-later:hover { color: #fff; }

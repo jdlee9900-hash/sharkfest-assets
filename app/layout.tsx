@@ -1,10 +1,25 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
+import { PWARegister } from '@/components/PWARegister'
 
 export const metadata: Metadata = {
   title: 'SharkFest — Torbay Sharks RFC',
   description: 'Three days, two marquees, one community on the Devon Coast. Relive SharkFest 2026.',
+  applicationName: 'SharkFest',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'SharkFest',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   openGraph: {
     title: 'SharkFest — Torbay Sharks RFC',
     description: 'Three days, two marquees, one community on the Devon Coast. Relive SharkFest 2026.',
@@ -12,10 +27,20 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: '#0a0f1e',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body><AuthProvider>{children}</AuthProvider></body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+        <PWARegister />
+      </body>
     </html>
   )
 }
