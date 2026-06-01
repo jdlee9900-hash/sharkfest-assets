@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
 import { Countdown2027 } from '@/components/Countdown2027'
 import { PartnerEmailCard } from '@/components/PartnerEmailCard'
+import { SignOutButton } from '@/components/SignOutButton'
 import type { MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
@@ -77,12 +78,6 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
     }
   }
 
-  const handleSignOut = async () => {
-    const { createClient } = await import('@/lib/supabase/client')
-    await createClient().auth.signOut()
-    router.push('/')
-  }
-
   return (
     <div className="members-wrap">
       <div className="members-head">
@@ -91,7 +86,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           <h1 className="members-title">Welcome back{card.name ? `, ${card.name.split(' ')[0]}` : ''}</h1>
           <p className="members-email">{email}</p>
         </div>
-        <button className="mb-signout" onClick={handleSignOut}>Log out</button>
+        <SignOutButton>Log out</SignOutButton>
       </div>
 
       {justJoined && (

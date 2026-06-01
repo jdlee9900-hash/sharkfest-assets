@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveMembership, memberPriceId, memberDiscountPercent } from '@/lib/membership'
 import { LoginForm } from '@/components/LoginForm'
 import { MembershipPlans } from '@/components/MembershipPlans'
+import { SignOutButton } from '@/components/SignOutButton'
 
 export const metadata: Metadata = {
   title: 'Become a member · SharkFest',
@@ -42,6 +43,7 @@ const BENEFITS = [
 export default async function JoinPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const isLoggedIn = !!user
   const membership = user ? await getActiveMembership(user.id) : null
   const prices = await fetchPrices()
   const discount = memberDiscountPercent()
@@ -56,9 +58,17 @@ export default async function JoinPage() {
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
-          <Link href="/members" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Members area
-          </Link>
+          {membership ? (
+            <>
+              <Link href="/members" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>Members area</Link>
+              <SignOutButton className="rc-header-signout" />
+            </>
+          ) : isLoggedIn ? (
+            <>
+              <Link href="/my-booking" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--grey-400)' }}>My booking</Link>
+              <SignOutButton className="rc-header-signout" />
+            </>
+          ) : null}
         </nav>
       </header>
 

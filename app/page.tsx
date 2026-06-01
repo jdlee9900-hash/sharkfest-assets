@@ -6,6 +6,7 @@ import { OceanCanvas }      from '@/components/OceanCanvas'
 import { Marquee }           from '@/components/Marquee'
 import { ScrollReveal }      from '@/components/ScrollReveal'
 import { AnimatedCounter }   from '@/components/AnimatedCounter'
+import { SignOutButton }     from '@/components/SignOutButton'
 
 const STATS = [
   { value: 830, label: 'Attendees', suffix: '+' },
@@ -32,9 +33,11 @@ export default async function Page() {
   // The landing page is public — never let an auth/membership lookup failure
   // (e.g. a missing service key or transient DB error) crash the whole site.
   let isMember = false
+  let isLoggedIn = false
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    isLoggedIn = !!user
     isMember = user ? await isActiveMember(user.id) : false
   } catch (err) {
     console.error('[home] membership check failed:', err)
@@ -42,6 +45,43 @@ export default async function Page() {
 
   return (
     <>
+      {/* ══════════════════ SITE HEADER ══════════════════ */}
+      <header className="rc-header">
+        <Link href="/" className="rc-header-logo" aria-label="SharkFest home">
+          <Image src="/logo.png" alt="Torbay Sharks RFC" width={28} height={28} />
+          <span>SharkFest</span>
+        </Link>
+        <nav className="rc-header-nav" aria-label="Site navigation">
+          <Link href="/#2026">2026</Link>
+          <Link href="/community">Photos</Link>
+          {isMember ? (
+            <>
+              <Link href="/members" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+                Members area
+              </Link>
+              <Link href="/my-booking" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--grey-400)' }}>
+                My booking
+              </Link>
+              <SignOutButton className="rc-header-signout" />
+            </>
+          ) : isLoggedIn ? (
+            <>
+              <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+                Become a member
+              </Link>
+              <Link href="/my-booking" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--grey-400)' }}>
+                My booking
+              </Link>
+              <SignOutButton className="rc-header-signout" />
+            </>
+          ) : (
+            <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+              Become a member
+            </Link>
+          )}
+        </nav>
+      </header>
+
       {/* ══════════════════ HERO ══════════════════ */}
       <section className="hero">
         <OceanCanvas />
@@ -57,16 +97,28 @@ export default async function Page() {
           <p className="hero-sub">Thank you for an unforgettable weekend.<br />Relive it all below.</p>
 
           <div className="hero-cta">
-            {isMember && (
-              <Link href="/members" className="btn btn-accent">
-                Access Membership
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </Link>
+            {isMember ? (
+              <>
+                <Link href="/members" className="btn btn-accent">
+                  Members area
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </Link>
+                <Link href="/my-booking" className="btn btn-outline">
+                  My booking
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/join" className="btn btn-accent">
+                  Become a member
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </Link>
+                <a href="#2026" className="btn btn-outline">
+                  Relive 2026
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </a>
+              </>
             )}
-            <a href="#2026" className="btn btn-outline">
-              Relive 2026
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-            </a>
           </div>
         </div>
 
@@ -222,20 +274,22 @@ export default async function Page() {
       </section>
 
       {/* ══════════════════ MEMBERSHIP ══════════════════ */}
-      <section className="join-promo" id="membership">
-        <div className="join-promo-inner">
-          <ScrollReveal>
-            <p className="join-promo-eyebrow">Membership</p>
-            <h2 className="join-promo-title">Stay part of it, all year round</h2>
-            <p className="join-promo-body">
-              SharkFest 2026 is in the books. Become a member for exclusive content,
-              members events, your own digital membership card — and a reduced price
-              when the next festival&apos;s tickets open.
-            </p>
-            <Link href="/join" className="btn btn-accent join-promo-cta">Become a member</Link>
-          </ScrollReveal>
-        </div>
-      </section>
+      {!isMember && (
+        <section className="join-promo" id="membership">
+          <div className="join-promo-inner">
+            <ScrollReveal>
+              <p className="join-promo-eyebrow">Membership</p>
+              <h2 className="join-promo-title">Stay part of it, all year round</h2>
+              <p className="join-promo-body">
+                SharkFest 2026 is in the books. Become a member for exclusive content,
+                members events, your own digital membership card — and a reduced price
+                when the next festival&apos;s tickets open.
+              </p>
+              <Link href="/join" className="btn btn-accent join-promo-cta">Become a member</Link>
+            </ScrollReveal>
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════ FOOTER ══════════════════ */}
       <footer className="footer">

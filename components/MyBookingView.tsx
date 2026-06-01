@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import type { Registration, PaymentPlan, Instalment, Payment } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
 import { getEvent } from '@/lib/events'
 import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
 import { PartnerEmailCard } from '@/components/PartnerEmailCard'
+import { SignOutButton } from '@/components/SignOutButton'
 
 interface Props {
   user: { email?: string }
@@ -108,7 +109,6 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export function MyBookingView({ user, registration, paymentPlan, instalments, payments, campNearInitial, isPartner = false }: Props) {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const paymentResult = searchParams.get('payment')
 
@@ -165,12 +165,6 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
 
   const handleCustomPay = () => payAmount(Math.round(parseFloat(customAmount) * 100), 'custom')
 
-  const handleSignOut = async () => {
-    const { createClient } = await import('@/lib/supabase/client')
-    await createClient().auth.signOut()
-    router.push('/')
-  }
-
   return (
     <div className="mb-wrap">
       {/* Header */}
@@ -179,7 +173,7 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
           <h1 className="mb-title">My Booking</h1>
           <p className="mb-email">{user.email}</p>
         </div>
-        <button className="mb-signout" onClick={handleSignOut}>Sign out</button>
+        <SignOutButton>Sign out</SignOutButton>
       </div>
 
       {/* Payment result banners */}
