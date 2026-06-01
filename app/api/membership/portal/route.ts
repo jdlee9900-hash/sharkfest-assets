@@ -13,6 +13,9 @@ export async function POST() {
 
   const membership = await getActiveMembership(user.id)
   if (!membership) return NextResponse.json({ error: 'No active membership' }, { status: 403 })
+  if (membership.stripe_customer_id === 'comp') {
+    return NextResponse.json({ error: 'Complimentary memberships have no billing to manage' }, { status: 400 })
+  }
 
   const stripe = new Stripe(stripeKey)
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'

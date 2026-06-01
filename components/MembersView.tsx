@@ -44,6 +44,7 @@ interface Props {
   events: FeedPost[]
   partnerEmail: string | null
   isPartner: boolean
+  isComp: boolean
 }
 
 const BENEFITS = (discountPercent: number) => [
@@ -59,7 +60,7 @@ const F27_HIGHLIGHTS = [
   { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
-export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner }: Props) {
+export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -151,9 +152,11 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
               {error}
             </div>
           )}
-          <button className="btn btn-dark members-manage" onClick={handleManage} disabled={busy}>
-            {busy ? 'Opening…' : 'Manage membership & billing'}
-          </button>
+          {!isComp && (
+            <button className="btn btn-dark members-manage" onClick={handleManage} disabled={busy}>
+              {busy ? 'Opening…' : 'Manage membership & billing'}
+            </button>
+          )}
         </div>
       </div>
 
