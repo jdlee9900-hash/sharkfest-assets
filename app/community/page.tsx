@@ -33,7 +33,6 @@ export default async function CommunityPage() {
           <span>SharkFest</span>
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/#2026">2026</Link>
           <Link href="/run-club">Run Club</Link>
           <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
             Become a member
