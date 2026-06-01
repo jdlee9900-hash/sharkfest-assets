@@ -68,9 +68,6 @@ export default async function MyBookingPage() {
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
           <Link href="/members">Members</Link>
-          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Become a member
-          </Link>
         </nav>
       </header>
 
