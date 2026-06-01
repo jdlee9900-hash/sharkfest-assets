@@ -50,7 +50,9 @@ export async function POST(request: Request) {
     mode: 'subscription',
     customer: customerId,
     line_items: [{ price, quantity: 1 }],
-    success_url: `${origin}/members?welcome=1`,
+    // session_id lets the members page reconcile straight from Stripe if it loads
+    // before the webhook has written the membership row.
+    success_url: `${origin}/members?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/join?status=cancelled`,
     metadata: { user_id: user.id, plan },
     subscription_data: { metadata: { user_id: user.id, plan } },

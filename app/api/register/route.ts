@@ -3,7 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, emailPartnerInvite, getOrigin, getAdminEmails } from '@/lib/email'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvent } from '@/lib/events'
-import { isActiveMember } from '@/lib/membership'
+import { isActiveMemberOrPartner } from '@/lib/membership'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
           { status: 401 }
         )
       }
-      if (!(await isActiveMember(user.id))) {
+      if (!(await isActiveMemberOrPartner(user.id))) {
         return NextResponse.json(
           { error: `${event.name} registration is exclusive to members. Join the club to book your pitch.` },
           { status: 403 }

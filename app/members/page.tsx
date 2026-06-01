@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import QRCode from 'qrcode'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { getMembershipOrPartnerMembership, getActiveMembership, membershipNumber, memberDiscountPercent } from '@/lib/membership'
+import { getMembershipOrPartnerMembership, getActiveMembership, reconcileCheckoutSession, membershipNumber, memberDiscountPercent } from '@/lib/membership'
 import { thumbUrl } from '@/lib/cloudinary'
 import { getOrigin } from '@/lib/email'
 import { MembersView, type FeedPost } from '@/components/MembersView'
@@ -14,12 +14,19 @@ export const metadata: Metadata = {
   title: 'Members · SharkFest',
 }
 
-export default async function MembersPage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
+export default async function MembersPage({ searchParams }: { searchParams: Promise<{ welcome?: string; session_id?: string }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/members')
 
-  const membership = await getMembershipOrPartnerMembership(user.id)
+  const { welcome, session_id } = await searchParams
+
+  let membership = await getMembershipOrPartnerMembership(user.id)
+  // Just paid but the webhook hasn't landed yet? Reconcile straight from Stripe
+  // so a brand-new member isn't bounced back to /join having just subscribed.
+  if (!membership && welcome === '1' && session_id) {
+    membership = await reconcileCheckoutSession(session_id, user.id)
+  }
   if (!membership) redirect('/join')
 
   const service = createServiceClient()
@@ -89,8 +96,6 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   } catch {
     qrDataUrl = null
   }
-
-  const { welcome } = await searchParams
 
   return (
     <>

@@ -1,5 +1,6 @@
+import Stripe from 'stripe'
 import { createServiceClient } from '@/lib/supabase/server'
-import type { Membership, MemberPlan } from '@/lib/types'
+import type { Membership, MemberPlan, MembershipStatus } from '@/lib/types'
 
 // Stripe recurring price IDs are created in the Stripe dashboard and supplied via env.
 // Falls back to the older monthly/annual env vars so nothing hard-breaks pre-setup.
@@ -79,4 +80,86 @@ export async function isActiveMemberOrPartner(userId: string): Promise<boolean> 
 export function membershipNumber(m: Pick<Membership, 'id'>): string {
   const hex = m.id.replace(/-/g, '').slice(0, 6).toUpperCase()
   return `TSRFC-${hex}`
+}
+
+// ── Stripe subscription → membership row ──────────────────────────────────────
+
+/** Map Stripe's subscription status to our narrower set. */
+export function mapSubStatus(s: Stripe.Subscription.Status): MembershipStatus {
+  switch (s) {
+    case 'active':
+    case 'trialing':   return 'active'
+    case 'past_due':
+    case 'unpaid':
+    case 'paused':     return 'past_due'
+    case 'incomplete': return 'incomplete'
+    default:           return 'canceled' // canceled, incomplete_expired
+  }
+}
+
+/**
+ * Upsert a membership row from a Stripe subscription (idempotent on subscription
+ * id). Shared by the webhook and the post-checkout reconcile path so both write
+ * the row identically.
+ */
+export async function upsertMembershipFromStripe(sub: Stripe.Subscription, email: string): Promise<void> {
+  const userId = sub.metadata?.user_id
+  if (!userId) return
+  const service = createServiceClient()
+  const priceId = sub.items.data[0]?.price.id ?? null
+  const periodEnd = sub.items.data[0]?.current_period_end ?? null
+  const familyPrice = process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL
+  const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? (priceId === familyPrice ? 'family' : 'individual')
+
+  await service.from('memberships').upsert({
+    user_id: userId,
+    email,
+    stripe_customer_id: sub.customer as string,
+    stripe_subscription_id: sub.id,
+    stripe_price_id: priceId,
+    plan,
+    status: mapSubStatus(sub.status),
+    current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+    cancel_at_period_end: sub.cancel_at_period_end,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'stripe_subscription_id' })
+
+  // Flag the user's registrations as member-owned (for admin visibility + pricing).
+  const status = mapSubStatus(sub.status)
+  const active = status === 'active' || status === 'past_due'
+  await service.from('registrations').update({ is_member: active }).eq('user_id', userId)
+}
+
+/**
+ * Reconcile a just-completed Checkout Session straight from Stripe, in case the
+ * webhook hasn't landed yet by the time the customer is redirected back. Verifies
+ * the session belongs to this user and is paid before writing the membership row.
+ * Returns the resulting active membership, or null if it can't be confirmed.
+ */
+export async function reconcileCheckoutSession(sessionId: string, userId: string): Promise<Membership | null> {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key || !sessionId) return null
+  const stripe = new Stripe(key)
+
+  let session: Stripe.Checkout.Session
+  try {
+    session = await stripe.checkout.sessions.retrieve(sessionId)
+  } catch {
+    return null
+  }
+
+  // Must be this user's own paid subscription checkout — never trust the id blindly.
+  if (session.metadata?.user_id !== userId) return null
+  if (session.mode !== 'subscription' || !session.subscription) return null
+  if (session.status !== 'complete' && session.payment_status !== 'paid') return null
+
+  try {
+    const sub = await stripe.subscriptions.retrieve(session.subscription as string)
+    const email = session.customer_details?.email ?? session.customer_email ?? ''
+    await upsertMembershipFromStripe(sub, email)
+  } catch {
+    return null
+  }
+
+  return getActiveMembership(userId)
 }
