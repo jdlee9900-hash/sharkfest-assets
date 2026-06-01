@@ -124,6 +124,12 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
   const depositIns  = instalments.find(i => i.label === 'Deposit')
   const depositPaid = depositIns ? paidIds.has(depositIns.id) : false
 
+  const isInstalmentPlan = registration?.payment_method === 'instalments'
+  const scheduleInstalments = isInstalmentPlan
+    ? instalments.filter(i => i.label.startsWith('Instalment'))
+    : []
+  const todayIso = new Date().toISOString().slice(0, 10)
+
   const handlePay = async (instalmentId: string) => {
     setPaying(instalmentId)
     setPayError('')
@@ -275,8 +281,52 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
                 </div>
               )}
 
-              {/* Payment options — available whenever there's a balance to pay */}
-              {balance !== null && balance > 0 && (
+              {/* Payment options */}
+              {balance !== null && balance > 0 && isInstalmentPlan && scheduleInstalments.length > 0 && (
+                <>
+                  <p className="mb-custom-title" style={{ marginBottom: '0.75rem' }}>Instalment schedule</p>
+                  <div className="mb-instalments">
+                    {scheduleInstalments.map(ins => {
+                      const isPaid = paidIds.has(ins.id)
+                      const isOverdue = ins.due_date && ins.due_date < todayIso && !isPaid
+                      return (
+                        <div
+                          key={ins.id}
+                          className={`mb-instalment ${isPaid ? 'mb-instalment--paid' : ''}`}
+                          style={isOverdue ? { borderColor: '#fca5a5', background: '#fff5f5' } : undefined}
+                        >
+                          <div className="mb-ins-info">
+                            <span className="mb-ins-label">{ins.label}</span>
+                            <span className="mb-ins-due">
+                              Due {ins.due_date ? new Date(ins.due_date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                              {isOverdue && <span style={{ color: '#dc2626', marginLeft: '0.4rem', fontWeight: 600 }}>Overdue</span>}
+                            </span>
+                          </div>
+                          <div className="mb-ins-right">
+                            <span className="mb-ins-amount">{formatAmount(ins.amount)}</span>
+                            {isPaid ? (
+                              <span className="mb-ins-paid">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                                Paid
+                              </span>
+                            ) : (
+                              <button
+                                className="btn btn-accent mb-pay-btn"
+                                onClick={() => handlePay(ins.id)}
+                                disabled={paying === ins.id}
+                              >
+                                {paying === ins.id ? 'Redirecting…' : 'Pay now'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+
+              {balance !== null && balance > 0 && !isInstalmentPlan && (
                 <>
                   {/* Deposit prompt — secures the place */}
                   {depositIns && !depositPaid && (
@@ -352,9 +402,15 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
           ) : (
             <div className="mb-card mb-card--muted">
               <h2 className="mb-card-title">Payments</h2>
-              <p style={{ color: 'var(--grey-400)', marginTop: '0.5rem', fontSize: '0.9375rem' }}>
-                Your payment plan hasn&apos;t been allocated yet. We&apos;ll email you once it&apos;s ready, usually within 7 days of registering.
-              </p>
+              {registration?.payment_method === 'instalments' ? (
+                <p style={{ color: 'var(--grey-400)', marginTop: '0.5rem', fontSize: '0.9375rem' }}>
+                  You&apos;ve chosen to pay in 3 equal instalments. Once we&apos;ve reviewed your booking we&apos;ll confirm the amounts and due dates — usually within 7 days.
+                </p>
+              ) : (
+                <p style={{ color: 'var(--grey-400)', marginTop: '0.5rem', fontSize: '0.9375rem' }}>
+                  Your payment plan hasn&apos;t been allocated yet. We&apos;ll email you once it&apos;s ready, usually within 7 days of registering.
+                </p>
+              )}
             </div>
           )}
 
