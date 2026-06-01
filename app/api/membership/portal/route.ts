@@ -3,6 +3,8 @@ import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveMembership } from '@/lib/membership'
 
+const REAL_STRIPE_CUSTOMER = /^cus_[A-Za-z0-9]{10,}$/
+
 export async function POST() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -13,7 +15,7 @@ export async function POST() {
 
   const membership = await getActiveMembership(user.id)
   if (!membership) return NextResponse.json({ error: 'No active membership' }, { status: 403 })
-  if (membership.stripe_customer_id === 'comp') {
+  if (!REAL_STRIPE_CUSTOMER.test(membership.stripe_customer_id)) {
     return NextResponse.json({ error: 'Complimentary memberships have no billing to manage' }, { status: 400 })
   }
 

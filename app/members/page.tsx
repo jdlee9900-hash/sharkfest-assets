@@ -129,7 +129,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           events={events}
           partnerEmail={partnerEmail}
           isPartner={isPartner}
-          isComp={primaryMembership.stripe_customer_id === 'comp'}
+          isComp={!/^cus_[A-Za-z0-9]{10,}$/.test(primaryMembership.stripe_customer_id)}
         />
       </main>
 
