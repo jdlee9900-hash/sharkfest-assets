@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 import { LoginForm } from '@/components/LoginForm'
 
 export const metadata: Metadata = {
-  title: 'Sign in · SharkFest 2028',
+  title: 'Sign in · SharkFest 2027',
 }
 
 export default function LoginPage() {
@@ -19,8 +19,8 @@ export default function LoginPage() {
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
-          <Link href="/register" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Register 2028
+          <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+            Become a member
           </Link>
         </nav>
       </header>

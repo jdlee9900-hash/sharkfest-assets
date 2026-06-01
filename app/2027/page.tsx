@@ -1,17 +1,22 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { ScrollReveal } from '@/components/ScrollReveal'
 import { Countdown2027 } from '@/components/Countdown2027'
+import { createClient } from '@/lib/supabase/server'
+import { isActiveMember } from '@/lib/membership'
 
-// Direct-link only while we build it out — keep it off search engines and
-// don't link it from anywhere on the main site yet.
+// Members-only exclusive — reachable only through the members area, and kept
+// off search engines.
 export const metadata: Metadata = {
   title: 'SharkFest 2027 · 25th Anniversary — Torbay Sharks RFC',
   description:
     'SharkFest 2027 — our Silver 25th Anniversary. May Bank Holiday, 28–31 May 2027. Devon Coast.',
   robots: { index: false, follow: false },
 }
+
+export const dynamic = 'force-dynamic'
 
 const DAYS = [
   {
@@ -57,16 +62,22 @@ const DAYS = [
   },
 ]
 
-export default function Festival2027Page() {
+export default async function Festival2027Page() {
+  // Exclusive to members — non-members are routed to sign in or join.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login?next=/2027')
+  if (!(await isActiveMember(user.id))) redirect('/join')
+
   return (
     <div className="f27">
       {/* ── Topbar ──────────────────────────────── */}
       <header className="f27-header">
-        <Link href="/" className="f27-header-logo" aria-label="Back to SharkFest">
+        <Link href="/members" className="f27-header-logo" aria-label="Back to members area">
           <Image src="/logo.png" alt="Torbay Sharks RFC" width={36} height={36} />
           <span>SharkFest</span>
         </Link>
-        <span className="f27-header-badge">Planning · 2027</span>
+        <span className="f27-header-badge">✦ Members Exclusive</span>
       </header>
 
       {/* ── Hero ────────────────────────────────── */}
@@ -96,6 +107,14 @@ export default function Festival2027Page() {
             A quarter of a century of the festival we love — celebrated in glistening
             silver. Three nights of music, dancing and one very special anniversary party.
           </p>
+
+          <div className="f27-hero-cta">
+            <Link href="/register?year=2027" className="f27-btn f27-btn--silver">
+              Register your pitch
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <a href="#weekend" className="f27-btn f27-btn--ghost">See the weekend</a>
+          </div>
         </div>
 
         <div className="f27-wave" aria-hidden="true">
@@ -106,7 +125,7 @@ export default function Festival2027Page() {
       </section>
 
       {/* ── The Weekend ─────────────────────────── */}
-      <section className="f27-weekend">
+      <section className="f27-weekend" id="weekend">
         <div className="f27-inner">
           <ScrollReveal>
             <div className="f27-section-label">
@@ -164,6 +183,28 @@ export default function Festival2027Page() {
               <span className="f27-pill f27-pill--lg">💿 Metallics</span>
               <span className="f27-pill f27-pill--lg">🌟 Glitter</span>
             </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ── Register ────────────────────────────── */}
+      <section className="f27-register">
+        <div className="f27-sparkles" aria-hidden="true" />
+        <div className="f27-inner f27-register-inner">
+          <ScrollReveal>
+            <p className="f27-dress-eyebrow">Be there for the silver one</p>
+            <h2 className="f27-register-title">Register for SharkFest 2027</h2>
+            <p className="f27-register-body">
+              Reserve your pitch for the 25th Anniversary weekend. Tell us your party size
+              and accommodation, and we&apos;ll be in touch with pricing and your payment plan.
+            </p>
+            <Link href="/register?year=2027" className="f27-btn f27-btn--silver f27-btn--lg">
+              Register your pitch
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <p className="f27-register-note">
+              Already registered? <Link href="/login?next=/my-booking" className="f27-register-link">Sign in to your booking</Link>
+            </p>
           </ScrollReveal>
         </div>
       </section>

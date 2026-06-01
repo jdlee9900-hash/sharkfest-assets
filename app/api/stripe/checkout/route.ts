@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       price_data: {
         currency: 'gbp',
         product_data: {
-          name: `SharkFest 2028 — ${label}`,
+          name: `SharkFest 2027 — ${label}`,
           description: `${registration.first_name} ${registration.surname}`,
         },
         unit_amount: amountPence,

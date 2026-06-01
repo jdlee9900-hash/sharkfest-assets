@@ -107,7 +107,7 @@ export async function POST(request: Request) {
   if (reg) {
     await sendEmail(
       reg.email,
-      'Your SharkFest 2028 payment plan is ready',
+      'Your SharkFest 2027 payment plan is ready',
       emailPlanAllocated(reg, { total_amount: finalTotal, notes: safeNotes, member_discount_pct: memberPct || null }, getOrigin())
     )
   }

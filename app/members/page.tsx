@@ -108,7 +108,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         <p className="footer-sub">Torbay Sharks RFC · Devon Coast</p>
         <nav className="footer-links">
           <Link href="/">Home</Link>
-          <Link href="/register">Register 2028</Link>
+          <Link href="/2027">SharkFest 2027</Link>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
       </footer>

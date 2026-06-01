@@ -33,7 +33,7 @@ async function fetchPrices(): Promise<{ monthly: number | null; annual: number |
 }
 
 const BENEFITS = [
-  { icon: '🎟️', title: 'Reduced 2028 tickets', body: 'Members get a discount on SharkFest 2028 registration, applied automatically to your booking.' },
+  { icon: '🎟️', title: 'Members-only festival', body: 'SharkFest 2027 is exclusive to members — your membership unlocks registration, with a discount applied automatically to your booking.' },
   { icon: '📸', title: 'Exclusive content', body: 'Behind-the-scenes stories, photos and updates between festivals.' },
   { icon: '💳', title: 'Digital membership card', body: 'Your own branded membership pass, ready on your phone.' },
   { icon: '🎉', title: 'Members events', body: 'Invitations to socials and gatherings through the year.' },
@@ -56,8 +56,8 @@ export default async function JoinPage() {
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/#2026">2026</Link>
           <Link href="/community">Photos</Link>
-          <Link href="/register" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Register 2028
+          <Link href="/members" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+            Members area
           </Link>
         </nav>
       </header>
@@ -67,8 +67,9 @@ export default async function JoinPage() {
           <p className="join-eyebrow">Torbay Sharks · Membership</p>
           <h1 className="join-title">Stay part of SharkFest, all year round</h1>
           <p className="join-lede">
-            SharkFest 2026 is done and 2028 is on the horizon. Become a member to keep the
-            community alive between festivals — and get a reduced price when tickets open.
+            SharkFest 2026 is done and 2027 — our 25th anniversary — is confirmed. Membership
+            is your way in: registration for the festival is exclusive to members, with the
+            community kept alive all year round.
           </p>
         </section>
 
@@ -105,7 +106,7 @@ export default async function JoinPage() {
         <p className="footer-sub">Torbay Sharks RFC · Devon Coast</p>
         <nav className="footer-links">
           <Link href="/">Home</Link>
-          <Link href="/register">Register 2028</Link>
+          <Link href="/members">Members area</Link>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
       </footer>

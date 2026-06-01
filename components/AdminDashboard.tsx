@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Registration } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
+import { DEFAULT_EVENT_YEAR } from '@/lib/events'
 
 type Status = 'pending' | 'confirmed' | 'waitlist' | 'cancelled'
 
@@ -58,6 +59,13 @@ export function AdminDashboard({
     }
     return list
   }, [registrations, filterStatus, search])
+
+  // Resolve a "camp near" registration id to a display name for the detail view.
+  const nameById = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const r of registrations) m.set(r.id, `${r.first_name} ${r.surname}`.trim())
+    return m
+  }, [registrations])
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: registrations.length }
@@ -128,7 +136,7 @@ export function AdminDashboard({
     <div className="adm-wrap">
       <div className="adm-top">
         <div>
-          <h1 className="adm-title">SharkFest 2028 — Registrations</h1>
+          <h1 className="adm-title">SharkFest 2027 — Registrations</h1>
           <p className="adm-sub">{registrations.length} total registrations</p>
         </div>
         <div className="adm-top-actions">
@@ -219,7 +227,10 @@ export function AdminDashboard({
                   className={`adm-row ${expanded === r.id ? 'adm-row--expanded' : ''}`}
                   onClick={() => setExpanded(e => e === r.id ? null : r.id)}
                 >
-                  <td className="adm-name">{r.first_name} {r.surname}</td>
+                  <td className="adm-name">
+                    {r.first_name} {r.surname}
+                    <span className={`adm-year-tag${r.year !== DEFAULT_EVENT_YEAR ? ' adm-year-tag--alt' : ''}`}>{r.year}</span>
+                  </td>
                   <td className="adm-email">{r.email}</td>
                   <td>{r.adults}A {r.kids > 0 ? `${r.kids}C` : ''}</td>
                   <td>{r.accommodation}{r.electric_hookup ? ' ⚡' : ''}</td>
@@ -276,6 +287,14 @@ export function AdminDashboard({
                         <dl className="mb-detail-grid">
                           <div><dt>Mobile</dt><dd>{r.mobile}</dd></div>
                           {r.vehicle_reg && <div><dt>Vehicle</dt><dd>{r.vehicle_reg}</dd></div>}
+                          {(() => {
+                            const near = [r.camp_near_1, r.camp_near_2]
+                              .filter((id): id is string => !!id)
+                              .map(id => nameById.get(id) ?? 'Unknown')
+                            return near.length > 0 ? (
+                              <div><dt>Camp near</dt><dd>{near.join(', ')}</dd></div>
+                            ) : null
+                          })()}
                           {r.notes && <div className="mb-full"><dt>Notes</dt><dd>{r.notes}</dd></div>}
                         </dl>
                       </div>

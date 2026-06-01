@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
   await sendEmail(
     regRes.data.email,
-    'Friendly reminder — outstanding balance on your SharkFest 2028 booking',
+    'Friendly reminder — outstanding balance on your SharkFest 2027 booking',
     emailPaymentReminder(regRes.data, outstanding, getOrigin())
   )
 

@@ -18,6 +18,8 @@ export interface Registration {
   status: RegistrationStatus
   admin_notes: string | null
   user_id: string | null
+  camp_near_1: string | null
+  camp_near_2: string | null
   created_at: string
 }
 
