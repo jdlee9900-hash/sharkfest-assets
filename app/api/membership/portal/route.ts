@@ -13,14 +13,21 @@ export async function POST() {
 
   const membership = await getActiveMembership(user.id)
   if (!membership) return NextResponse.json({ error: 'No active membership' }, { status: 403 })
+  if (membership.stripe_customer_id === 'comp') {
+    return NextResponse.json({ error: 'Complimentary memberships have no billing to manage' }, { status: 400 })
+  }
 
   const stripe = new Stripe(stripeKey)
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: membership.stripe_customer_id,
-    return_url: `${origin}/members`,
-  })
-
-  return NextResponse.json({ url: session.url })
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: membership.stripe_customer_id,
+      return_url: `${origin}/members`,
+    })
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Billing portal unavailable'
+    return NextResponse.json({ error: msg }, { status: 502 })
+  }
 }
