@@ -64,6 +64,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [compOpen, setCompOpen] = useState(false)
 
   const handleManage = async () => {
     setBusy(true)
@@ -152,7 +153,37 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
               {error}
             </div>
           )}
-          {!isComp && (
+          {isComp ? (
+            <>
+              <button className="btn btn-dark members-manage" onClick={() => setCompOpen(o => !o)}>
+                {compOpen ? 'Close' : 'Manage membership'}
+              </button>
+              {compOpen && (
+                <div className="comp-portal">
+                  <div className="comp-portal-section">
+                    <p className="comp-portal-label">Plan</p>
+                    <p className="comp-portal-value">{card.plan === 'family' ? 'Family' : 'Individual or Couple'}</p>
+                  </div>
+                  <div className="comp-portal-section">
+                    <p className="comp-portal-label">Status</p>
+                    <p className="comp-portal-value">
+                      Active
+                      <span className="comp-portal-badge">Complimentary</span>
+                    </p>
+                  </div>
+                  <div className="comp-portal-divider" />
+                  <p className="comp-portal-label" style={{ marginBottom: '0.5rem' }}>What&apos;s included</p>
+                  <ul className="comp-portal-perks">
+                    <li>Member ticket price — save {discountPercent}% on SharkFest 2027</li>
+                    <li>Exclusive members content &amp; updates</li>
+                    <li>Invitations to members events</li>
+                    <li>Access to the members area</li>
+                  </ul>
+                  <p className="comp-portal-note">This is a complimentary membership — there is no subscription or payment to manage.</p>
+                </div>
+              )}
+            </>
+          ) : (
             <button className="btn btn-dark members-manage" onClick={handleManage} disabled={busy}>
               {busy ? 'Opening…' : 'Manage membership & billing'}
             </button>
