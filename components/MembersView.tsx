@@ -69,7 +69,8 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
     setError('')
     try {
       const res = await fetch('/api/membership/portal', { method: 'POST' })
-      const body = await res.json()
+      let body: { url?: string; error?: string } = {}
+      try { body = await res.json() } catch { /* empty body */ }
       if (!res.ok) throw new Error(body.error ?? 'Could not open billing')
       redirectToStripe(body.url)
     } catch (err) {
