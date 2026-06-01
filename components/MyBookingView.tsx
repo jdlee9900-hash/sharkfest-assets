@@ -138,10 +138,11 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
     }
   }
 
-  const handleCustomPay = async () => {
-    const pence = Math.round(parseFloat(customAmount) * 100)
+  // Pay an arbitrary amount (in pence) towards the balance. `key` drives the
+  // per-button loading state ('custom', 'full', …).
+  const payAmount = async (pence: number, key: string) => {
     if (!pence || pence < 100) { setPayError('Please enter an amount of at least £1'); return }
-    setPaying('custom')
+    setPaying(key)
     setPayError('')
     try {
       const res = await fetch('/api/stripe/checkout', {
@@ -157,6 +158,8 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
       setPaying(null)
     }
   }
+
+  const handleCustomPay = () => payAmount(Math.round(parseFloat(customAmount) * 100), 'custom')
 
   const handleSignOut = async () => {
     const { createClient } = await import('@/lib/supabase/client')
@@ -262,61 +265,71 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
                 </div>
               )}
 
-              {/* Deposit */}
-              {depositIns && (
-                <div className={`mb-deposit-card ${depositPaid ? 'mb-deposit-card--paid' : ''}`}>
-                  <div>
-                    <p className="mb-deposit-title">
-                      {depositPaid ? '✓ Deposit paid' : 'Deposit required to secure your booking'}
-                    </p>
-                    <p className="mb-deposit-sub">
-                      {depositPaid
-                        ? `${formatAmount(depositIns.amount)} deposit received`
-                        : `Pay a ${formatAmount(depositIns.amount)} deposit to confirm your place at SharkFest 2027`}
-                    </p>
-                  </div>
-                  {!depositPaid && (
-                    <button
-                      className="btn btn-accent mb-pay-btn"
-                      onClick={() => handlePay(depositIns.id)}
-                      disabled={paying === depositIns.id}
-                    >
-                      {paying === depositIns.id ? 'Redirecting…' : `Pay ${formatAmount(depositIns.amount)} deposit`}
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Custom balance payment — shown once deposit is paid (or if no deposit instalment) */}
-              {(depositPaid || !depositIns) && balance !== null && balance > 0 && (
-                <div className="mb-custom-pay">
-                  <p className="mb-custom-title">Pay towards your balance</p>
-                  <p className="mb-custom-sub">
-                    You have {formatAmount(balance)} remaining. Enter any amount to pay now.
-                  </p>
-                  <div className="mb-custom-input-row">
-                    <div className="adm-amount-wrap" style={{ flex: 1 }}>
-                      <span className="adm-amount-prefix">£</span>
-                      <input
-                        type="number"
-                        className="cu-input adm-amount-input"
-                        placeholder="0.00"
-                        min="1"
-                        step="0.01"
-                        max={(balance / 100).toFixed(2)}
-                        value={customAmount}
-                        onChange={e => setCustomAmount(e.target.value)}
-                      />
+              {/* Payment options — available whenever there's a balance to pay */}
+              {balance !== null && balance > 0 && (
+                <>
+                  {/* Deposit prompt — secures the place */}
+                  {depositIns && !depositPaid && (
+                    <div className="mb-deposit-card">
+                      <div>
+                        <p className="mb-deposit-title">Deposit required to secure your booking</p>
+                        <p className="mb-deposit-sub">
+                          Pay a {formatAmount(depositIns.amount)} deposit to confirm your place at SharkFest 2027 — or pay more below.
+                        </p>
+                      </div>
+                      <button
+                        className="btn btn-accent mb-pay-btn"
+                        onClick={() => handlePay(depositIns.id)}
+                        disabled={paying === depositIns.id}
+                      >
+                        {paying === depositIns.id ? 'Redirecting…' : `Pay ${formatAmount(depositIns.amount)} deposit`}
+                      </button>
                     </div>
+                  )}
+
+                  {/* Full balance or a custom amount */}
+                  <div className="mb-custom-pay">
+                    <p className="mb-custom-title">
+                      {depositIns && !depositPaid ? 'Or pay more towards your balance' : 'Pay towards your balance'}
+                    </p>
+                    <p className="mb-custom-sub">
+                      You have {formatAmount(balance)} remaining. Pay it all in one go, or choose a custom amount.
+                    </p>
+
                     <button
-                      className="btn btn-accent mb-pay-btn"
-                      onClick={handleCustomPay}
-                      disabled={paying === 'custom' || !customAmount}
+                      className="btn btn-accent mb-pay-btn mb-pay-full"
+                      onClick={() => payAmount(balance, 'full')}
+                      disabled={paying === 'full'}
                     >
-                      {paying === 'custom' ? 'Redirecting…' : 'Pay now'}
+                      {paying === 'full' ? 'Redirecting…' : `Pay full balance — ${formatAmount(balance)}`}
                     </button>
+
+                    <div className="mb-pay-or"><span>or a custom amount</span></div>
+
+                    <div className="mb-custom-input-row">
+                      <div className="adm-amount-wrap" style={{ flex: 1 }}>
+                        <span className="adm-amount-prefix">£</span>
+                        <input
+                          type="number"
+                          className="cu-input adm-amount-input"
+                          placeholder="0.00"
+                          min="1"
+                          step="0.01"
+                          max={(balance / 100).toFixed(2)}
+                          value={customAmount}
+                          onChange={e => setCustomAmount(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        className="btn btn-dark mb-pay-btn"
+                        onClick={handleCustomPay}
+                        disabled={paying === 'custom' || !customAmount}
+                      >
+                        {paying === 'custom' ? 'Redirecting…' : 'Pay now'}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {balance === 0 && (

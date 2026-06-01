@@ -2366,3 +2366,14 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 @media (max-width: 560px) { .join-tiers { grid-template-columns: 1fr; } }
 .join-tier-card { display: flex; flex-direction: column; gap: 0.5rem; height: 100%; }
 .join-tier-card .join-cta { margin-top: auto; }
+
+/* My Booking — pay full balance + custom amount */
+.mb-pay-full { width: 100%; justify-content: center; margin-bottom: 0.25rem; }
+.mb-pay-or {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin: 0.9rem 0 0.75rem;
+  font-size: 0.8125rem; color: var(--grey-400);
+}
+.mb-pay-or::before, .mb-pay-or::after {
+  content: ''; flex: 1; height: 1px; background: var(--grey-200, #e2e8f0);
+}
