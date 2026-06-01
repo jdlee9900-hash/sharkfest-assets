@@ -48,6 +48,31 @@ export async function isActiveMember(userId: string): Promise<boolean> {
 }
 
 /**
+ * Active membership for a user, or, if this user is a partner on a booking,
+ * the primary registrant's membership. Partners share the primary's membership.
+ */
+export async function getMembershipOrPartnerMembership(userId: string): Promise<Membership | null> {
+  const own = await getActiveMembership(userId)
+  if (own) return own
+
+  const service = createServiceClient()
+  const { data: partnerReg } = await service
+    .from('registrations')
+    .select('user_id')
+    .eq('partner_user_id', userId)
+    .not('user_id', 'is', null)
+    .limit(1)
+    .maybeSingle()
+
+  if (!partnerReg?.user_id) return null
+  return getActiveMembership(partnerReg.user_id as string)
+}
+
+export async function isActiveMemberOrPartner(userId: string): Promise<boolean> {
+  return (await getMembershipOrPartnerMembership(userId)) !== null
+}
+
+/**
  * Stable, human-friendly membership number derived from the row id — e.g. TSRFC-3F9A2C.
  * Deterministic so it can be shown on the card and used for verification.
  */

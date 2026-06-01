@@ -2367,6 +2367,20 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 .join-tier-card { display: flex; flex-direction: column; gap: 0.5rem; height: 100%; }
 .join-tier-card .join-cta { margin-top: auto; }
 
+/* My Booking — partner / shared access banner */
+.mb-banner--partner {
+  background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* My Booking — partner email input row */
+.mb-partner-row { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; }
+.mb-partner-row .cu-input { height: 2.25rem; font-size: 0.9375rem; }
+.mb-partner-hint {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  margin-top: 0.75rem; font-size: 0.875rem; color: var(--grey-500);
+}
+
 /* My Booking — pay full balance + custom amount */
 .mb-pay-full { width: 100%; justify-content: center; margin-bottom: 0.25rem; }
 .mb-pay-or {

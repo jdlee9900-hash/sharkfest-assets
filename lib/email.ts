@@ -348,6 +348,33 @@ Rejoin: ${url}
   }
 }
 
+export function emailPartnerInvite(
+  primaryName: string,
+  partnerEmail: string,
+  origin: string
+): EmailBody {
+  const url = `${origin}/login?next=/my-booking`
+  return {
+    html: htmlWrap(`
+      ${hh("You've been added to a SharkFest booking")}
+      ${hp(`Hi,`)}
+      ${hp(`<strong>${primaryName}</strong> has added you as a co-holder of their SharkFest 2027 booking. You can log in with your email address (${partnerEmail}) to view the booking, track payments, and manage your camp-near preferences.`)}
+      ${hp('Just click the button below and we\'ll send you a magic-link sign-in — no password needed.')}
+      ${hcta('View the shared booking', url)}
+    `),
+    text: textWrap('SharkFest 2027 — Shared booking access', `
+Hi,
+
+${primaryName} has added you as a co-holder of their SharkFest 2027 booking.
+You can log in with your email address (${partnerEmail}) to view the booking,
+track payments, and manage your camp-near preferences.
+
+Visit this link to sign in with a magic link (no password needed):
+${url}
+    `),
+  }
+}
+
 export function emailPaymentReminder(
   reg: { first_name: string },
   outstanding: number,

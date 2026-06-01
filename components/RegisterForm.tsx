@@ -44,7 +44,8 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
     electric_hookup: false, vehicle_reg: '', notes: '',
   })
 
-  const [campNear, setCampNear] = useState<Picked[]>([])
+  const [campNear, setCampNear]       = useState<Picked[]>([])
+  const [partnerEmail, setPartnerEmail] = useState('')
 
   const patch = (key: keyof FormData, value: FormData[keyof FormData]) =>
     setForm(prev => ({ ...prev, [key]: value }))
@@ -61,7 +62,7 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, company: hp, year: event.year, camp_near: campNear.map(p => p.id) }),
+        body: JSON.stringify({ ...form, company: hp, year: event.year, camp_near: campNear.map(p => p.id), partner_email: partnerEmail.trim() || undefined }),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? 'Registration failed')
@@ -268,6 +269,15 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
         <div className="cu-field">
           <p className="cu-label">Who would you like to camp near? <span className="cu-optional">(optional)</span></p>
           <CampNearPicker year={event.year} eventName={event.name} picked={campNear} onChange={setCampNear} />
+        </div>
+
+        {/* Partner email */}
+        <div className="cu-field">
+          <label htmlFor="reg-partner" className="cu-label">Partner / shared-access email <span className="cu-optional">(optional)</span></label>
+          <input id="reg-partner" type="email" className="cu-input"
+            value={partnerEmail} onChange={e => setPartnerEmail(e.target.value)}
+            autoComplete="off" placeholder="partner@example.com" />
+          <span className="reg-field-hint">Add a second email to share this booking. They'll receive an invite link and can view payments and manage camp preferences.</span>
         </div>
 
         {/* Vehicle reg */}

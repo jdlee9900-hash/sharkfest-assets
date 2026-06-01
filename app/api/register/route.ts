@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, getOrigin, getAdminEmails } from '@/lib/email'
+import { sendEmail, emailRegistrationUser, emailRegistrationAdmin, emailPartnerInvite, getOrigin, getAdminEmails } from '@/lib/email'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvent } from '@/lib/events'
 import { isActiveMember } from '@/lib/membership'
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
-      vehicle_reg, notes, company, year, camp_near,
+      vehicle_reg, notes, company, year, camp_near, partner_email,
     } = body
 
     // Resolve which festival this registration is for. Unknown/missing years
@@ -113,6 +113,9 @@ export async function POST(request: Request) {
         ...(campNear1 ? { camp_near_1: campNear1 } : {}),
         ...(campNear2 ? { camp_near_2: campNear2 } : {}),
         ...(userId ? { user_id: userId } : {}),
+        ...(typeof partner_email === 'string' && EMAIL_RE.test(partner_email.trim()) && partner_email.trim().toLowerCase() !== email.trim().toLowerCase()
+          ? { partner_email: partner_email.trim().toLowerCase().slice(0, 254) }
+          : {}),
       })
       .select('id, email, first_name, surname, mobile, adults, kids, accommodation, electric_hookup')
       .single()
@@ -121,14 +124,19 @@ export async function POST(request: Request) {
 
     const origin = getOrigin()
     const admins = getAdminEmails()
+    const partnerEmailClean = typeof partner_email === 'string' && EMAIL_RE.test(partner_email.trim())
+      && partner_email.trim().toLowerCase() !== email.trim().toLowerCase()
+      ? partner_email.trim().toLowerCase()
+      : null
 
-    // Await emails before returning so the serverless function doesn't
-    // terminate before the SMTP handshake completes.
     await Promise.allSettled([
       sendEmail(data.email, `${event.name} — Registration received`, emailRegistrationUser(data, origin, event)),
       ...admins.map(to =>
         sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin(data, origin, event))
       ),
+      ...(partnerEmailClean
+        ? [sendEmail(partnerEmailClean, `${event.name} — You've been added to a booking`, emailPartnerInvite(`${data.first_name} ${data.surname}`, partnerEmailClean, origin))]
+        : []),
     ])
 
     return NextResponse.json({ id: data.id })
