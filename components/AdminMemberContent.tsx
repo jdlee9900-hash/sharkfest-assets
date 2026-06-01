@@ -278,33 +278,35 @@ export function AdminMemberContent({ kind, posts }: Props) {
         {posts.length === 0 ? (
           <p style={{ color: 'var(--grey-400)', fontSize: '0.9375rem' }}>{isEvent ? 'No events yet.' : 'No content yet.'}</p>
         ) : (
-          <table className="mb-pay-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                {isEvent && <th>When</th>}
-                {isEvent && <th>Location</th>}
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map(p => (
-                <tr key={p.id}>
-                  <td>{p.title}</td>
-                  {isEvent && <td>{fmtDate(p.event_at)}</td>}
-                  {isEvent && <td>{p.location ?? '—'}</td>}
-                  <td>{p.published ? 'Published' : 'Draft'}</td>
-                  <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
-                    <button type="button" className="mc-link" onClick={() => startEdit(p)}>Edit</button>
-                    <button type="button" className="mc-link-danger" onClick={() => handleDelete(p.id)} disabled={deletingId === p.id}>
-                      {deletingId === p.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </td>
+          <div className="mb-table-scroll">
+            <table className="mb-pay-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  {isEvent && <th>When</th>}
+                  {isEvent && <th>Location</th>}
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {posts.map(p => (
+                  <tr key={p.id}>
+                    <td>{p.title}</td>
+                    {isEvent && <td>{fmtDate(p.event_at)}</td>}
+                    {isEvent && <td>{p.location ?? '—'}</td>}
+                    <td>{p.published ? 'Published' : 'Draft'}</td>
+                    <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                      <button type="button" className="mc-link" onClick={() => startEdit(p)}>Edit</button>
+                      <button type="button" className="mc-link-danger" onClick={() => handleDelete(p.id)} disabled={deletingId === p.id}>
+                        {deletingId === p.id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
