@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
 
-export function LoginForm() {
+export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: string }) {
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/my-booking'
+  const next = searchParams.get('next') ?? defaultNext
   const hasError = searchParams.get('error') === 'auth'
   // Members-branded variant when signing in to join or enter the members club.
   const members = next.startsWith('/members') || next.startsWith('/join')

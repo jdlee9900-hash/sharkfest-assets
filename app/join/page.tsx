@@ -94,7 +94,9 @@ export default async function JoinPage() {
             <MembershipPlans prices={prices} discountPercent={discount} />
           ) : (
             <Suspense fallback={<div className="auth-card" style={{ minHeight: 260 }} />}>
-              <LoginForm />
+              {/* Send them back to /join after sign-in so they land on the plan
+                  picker (not the empty booking page) to finish becoming a member. */}
+              <LoginForm defaultNext="/join" />
             </Suspense>
           )}
         </section>
