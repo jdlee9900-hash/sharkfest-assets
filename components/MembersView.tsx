@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
 import { Countdown2027 } from '@/components/Countdown2027'
+import { PartnerEmailCard } from '@/components/PartnerEmailCard'
 import type { MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
@@ -40,6 +41,8 @@ interface Props {
   discountPercent: number
   news: FeedPost[]
   events: FeedPost[]
+  partnerEmail: string | null
+  isPartner: boolean
 }
 
 const BENEFITS = (discountPercent: number) => [
@@ -55,7 +58,7 @@ const F27_HIGHLIGHTS = [
   { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
-export function MembersView({ card, email, justJoined, discountPercent, news, events }: Props) {
+export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -168,6 +171,11 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           </div>
         ))}
       </div>
+
+      {/* Shared booking access — only shown to the primary member, not their partner */}
+      {!isPartner && (
+        <PartnerEmailCard initial={partnerEmail} />
+      )}
 
       {/* Exclusive content */}
       <section className="members-section">

@@ -31,19 +31,19 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
   const service = createServiceClient()
 
-  // Member name from their own most recent registration; for partner users fall
-  // back to the booking they share, then to the email local-part.
+  // Member name + partner email from their own most recent registration.
+  // For partner users, fall back to the booking they share.
   const { data: ownReg } = await service
     .from('registrations')
-    .select('first_name, surname')
+    .select('first_name, surname, partner_email')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  let name = ownReg
-    ? `${ownReg.first_name} ${ownReg.surname}`.trim()
-    : null
+  let name = ownReg ? `${ownReg.first_name} ${ownReg.surname}`.trim() : null
+  let partnerEmail: string | null = ownReg?.partner_email ?? null
+  let isPartner = false
 
   if (!name) {
     // Partner user — find the booking they were added to.
@@ -54,6 +54,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       .limit(1)
       .maybeSingle()
     name = partnerReg?.partner_email?.split('@')[0] ?? user.email?.split('@')[0] ?? 'Member'
+    partnerEmail = null // partners can't manage partner email; that belongs to the primary
+    isPartner = true
   }
 
   // Ensure name is always a string (TypeScript narrowing)
@@ -126,6 +128,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           discountPercent={memberDiscountPercent()}
           news={news}
           events={events}
+          partnerEmail={partnerEmail}
+          isPartner={isPartner}
         />
       </main>
 
