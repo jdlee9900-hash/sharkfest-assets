@@ -29,6 +29,7 @@ export default async function MyBookingPage() {
   let paymentPlan = null
   let instalments: unknown[] = []
   let payments: unknown[] = []
+  let campNearInitial: { id: string; name: string }[] = []
 
   if (registration) {
     const [ppRes, insRes, payRes] = await Promise.all([
@@ -39,6 +40,21 @@ export default async function MyBookingPage() {
     paymentPlan = ppRes.data
     instalments = insRes.data ?? []
     payments = payRes.data ?? []
+
+    // Resolve the registrant's current "camp near" people to display names.
+    const nearIds = [registration.camp_near_1, registration.camp_near_2].filter(Boolean) as string[]
+    if (nearIds.length > 0) {
+      const { data: people } = await service
+        .from('registrations')
+        .select('id, first_name, surname')
+        .in('id', nearIds)
+      campNearInitial = nearIds
+        .map(id => {
+          const p = people?.find(x => x.id === id)
+          return p ? { id, name: `${p.first_name} ${p.surname}`.trim() } : null
+        })
+        .filter((x): x is { id: string; name: string } => x !== null)
+    }
   }
 
   return (
@@ -66,6 +82,7 @@ export default async function MyBookingPage() {
             paymentPlan={paymentPlan}
             instalments={instalments as never[]}
             payments={payments as never[]}
+            campNearInitial={campNearInitial}
           />
         </Suspense>
       </main>

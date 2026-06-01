@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Registration, PaymentPlan, Instalment, Payment } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
+import { getEvent } from '@/lib/events'
+import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
 
 interface Props {
   user: { email?: string }
@@ -11,6 +13,76 @@ interface Props {
   paymentPlan: PaymentPlan | null
   instalments: Instalment[]
   payments: Payment[]
+  campNearInitial: Picked[]
+}
+
+// Editable "camp near" card — lets a registrant add/change who they'd like to be
+// pitched near after booking (early bookers often had no one to choose at sign-up).
+function CampNearCard({ registration, initial }: { registration: Registration; initial: Picked[] }) {
+  const event = getEvent(registration.year)
+  const [picked, setPicked] = useState<Picked[]>(initial)
+  const [saved, setSaved]   = useState<Picked[]>(initial)
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState('')
+  const [done, setDone]     = useState(false)
+
+  const dirty = picked.map(p => p.id).join(',') !== saved.map(p => p.id).join(',')
+
+  const handleSave = async () => {
+    setSaving(true); setError(''); setDone(false)
+    try {
+      const res = await fetch('/api/my-booking/camp-near', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ camp_near: picked.map(p => p.id) }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'Could not save your changes')
+      const next: Picked[] = Array.isArray(body.camp_near) ? body.camp_near : picked
+      setPicked(next); setSaved(next); setDone(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mb-card">
+      <h2 className="mb-card-title">Camp near</h2>
+      <p className="mb-camp-intro">
+        Choose up to two people you’d like to be pitched near. You can change this any
+        time — handy if you booked early before your friends had registered.
+      </p>
+
+      <CampNearPicker
+        year={event.year}
+        eventName={event.name}
+        picked={picked}
+        onChange={p => { setPicked(p); setDone(false) }}
+        excludeId={registration.id}
+      />
+
+      {error && (
+        <div className="auth-error" role="alert" style={{ marginTop: '0.75rem' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {error}
+        </div>
+      )}
+
+      <div className="mb-camp-actions">
+        <button className="btn btn-accent mb-pay-btn" onClick={handleSave} disabled={saving || !dirty}>
+          {saving ? 'Saving…' : 'Save camp-near choices'}
+        </button>
+        {done && !dirty && (
+          <span className="mb-camp-saved">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Saved
+          </span>
+        )}
+      </div>
+    </div>
+  )
 }
 
 // Only ever hand the browser off to a genuine Stripe Checkout URL, even though
@@ -31,7 +103,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#f87171',
 }
 
-export function MyBookingView({ user, registration, paymentPlan, instalments, payments }: Props) {
+export function MyBookingView({ user, registration, paymentPlan, instalments, payments, campNearInitial }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const paymentResult = searchParams.get('payment')
@@ -144,6 +216,9 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
               {registration.notes && <div className="mb-full"><dt>Notes</dt><dd>{registration.notes}</dd></div>}
             </dl>
           </div>
+
+          {/* Camp near — editable */}
+          <CampNearCard registration={registration} initial={campNearInitial} />
 
           {/* Payment section */}
           {paymentPlan ? (
