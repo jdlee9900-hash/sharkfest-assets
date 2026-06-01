@@ -15,7 +15,7 @@ export async function POST() {
 
   const membership = await getActiveMembership(user.id)
   if (!membership) return NextResponse.json({ error: 'No active membership' }, { status: 403 })
-  if (!REAL_STRIPE_CUSTOMER.test(membership.stripe_customer_id)) {
+  if (membership.stripe_subscription_id.startsWith('comp_') || !REAL_STRIPE_CUSTOMER.test(membership.stripe_customer_id)) {
     return NextResponse.json({ error: 'Complimentary memberships have no billing to manage' }, { status: 400 })
   }
 

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/lib/membership'
+
+const REAL_STRIPE_CUSTOMER = /^cus_[A-Za-z0-9]{10,}$/
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -96,6 +99,13 @@ export async function POST(request: Request) {
     label = 'Balance payment'
   }
 
+  // Use the member's existing Stripe customer if available so their card is pre-filled
+  // and festival payments appear alongside their membership in the billing portal.
+  const membership = await getActiveMembership(user.id)
+  const memberCustomerId = membership && REAL_STRIPE_CUSTOMER.test(membership.stripe_customer_id)
+    ? membership.stripe_customer_id
+    : null
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [{
@@ -110,7 +120,7 @@ export async function POST(request: Request) {
       quantity: 1,
     }],
     mode: 'payment',
-    customer_email: registration.email,
+    ...(memberCustomerId ? { customer: memberCustomerId } : { customer_email: registration.email }),
     success_url: `${origin}/my-booking?payment=success`,
     cancel_url: `${origin}/my-booking?payment=cancelled`,
     metadata: {
