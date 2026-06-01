@@ -2355,3 +2355,8 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 
 /* small "(optional)" qualifier on field labels */
 .cu-optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--grey-400); }
+
+/* My Booking — camp-near editor */
+.mb-camp-intro { font-size: 0.9375rem; color: var(--grey-500); line-height: 1.6; margin-bottom: 1rem; }
+.mb-camp-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; flex-wrap: wrap; }
+.mb-camp-saved { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; font-weight: 600; color: #22c55e; }
