@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 }
 
 // Look up the real recurring prices so the page shows accurate amounts.
-async function fetchPrices(): Promise<{ monthly: number | null; annual: number | null }> {
+async function fetchPrices(): Promise<{ individual: number | null; family: number | null }> {
   const key = process.env.STRIPE_SECRET_KEY
-  const monthlyId = memberPriceId('monthly')
-  const annualId = memberPriceId('annual')
-  if (!key || (!monthlyId && !annualId)) return { monthly: null, annual: null }
+  const individualId = memberPriceId('individual')
+  const familyId = memberPriceId('family')
+  if (!key || (!individualId && !familyId)) return { individual: null, family: null }
   const stripe = new Stripe(key)
   const get = async (id: string | null) => {
     if (!id) return null
@@ -28,8 +28,8 @@ async function fetchPrices(): Promise<{ monthly: number | null; annual: number |
       return null
     }
   }
-  const [monthly, annual] = await Promise.all([get(monthlyId), get(annualId)])
-  return { monthly, annual }
+  const [individual, family] = await Promise.all([get(individualId), get(familyId)])
+  return { individual, family }
 }
 
 const BENEFITS = [

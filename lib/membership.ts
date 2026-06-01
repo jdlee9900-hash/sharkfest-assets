@@ -2,8 +2,11 @@ import { createServiceClient } from '@/lib/supabase/server'
 import type { Membership, MemberPlan } from '@/lib/types'
 
 // Stripe recurring price IDs are created in the Stripe dashboard and supplied via env.
+// Falls back to the older monthly/annual env vars so nothing hard-breaks pre-setup.
 export function memberPriceId(plan: MemberPlan): string | null {
-  const id = plan === 'annual' ? process.env.STRIPE_PRICE_ANNUAL : process.env.STRIPE_PRICE_MONTHLY
+  const id = plan === 'family'
+    ? (process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL)
+    : (process.env.STRIPE_PRICE_INDIVIDUAL ?? process.env.STRIPE_PRICE_MONTHLY)
   return id?.trim() || null
 }
 

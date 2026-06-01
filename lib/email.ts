@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import type { FestivalEvent } from './events'
+import type { MemberPlan } from './types'
 
 // Default event for templates that don't (yet) take one — keeps existing
 // payment/receipt emails unchanged while registration emails go per-event.
@@ -273,11 +274,11 @@ View your booking: ${url}
 
 export function emailMembershipWelcome(
   member: { first_name: string },
-  plan: 'monthly' | 'annual',
+  plan: MemberPlan,
   origin: string
 ): EmailBody {
   const url = `${origin}/members`
-  const planLabel = plan === 'annual' ? 'Annual membership' : 'Monthly membership'
+  const planLabel = plan === 'family' ? 'Family membership' : 'Individual / Couple membership'
   return {
     html: htmlWrap(`
       ${hh('Welcome to the club')}

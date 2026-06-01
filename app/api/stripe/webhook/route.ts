@@ -37,7 +37,8 @@ async function upsertMembership(service: Service, sub: Stripe.Subscription, emai
   if (!userId) return
   const priceId = sub.items.data[0]?.price.id ?? null
   const periodEnd = sub.items.data[0]?.current_period_end ?? null
-  const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? (priceId === process.env.STRIPE_PRICE_ANNUAL ? 'annual' : 'monthly')
+  const familyPrice = process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL
+  const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? (priceId === familyPrice ? 'family' : 'individual')
 
   await service.from('memberships').upsert({
     user_id: userId,
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
         const userId = sub.metadata?.user_id
         if (userId && email) {
           const firstName = await memberFirstName(service, userId, email)
-          const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? 'monthly'
+          const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? 'individual'
           await sendEmail(email, 'Welcome to the club — SharkFest membership', emailMembershipWelcome({ first_name: firstName }, plan, getOrigin()))
         }
       } catch (err) {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MembershipCard } from '@/components/MembershipCard'
 import { Countdown2027 } from '@/components/Countdown2027'
+import type { MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
   if (typeof url !== 'string') throw new Error('Could not open billing')
@@ -29,7 +30,7 @@ interface Props {
   card: {
     name: string
     membershipNumber: string
-    plan: 'monthly' | 'annual'
+    plan: MemberPlan
     status: string
     memberSince: string | null
     qrDataUrl: string | null

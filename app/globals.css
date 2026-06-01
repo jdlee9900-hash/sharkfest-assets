@@ -2360,3 +2360,9 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 .mb-camp-intro { font-size: 0.9375rem; color: var(--grey-500); line-height: 1.6; margin-bottom: 1rem; }
 .mb-camp-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; flex-wrap: wrap; }
 .mb-camp-saved { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; font-weight: 600; color: #22c55e; }
+
+/* Membership tiers — two side-by-side cards on the join page */
+.join-tiers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+@media (max-width: 560px) { .join-tiers { grid-template-columns: 1fr; } }
+.join-tier-card { display: flex; flex-direction: column; gap: 0.5rem; height: 100%; }
+.join-tier-card .join-cta { margin-top: auto; }
