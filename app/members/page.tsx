@@ -108,8 +108,6 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           <span>SharkFest</span>
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/#2026">2026</Link>
-          <Link href="/community">Photos</Link>
           <Link href="/my-booking">My booking</Link>
         </nav>
       </header>

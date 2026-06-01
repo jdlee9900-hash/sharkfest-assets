@@ -29,8 +29,6 @@ export default function WrapUpPage() {
           <span>SharkFest</span>
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/#2026">2026</Link>
-          <Link href="/community">Photos</Link>
           <Link href="/run-club">Run Club</Link>
         </nav>
       </header>
@@ -147,7 +145,6 @@ export default function WrapUpPage() {
         <nav className="footer-links">
           <Link href="/">Home</Link>
           <Link href="/#2026">SharkFest 2026</Link>
-          <Link href="/community">Photos</Link>
           <Link href="/run-club">Run Club</Link>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>

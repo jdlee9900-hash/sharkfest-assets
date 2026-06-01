@@ -84,8 +84,6 @@ export default async function MyBookingPage() {
           <span>SharkFest</span>
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
-          <Link href="/#2026">2026</Link>
-          <Link href="/community">Photos</Link>
           <Link href="/members">Members</Link>
         </nav>
       </header>
