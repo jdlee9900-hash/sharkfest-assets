@@ -10,6 +10,7 @@ import { getOrigin } from '@/lib/email'
 import { MembersView, type FeedPost } from '@/components/MembersView'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import type { MemberPost } from '@/lib/types'
+import { adminEmails } from '@/lib/types'
 
 export const metadata: Metadata = {
   title: 'Members · SharkFest',
@@ -109,6 +110,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
           <Link href="/my-booking">My booking</Link>
+          {adminEmails().includes(user.email ?? '') && (
+            <Link href="/admin">Admin</Link>
+          )}
         </nav>
       </header>
 
@@ -129,7 +133,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           events={events}
           partnerEmail={partnerEmail}
           isPartner={isPartner}
-          isComp={primaryMembership.stripe_customer_id === 'comp'}
+          isComp={primaryMembership.stripe_subscription_id.startsWith('comp_')}
         />
       </main>
 
