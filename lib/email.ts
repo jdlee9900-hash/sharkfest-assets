@@ -469,6 +469,13 @@ function bodyToHtml(body: string): string {
     .join('')
 }
 
+function processBodyHtml(body: string): string {
+  const trimmed = body.trim()
+  // If it contains HTML tags (e.g. from the rich text editor), use it directly.
+  // Otherwise treat as plain text and convert paragraphs → <p> tags.
+  return /<[a-z]/i.test(trimmed) ? trimmed : bodyToHtml(trimmed)
+}
+
 export function buildCampaignEmail(
   body: string,
   contact: { first_name: string; unsubscribe_token: string },
@@ -482,10 +489,22 @@ export function buildCampaignEmail(
     <a href="${unsubUrl}" style="color:#94a3b8">Unsubscribe</a>
   </p>`
 
+  // Strip HTML tags for the plain-text fallback
+  const textBody = personalised.replace(/<[^>]+>/g, '').trim()
+
   return {
-    html: htmlWrap(`${bodyToHtml(personalised)}${unsubFooter}`),
-    text: `${personalised}\n\n---\nTo unsubscribe: ${unsubUrl}\n`,
+    html: htmlWrap(`${processBodyHtml(personalised)}${unsubFooter}`),
+    text: `${textBody}\n\n---\nTo unsubscribe: ${unsubUrl}\n`,
   }
+}
+
+export function buildCampaignPreview(body: string): string {
+  const sample = body.replace(/\{\{first_name\}\}/g, '[First name]')
+  const previewFooter = `<p style="margin:24px 0 0;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:16px">
+    You're receiving this because you're a Torbay Sharks RFC member or SharkFest registrant.
+    <span style="color:#94a3b8">Unsubscribe</span> (link included in real send)
+  </p>`
+  return htmlWrap(`${processBodyHtml(sample)}${previewFooter}`)
 }
 
 export function emailPaymentReminder(
