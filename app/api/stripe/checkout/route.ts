@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   const service = createServiceClient()
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.co.uk'
 
   // Get the user's registration
   const { data: registration } = await service

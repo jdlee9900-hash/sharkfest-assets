@@ -20,7 +20,7 @@ export async function POST() {
   }
 
   const stripe = new Stripe(stripeKey)
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.co.uk'
 
   try {
     const session = await stripe.billingPortal.sessions.create({

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   if (existing) return NextResponse.json({ error: 'You already have an active membership' }, { status: 409 })
 
   const stripe = new Stripe(stripeKey)
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.co.uk'
 
   // Reuse a Stripe customer if we've seen this user before (any membership row),
   // otherwise create one tagged with the Supabase user id.
