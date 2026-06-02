@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
@@ -295,7 +295,7 @@ function ContactsTab() {
 // ─── RTE Toolbar ──────────────────────────────────────────────────────────────
 
 interface RteToolbarProps {
-  editor: ReturnType<typeof useEditor>
+  editor: Editor | null
 }
 
 function RteToolbar({ editor }: RteToolbarProps) {
