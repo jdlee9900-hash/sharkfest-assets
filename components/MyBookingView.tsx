@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import type { Registration, PaymentPlan, Instalment, Payment } from '@/lib/types'
+import type { Registration, PaymentPlan, Instalment, Payment, AccommodationType } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
 import { getEvent } from '@/lib/events'
 import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
@@ -17,6 +17,174 @@ interface Props {
   payments: Payment[]
   campNearInitial: Picked[]
   isPartner?: boolean
+}
+
+const ACCOMMODATION_TYPES: AccommodationType[] = ['Tent', 'Caravan', 'Mobile Home', 'Campervan']
+
+interface EditState {
+  first_name: string
+  surname: string
+  mobile: string
+  adults: number
+  kids: number
+  accommodation: AccommodationType
+  electric_hookup: boolean
+  vehicle_reg: string
+  notes: string
+}
+
+function BookingDetailsCard({ registration, isPartner }: { registration: Registration; isPartner: boolean }) {
+  const [editing, setEditing]   = useState(false)
+  const [saving, setSaving]     = useState(false)
+  const [error, setError]       = useState('')
+  const [saved, setSaved]       = useState<Registration>(registration)
+  const [form, setForm]         = useState<EditState>({
+    first_name:     registration.first_name,
+    surname:        registration.surname,
+    mobile:         registration.mobile,
+    adults:         registration.adults,
+    kids:           registration.kids,
+    accommodation:  registration.accommodation,
+    electric_hookup: registration.electric_hookup,
+    vehicle_reg:    registration.vehicle_reg ?? '',
+    notes:          registration.notes ?? '',
+  })
+
+  const set = <K extends keyof EditState>(k: K, v: EditState[K]) =>
+    setForm(f => ({ ...f, [k]: v }))
+
+  const handleEdit = () => { setEditing(true); setError('') }
+
+  const handleCancel = () => {
+    setEditing(false)
+    setError('')
+    setForm({
+      first_name:      saved.first_name,
+      surname:         saved.surname,
+      mobile:          saved.mobile,
+      adults:          saved.adults,
+      kids:            saved.kids,
+      accommodation:   saved.accommodation,
+      electric_hookup: saved.electric_hookup,
+      vehicle_reg:     saved.vehicle_reg ?? '',
+      notes:           saved.notes ?? '',
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true); setError('')
+    try {
+      const res = await fetch('/api/my-booking/details', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not save changes')
+      setSaved(data)
+      setEditing(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mb-card">
+      <div className="mb-card-head">
+        <h2 className="mb-card-title">Booking details</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <span className="mb-status-badge" style={{ background: STATUS_COLORS[saved.status] ?? '#888' }}>
+            {saved.status.charAt(0).toUpperCase() + saved.status.slice(1)}
+          </span>
+          {!isPartner && !editing && (
+            <button className="mb-edit-btn" onClick={handleEdit}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"/></svg>
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="auth-error" role="alert" style={{ marginBottom: '1rem' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {error}
+        </div>
+      )}
+
+      {editing ? (
+        <div className="mb-edit-form">
+          <div className="mb-edit-row">
+            <div className="mb-edit-field">
+              <label className="cu-label">First name</label>
+              <input className="cu-input" value={form.first_name} onChange={e => set('first_name', e.target.value)} required />
+            </div>
+            <div className="mb-edit-field">
+              <label className="cu-label">Surname</label>
+              <input className="cu-input" value={form.surname} onChange={e => set('surname', e.target.value)} required />
+            </div>
+          </div>
+          <div className="mb-edit-field">
+            <label className="cu-label">Mobile</label>
+            <input className="cu-input" type="tel" value={form.mobile} onChange={e => set('mobile', e.target.value)} required />
+          </div>
+          <div className="mb-edit-row">
+            <div className="mb-edit-field">
+              <label className="cu-label">Adults</label>
+              <input className="cu-input" type="number" min={1} max={20} value={form.adults} onChange={e => set('adults', Number(e.target.value))} />
+            </div>
+            <div className="mb-edit-field">
+              <label className="cu-label">Children</label>
+              <input className="cu-input" type="number" min={0} max={20} value={form.kids} onChange={e => set('kids', Number(e.target.value))} />
+            </div>
+          </div>
+          <div className="mb-edit-row">
+            <div className="mb-edit-field">
+              <label className="cu-label">Accommodation</label>
+              <select className="cu-input" value={form.accommodation} onChange={e => set('accommodation', e.target.value as AccommodationType)}>
+                {ACCOMMODATION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="mb-edit-field mb-edit-field--check">
+              <label className="mb-check-label">
+                <input type="checkbox" checked={form.electric_hookup} onChange={e => set('electric_hookup', e.target.checked)} />
+                Electric hookup
+              </label>
+            </div>
+          </div>
+          <div className="mb-edit-field">
+            <label className="cu-label">Vehicle reg <span className="cu-label-opt">(optional)</span></label>
+            <input className="cu-input" value={form.vehicle_reg} onChange={e => set('vehicle_reg', e.target.value)} placeholder="e.g. AB12 CDE" />
+          </div>
+          <div className="mb-edit-field">
+            <label className="cu-label">Notes <span className="cu-label-opt">(optional)</span></label>
+            <textarea className="cu-input cu-textarea" rows={3} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Anything we should know…" />
+          </div>
+          <div className="mb-edit-actions">
+            <button className="btn btn-accent" onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+            <button className="btn mb-cancel-btn" onClick={handleCancel} disabled={saving}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <dl className="mb-detail-grid">
+          <div><dt>Name</dt><dd>{saved.first_name} {saved.surname}</dd></div>
+          <div><dt>Email</dt><dd>{saved.email}</dd></div>
+          <div><dt>Mobile</dt><dd>{saved.mobile}</dd></div>
+          <div><dt>Adults</dt><dd>{saved.adults}</dd></div>
+          <div><dt>Children</dt><dd>{saved.kids}</dd></div>
+          <div><dt>Accommodation</dt><dd>{saved.accommodation}{saved.electric_hookup ? ' + Electric' : ''}</dd></div>
+          {saved.vehicle_reg && <div><dt>Vehicle</dt><dd>{saved.vehicle_reg}</dd></div>}
+          {saved.notes && <div className="mb-full"><dt>Notes</dt><dd>{saved.notes}</dd></div>}
+        </dl>
+      )}
+    </div>
+  )
 }
 
 // Editable "camp near" card — lets a registrant add/change who they'd like to be
@@ -107,6 +275,7 @@ const STATUS_COLORS: Record<string, string> = {
   waitlist:  '#a78bfa',
   cancelled: '#f87171',
 }
+
 
 export function MyBookingView({ user, registration, paymentPlan, instalments, payments, campNearInitial, isPartner = false }: Props) {
   const searchParams = useSearchParams()
@@ -211,25 +380,8 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
         </div>
       ) : (
         <>
-          {/* Booking summary */}
-          <div className="mb-card">
-            <div className="mb-card-head">
-              <h2 className="mb-card-title">Booking details</h2>
-              <span className="mb-status-badge" style={{ background: STATUS_COLORS[registration.status] ?? '#888' }}>
-                {registration.status.charAt(0).toUpperCase() + registration.status.slice(1)}
-              </span>
-            </div>
-            <dl className="mb-detail-grid">
-              <div><dt>Name</dt><dd>{registration.first_name} {registration.surname}</dd></div>
-              <div><dt>Email</dt><dd>{registration.email}</dd></div>
-              <div><dt>Mobile</dt><dd>{registration.mobile}</dd></div>
-              <div><dt>Adults</dt><dd>{registration.adults}</dd></div>
-              <div><dt>Children</dt><dd>{registration.kids}</dd></div>
-              <div><dt>Accommodation</dt><dd>{registration.accommodation}{registration.electric_hookup ? ' + Electric' : ''}</dd></div>
-              {registration.vehicle_reg && <div><dt>Vehicle</dt><dd>{registration.vehicle_reg}</dd></div>}
-              {registration.notes && <div className="mb-full"><dt>Notes</dt><dd>{registration.notes}</dd></div>}
-            </dl>
-          </div>
+          {/* Booking summary — inline-editable */}
+          <BookingDetailsCard registration={registration} isPartner={isPartner} />
 
           {/* Camp near — editable */}
           <CampNearCard registration={registration} initial={campNearInitial} />
