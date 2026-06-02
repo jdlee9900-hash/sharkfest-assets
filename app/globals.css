@@ -1608,6 +1608,29 @@ body::after {
 .comp-portal-perks { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .comp-portal-perks li { font-size: 0.875rem; color: var(--grey-600); line-height: 1.5; }
 .comp-portal-note { font-size: 0.8125rem; color: var(--grey-400); margin: 0.25rem 0 0; line-height: 1.5; }
+
+.passkey-setup { display: flex; flex-direction: column; gap: 0.5rem; }
+.passkey-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  height: 2.85rem; padding: 0 1.1rem;
+  background: transparent; border: 1px solid rgba(255,255,255,0.15);
+  color: var(--grey-300); font-size: 0.875rem; font-weight: 500;
+  border-radius: var(--r-md); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  width: 100%;
+}
+.passkey-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.35); color: #fff; }
+.passkey-btn:disabled { opacity: 0.5; cursor: default; }
+.passkey-done {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.875rem; color: #34d399; padding: 0.5rem 0;
+}
+.passkey-divider {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: var(--grey-400); font-size: 0.8125rem; margin: 0.5rem 0;
+}
+.passkey-divider::before, .passkey-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--grey-200);
+}
 @media (max-width: 720px) { .members-card-stage { grid-template-columns: 1fr; } }
 
 .members-benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }

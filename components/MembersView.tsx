@@ -7,6 +7,7 @@ import { MembershipCard } from '@/components/MembershipCard'
 import { Countdown2027 } from '@/components/Countdown2027'
 import { PartnerEmailCard } from '@/components/PartnerEmailCard'
 import { SignOutButton } from '@/components/SignOutButton'
+import { PasskeySetup } from '@/components/PasskeySetup'
 import type { MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
@@ -45,6 +46,8 @@ interface Props {
   partnerEmail: string | null
   isPartner: boolean
   isComp: boolean
+  hasBooking: boolean
+  hasPasskey: boolean
 }
 
 const BENEFITS = (discountPercent: number) => [
@@ -60,7 +63,7 @@ const F27_HIGHLIGHTS = [
   { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
-export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp }: Props) {
+export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp, hasBooking, hasPasskey }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -129,10 +132,17 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
           </ul>
 
           <div className="m27-cta">
-            <Link href="/register?year=2027" className="f27-btn f27-btn--silver f27-btn--lg">
-              Register your pitch
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-            </Link>
+            {hasBooking ? (
+              <Link href="/my-booking" className="f27-btn f27-btn--silver f27-btn--lg">
+                View your booking
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </Link>
+            ) : (
+              <Link href="/register?year=2027" className="f27-btn f27-btn--silver f27-btn--lg">
+                Register your pitch
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </Link>
+            )}
             <Link href="/2027" className="f27-btn f27-btn--ghost">Explore the weekend</Link>
           </div>
 
@@ -188,6 +198,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
               {busy ? 'Opening…' : 'Manage membership & billing'}
             </button>
           )}
+          <PasskeySetup hasPasskey={hasPasskey} />
         </div>
       </div>
 
