@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
+import { PasskeyLogin } from '@/components/PasskeyLogin'
 
 export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: string }) {
   const searchParams = useSearchParams()
@@ -84,6 +85,9 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
               {error}
             </div>
           )}
+
+          <PasskeyLogin />
+          <div className="passkey-divider"><span>or</span></div>
 
           <form onSubmit={handleSubmit} className="auth-form">
             <label htmlFor="auth-email" className="cu-label">Email address</label>

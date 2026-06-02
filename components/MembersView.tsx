@@ -7,6 +7,7 @@ import { MembershipCard } from '@/components/MembershipCard'
 import { Countdown2027 } from '@/components/Countdown2027'
 import { PartnerEmailCard } from '@/components/PartnerEmailCard'
 import { SignOutButton } from '@/components/SignOutButton'
+import { PasskeySetup } from '@/components/PasskeySetup'
 import type { MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
@@ -46,6 +47,7 @@ interface Props {
   isPartner: boolean
   isComp: boolean
   hasBooking: boolean
+  hasPasskey: boolean
 }
 
 const BENEFITS = (discountPercent: number) => [
@@ -61,7 +63,7 @@ const F27_HIGHLIGHTS = [
   { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
-export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp, hasBooking }: Props) {
+export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp, hasBooking, hasPasskey }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -196,6 +198,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
               {busy ? 'Opening…' : 'Manage membership & billing'}
             </button>
           )}
+          <PasskeySetup hasPasskey={hasPasskey} />
         </div>
       </div>
 

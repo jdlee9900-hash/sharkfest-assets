@@ -65,6 +65,13 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
   const hasBooking = isPartner || (!!ownReg && ownReg.status !== 'cancelled')
 
+  const { data: passkeyRows } = await service
+    .from('webauthn_credentials')
+    .select('id')
+    .eq('user_id', user.id)
+    .limit(1)
+  const hasPasskey = (passkeyRows?.length ?? 0) > 0
+
   // The membership card should always show the primary member's number/plan.
   // For partner users, use getActiveMembership on the primary's user_id.
   const primaryMembership = (await getActiveMembership(user.id)) ?? membership
@@ -137,6 +144,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           isPartner={isPartner}
           isComp={primaryMembership.stripe_subscription_id.startsWith('comp_')}
           hasBooking={hasBooking}
+          hasPasskey={hasPasskey}
         />
       </main>
 
