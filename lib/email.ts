@@ -459,6 +459,54 @@ Log in to pay: ${url}
   }
 }
 
+// ── Mailing list campaign emails ─────────────────────────────────────────────
+
+function bodyToHtml(body: string): string {
+  return body
+    .split(/\n\n+/)
+    .filter(p => p.trim())
+    .map(para => hp(para.trim().replace(/\n/g, '<br>')))
+    .join('')
+}
+
+function processBodyHtml(body: string): string {
+  const trimmed = body.trim()
+  // If it contains HTML tags (e.g. from the rich text editor), use it directly.
+  // Otherwise treat as plain text and convert paragraphs → <p> tags.
+  return /<[a-z]/i.test(trimmed) ? trimmed : bodyToHtml(trimmed)
+}
+
+export function buildCampaignEmail(
+  body: string,
+  contact: { first_name: string; unsubscribe_token: string },
+  origin: string,
+): EmailBody {
+  const unsubUrl = `${origin}/unsubscribe?token=${contact.unsubscribe_token}`
+  const personalised = body.replace(/\{\{first_name\}\}/g, contact.first_name || 'there')
+
+  const unsubFooter = `<p style="margin:24px 0 0;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:16px">
+    You're receiving this because you're a Torbay Sharks RFC member or SharkFest registrant.
+    <a href="${unsubUrl}" style="color:#94a3b8">Unsubscribe</a>
+  </p>`
+
+  // Strip HTML tags for the plain-text fallback
+  const textBody = personalised.replace(/<[^>]+>/g, '').trim()
+
+  return {
+    html: htmlWrap(`${processBodyHtml(personalised)}${unsubFooter}`),
+    text: `${textBody}\n\n---\nTo unsubscribe: ${unsubUrl}\n`,
+  }
+}
+
+export function buildCampaignPreview(body: string): string {
+  const sample = body.replace(/\{\{first_name\}\}/g, '[First name]')
+  const previewFooter = `<p style="margin:24px 0 0;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:16px">
+    You're receiving this because you're a Torbay Sharks RFC member or SharkFest registrant.
+    <span style="color:#94a3b8">Unsubscribe</span> (link included in real send)
+  </p>`
+  return htmlWrap(`${processBodyHtml(sample)}${previewFooter}`)
+}
+
 export function emailPaymentReminder(
   reg: { first_name: string },
   outstanding: number,
