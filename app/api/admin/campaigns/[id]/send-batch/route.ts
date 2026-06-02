@@ -45,15 +45,16 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   let batchFailed = 0
 
   // Process sends concurrently in groups of 10
+  type SendRow = {
+    id: string
+    contact_id: string
+    mailing_list_contacts: { email: string; first_name: string; unsubscribe_token: string }[]
+  }
   for (let i = 0; i < sends.length; i += 10) {
-    const chunk = sends.slice(i, i + 10)
+    const chunk = sends.slice(i, i + 10) as SendRow[]
     await Promise.allSettled(
-      chunk.map(async (send: {
-        id: string
-        contact_id: string
-        mailing_list_contacts: { email: string; first_name: string; unsubscribe_token: string } | null
-      }) => {
-        const contact = send.mailing_list_contacts
+      chunk.map(async (send) => {
+        const contact = send.mailing_list_contacts?.[0] ?? null
         if (!contact) {
           await service
             .from('campaign_sends')
