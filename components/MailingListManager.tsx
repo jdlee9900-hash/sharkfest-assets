@@ -705,7 +705,7 @@ function CampaignDetail({ campaign: initial, activeContacts, onBack, onUpdated }
       return
     }
     if (editor && editor.getHTML() !== editBody) {
-      editor.commands.setContent(editBody, false)
+      editor.commands.setContent(editBody)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editBody])
