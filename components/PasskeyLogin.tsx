@@ -53,34 +53,31 @@ export function PasskeyLogin({ className }: Props) {
   }
 
   return (
-    <div>
+    <div className={`passkey-login-wrap${className ? ` ${className}` : ''}`}>
       <button
-        className={`btn passkey-btn${className ? ` ${className}` : ''}`}
+        className="passkey-login-btn"
         onClick={handleLogin}
         disabled={status === 'loading'}
+        aria-label="Sign in with biometrics"
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          aria-hidden="true"
-        >
-          <path d="M12 11c0-1.1.9-2 2-2s2 .9 2 2v1" />
-          <path d="M5 12a7 7 0 1 1 14 0c0 4-2 6-2 6H7s-2-2-2-6Z" />
-          <path d="M9 21h6" />
-          <path d="M10 17v4" />
-          <path d="M14 17v4" />
-        </svg>
-        {status === 'loading' ? 'Authenticating…' : 'Sign in with Face ID / Touch ID'}
+        <span className="passkey-login-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+            <path d="M12 10a2 2 0 0 1 2 2v1"/>
+            <path d="M5 12a7 7 0 1 1 14 0c0 4-2 6-2 6H7s-2-2-2-6Z"/>
+            <path d="M9 21h6"/><path d="M10 17v4"/><path d="M14 17v4"/>
+          </svg>
+        </span>
+        <span className="passkey-login-text">
+          <span className="passkey-login-title">
+            {status === 'loading' ? 'Authenticating…' : 'Sign in with Face ID / Touch ID'}
+          </span>
+          <span className="passkey-login-sub">Use your device biometrics — no email needed</span>
+        </span>
       </button>
       {status === 'error' && errorMsg && (
-        <p role="alert" style={{ fontSize: '0.8125rem', color: 'var(--red-500)', margin: '0.4rem 0 0', textAlign: 'center' }}>
-          {errorMsg}
-        </p>
+        <p role="alert" className="passkey-login-error">{errorMsg}</p>
       )}
     </div>
   )
 }
+

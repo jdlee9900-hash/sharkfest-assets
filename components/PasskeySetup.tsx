@@ -5,9 +5,11 @@ import { startRegistration } from '@simplewebauthn/browser'
 
 interface Props {
   hasPasskey: boolean
+  /** Renders a full highlighted card instead of a compact button */
+  variant?: 'card' | 'button'
 }
 
-export function PasskeySetup({ hasPasskey }: Props) {
+export function PasskeySetup({ hasPasskey, variant = 'button' }: Props) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -51,6 +53,48 @@ export function PasskeySetup({ hasPasskey }: Props) {
     }
   }
 
+  const fingerprintIcon = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <path d="M12 10a2 2 0 0 1 2 2v1"/>
+      <path d="M5 12a7 7 0 1 1 14 0c0 4-2 6-2 6H7s-2-2-2-6Z"/>
+      <path d="M9 21h6"/><path d="M10 17v4"/><path d="M14 17v4"/>
+    </svg>
+  )
+
+  if (variant === 'card') {
+    return (
+      <div className="passkey-card">
+        {status === 'done' ? (
+          <div className="passkey-card-done">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            <div>
+              <p className="passkey-card-done-title">Biometric login is set up</p>
+              <p className="passkey-card-done-sub">Use Face ID, Touch ID or your device PIN next time you sign in.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="passkey-card-inner">
+              <span className="passkey-card-icon" aria-hidden="true">{fingerprintIcon}</span>
+              <div className="passkey-card-body">
+                <p className="passkey-card-title">Set up faster sign-in</p>
+                <p className="passkey-card-sub">
+                  Use Face ID, Touch ID or your device PIN to sign in instantly next time —
+                  no email or magic link needed.
+                </p>
+              </div>
+            </div>
+            {errorMsg && <p className="passkey-error" role="alert">{errorMsg}</p>}
+            <button className="passkey-card-btn" onClick={handleSetup} disabled={status === 'loading'}>
+              {fingerprintIcon}
+              {status === 'loading' ? 'Setting up…' : 'Set up Face ID / Touch ID'}
+            </button>
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="passkey-setup">
       {status === 'done' ? (
@@ -64,21 +108,7 @@ export function PasskeySetup({ hasPasskey }: Props) {
             onClick={handleSetup}
             disabled={status === 'loading'}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              aria-hidden="true"
-            >
-              <path d="M12 11c0-1.1.9-2 2-2s2 .9 2 2v1" />
-              <path d="M5 12a7 7 0 1 1 14 0c0 4-2 6-2 6H7s-2-2-2-6Z" />
-              <path d="M9 21h6" />
-              <path d="M10 17v4" />
-              <path d="M14 17v4" />
-            </svg>
+            {fingerprintIcon}
             {status === 'loading'
               ? 'Setting up…'
               : hasPasskey

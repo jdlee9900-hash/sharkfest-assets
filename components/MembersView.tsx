@@ -102,6 +102,10 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
         </div>
       )}
 
+      {!hasPasskey && (
+        <PasskeySetup hasPasskey={false} variant="card" />
+      )}
+
       {/* ✦ SharkFest 2027 — members-exclusive showcase ✦ */}
       <section className="m27 f27" aria-label="SharkFest 2027 — members exclusive">
         <div className="f27-sparkles m27-sparkles" aria-hidden="true" />
@@ -198,7 +202,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
               {busy ? 'Opening…' : 'Manage membership & billing'}
             </button>
           )}
-          <PasskeySetup hasPasskey={hasPasskey} />
+          {hasPasskey && <PasskeySetup hasPasskey={true} />}
         </div>
       </div>
 
