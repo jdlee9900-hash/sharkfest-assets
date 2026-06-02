@@ -37,7 +37,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   // For partner users, fall back to the booking they share.
   const { data: ownReg } = await service
     .from('registrations')
-    .select('first_name, surname, partner_email')
+    .select('first_name, surname, partner_email, status')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -62,6 +62,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
   // Ensure name is always a string (TypeScript narrowing)
   const displayName: string = name ?? 'Member'
+
+  const hasBooking = isPartner || (!!ownReg && ownReg.status !== 'cancelled')
 
   // The membership card should always show the primary member's number/plan.
   // For partner users, use getActiveMembership on the primary's user_id.
@@ -134,6 +136,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           partnerEmail={partnerEmail}
           isPartner={isPartner}
           isComp={primaryMembership.stripe_subscription_id.startsWith('comp_')}
+          hasBooking={hasBooking}
         />
       </main>
 
