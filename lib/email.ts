@@ -7,7 +7,7 @@ import type { MemberPlan } from './types'
 const DEFAULT_EVENT: Pick<FestivalEvent, 'name'> = { name: 'SharkFest 2027' }
 
 export function getOrigin(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.vercel.app'
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.co.uk'
 }
 
 export function getAdminEmails(): string[] {
