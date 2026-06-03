@@ -19,9 +19,11 @@ export async function POST(request: Request) {
   const price = memberPriceId(plan)
   if (!price) return NextResponse.json({ error: 'Membership plan not configured' }, { status: 503 })
 
-  // Already a member? Send them to manage their existing subscription instead.
+  // Block paid members from double-subscribing; allow community members to upgrade.
   const existing = await getActiveMembership(user.id)
-  if (existing) return NextResponse.json({ error: 'You already have an active membership' }, { status: 409 })
+  if (existing && existing.plan !== 'community') {
+    return NextResponse.json({ error: 'You already have an active membership' }, { status: 409 })
+  }
 
   const stripe = new Stripe(stripeKey)
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sharkfest.co.uk'

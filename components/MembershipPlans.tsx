@@ -17,9 +17,10 @@ function redirectToStripe(url: unknown) {
 interface Props {
   prices: { individual: number | null; family: number | null }
   discountPercent: number
+  isUpgrade?: boolean
 }
 
-export function MembershipPlans({ prices, discountPercent }: Props) {
+export function MembershipPlans({ prices, discountPercent, isUpgrade = false }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState<MemberPlan | null>(null)
   const [error, setError] = useState('')
@@ -61,6 +62,12 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
 
   return (
     <div className="join-plans">
+      {isUpgrade && (
+        <div className="join-upgrade-banner">
+          <p className="join-upgrade-title">Upgrade your membership</p>
+          <p className="join-upgrade-sub">You&apos;re currently a Community Member. Choose a paid plan to unlock the SharkFest festival discount and full member benefits.</p>
+        </div>
+      )}
       {error && (
         <div className="auth-error" role="alert" style={{ marginBottom: '1rem' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -97,8 +104,8 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
         Billed monthly · Secure payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2027 tickets
       </p>
 
-      {/* Community (free) tier — shown below paid options as a lighter alternative */}
-      {communityTier && (
+      {/* Community (free) tier — only shown when not already a community member */}
+      {communityTier && !isUpgrade && (
         <div className="join-community-tier">
           <div className="join-community-divider">
             <span>or</span>

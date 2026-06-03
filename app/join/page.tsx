@@ -92,14 +92,14 @@ export default async function JoinPage() {
         </section>
 
         <section className="join-action">
-          {membership ? (
+          {membership && membership.plan !== 'community' ? (
             <div className="join-already">
               <p className="join-already-title">You&apos;re already a member 🦈</p>
               <p className="join-already-sub">Thanks for supporting the club.</p>
               <Link href="/members" className="btn btn-accent join-cta">Go to members area</Link>
             </div>
           ) : user ? (
-            <MembershipPlans prices={prices} discountPercent={discount} />
+            <MembershipPlans prices={prices} discountPercent={discount} isUpgrade={membership?.plan === 'community'} />
           ) : (
             <Suspense fallback={<div className="auth-card" style={{ minHeight: 260 }} />}>
               {/* Send them back to /join after sign-in so they land on the plan
