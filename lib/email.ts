@@ -31,23 +31,18 @@ interface EmailBody { html: string; text: string }
 export async function sendEmail(to: string | string[], subject: string, body: EmailBody): Promise<void> {
   const transporter = getTransporter()
   if (!transporter) {
-    console.error('[email] SMTP_USER or SMTP_PASS not set — email not sent:', subject)
-    return
+    throw new Error('SMTP not configured: SMTP_USER or SMTP_PASS env var is missing')
   }
 
   const from = process.env.EMAIL_FROM ?? `SharkFest <${process.env.SMTP_USER}>`
 
-  try {
-    await transporter.sendMail({
-      from,
-      to: Array.isArray(to) ? to.join(', ') : to,
-      subject,
-      html: body.html,
-      text: body.text,
-    })
-  } catch (err) {
-    console.error('[email] SMTP send failed — subject:', subject, '— to:', to, '— error:', err)
-  }
+  await transporter.sendMail({
+    from,
+    to: Array.isArray(to) ? to.join(', ') : to,
+    subject,
+    html: body.html,
+    text: body.text,
+  })
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────

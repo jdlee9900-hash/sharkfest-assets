@@ -664,6 +664,8 @@ function CampaignDetail({ campaign: initial, activeContacts, onBack, onUpdated }
   const [progress, setProgress] = useState<SendProgress | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
+  const [failedErrors, setFailedErrors] = useState<{ id: string; email: string; error: string }[] | null>(null)
+  const [loadingErrors, setLoadingErrors] = useState(false)
 
   const [editTab, setEditTab] = useState<'edit' | 'preview'>('edit')
   const [previewHtml, setPreviewHtml] = useState('')
@@ -835,6 +837,19 @@ function CampaignDetail({ campaign: initial, activeContacts, onBack, onUpdated }
     }
     setSending(false)
     await runSendLoop(campaign.id)
+  }
+
+  const handleViewErrors = async () => {
+    setLoadingErrors(true)
+    try {
+      const res = await fetch(`/api/admin/campaigns/${campaign.id}/errors`)
+      const data = await res.json()
+      setFailedErrors(data.rows ?? [])
+    } catch {
+      setFailedErrors([])
+    } finally {
+      setLoadingErrors(false)
+    }
   }
 
   const total = campaign.total_count || activeContacts
@@ -1024,10 +1039,37 @@ function CampaignDetail({ campaign: initial, activeContacts, onBack, onUpdated }
         )}
 
         {isSent && (
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#0f172a' }}>
-            Sent to <strong>{sent}</strong>{failed > 0 ? `, ${failed} failed` : ''}.
-            {campaign.sent_at && <> Completed {fmtDate(campaign.sent_at)}.</>}
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#0f172a' }}>
+              Sent to <strong>{sent}</strong>{failed > 0 ? `, ${failed} failed` : ''}.
+              {campaign.sent_at && <> Completed {fmtDate(campaign.sent_at)}.</>}
+            </p>
+            {failed > 0 && (
+              <button
+                onClick={failedErrors ? () => setFailedErrors(null) : handleViewErrors}
+                disabled={loadingErrors}
+                style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, fontSize: '0.8125rem', color: '#b91c1c', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                {loadingErrors ? 'Loading…' : failedErrors ? 'Hide errors' : 'View error details'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {failedErrors && failedErrors.length > 0 && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: '#b91c1c' }}>
+              Failed sends ({failedErrors.length})
+            </p>
+            {failedErrors.map(row => (
+              <div key={row.id} style={{ fontSize: '0.8125rem', color: '#7f1d1d' }}>
+                <strong>{row.email}</strong> — {row.error}
+              </div>
+            ))}
+          </div>
+        )}
+        {failedErrors && failedErrors.length === 0 && (
+          <p style={{ margin: 0, fontSize: '0.8125rem', color: '#64748b' }}>No error details found.</p>
         )}
 
         {(isSending || isPartial) && (
@@ -1144,23 +1186,32 @@ function CampaignDetail({ campaign: initial, activeContacts, onBack, onUpdated }
               {sending ? 'Sending…' : 'Continue Sending'}
             </button>
             {isPartial && failed > 0 && (
-              <button
-                onClick={handleRetryFailed}
-                disabled={sending}
-                style={{
-                  height: 36,
-                  padding: '0 16px',
-                  borderRadius: 6,
-                  border: 'none',
-                  background: sending ? '#94a3b8' : '#ef4444',
-                  color: '#ffffff',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: sending ? 'wait' : 'pointer',
-                }}
-              >
-                Retry Failed
-              </button>
+              <>
+                <button
+                  onClick={handleRetryFailed}
+                  disabled={sending}
+                  style={{
+                    height: 36,
+                    padding: '0 16px',
+                    borderRadius: 6,
+                    border: 'none',
+                    background: sending ? '#94a3b8' : '#ef4444',
+                    color: '#ffffff',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    cursor: sending ? 'wait' : 'pointer',
+                  }}
+                >
+                  Retry Failed
+                </button>
+                <button
+                  onClick={failedErrors ? () => setFailedErrors(null) : handleViewErrors}
+                  disabled={loadingErrors}
+                  style={{ background: 'none', border: 'none', padding: 0, fontSize: '0.8125rem', color: '#b91c1c', cursor: 'pointer', textDecoration: 'underline', alignSelf: 'center' }}
+                >
+                  {loadingErrors ? 'Loading…' : failedErrors ? 'Hide errors' : 'View error details'}
+                </button>
+              </>
             )}
           </div>
         )}
