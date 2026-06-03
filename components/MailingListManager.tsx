@@ -485,6 +485,7 @@ interface NewCampaignFormProps {
 
 function NewCampaignForm({ onCreated, onCancel }: NewCampaignFormProps) {
   const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -497,12 +498,13 @@ function NewCampaignForm({ onCreated, onCancel }: NewCampaignFormProps) {
     content: '',
     editable: true,
     immediatelyRender: false,
+    onUpdate: ({ editor: ed }) => setBody(ed.getHTML()),
   })
 
   const handleCreate = async () => {
-    const bodyHtml = editor ? editor.getHTML() : ''
-    const bodyText = editor ? editor.getText() : ''
-    if (!subject.trim() || !bodyText.trim()) return
+    const bodyHtml = editor ? editor.getHTML() : body
+    const hasBody = bodyHtml.replace(/<[^>]+>/g, '').trim().length > 0
+    if (!subject.trim() || !hasBody) return
     setSaving(true)
     setError('')
     try {
@@ -524,8 +526,8 @@ function NewCampaignForm({ onCreated, onCancel }: NewCampaignFormProps) {
     }
   }
 
-  const bodyText = editor ? editor.getText() : ''
-  const canCreate = !saving && subject.trim().length > 0 && bodyText.trim().length > 0
+  const hasBody = body.replace(/<[^>]+>/g, '').trim().length > 0
+  const canCreate = !saving && subject.trim().length > 0 && hasBody
 
   return (
     <div style={{
