@@ -46,6 +46,7 @@ interface Props {
   partnerEmail: string | null
   isPartner: boolean
   isComp: boolean
+  isCommunity: boolean
   hasBooking: boolean
   hasPasskey: boolean
 }
@@ -57,13 +58,20 @@ const BENEFITS = (discountPercent: number) => [
   { icon: '🦈', title: 'Support the club', body: 'Every membership helps Torbay Sharks RFC keep SharkFest going.' },
 ]
 
+const COMMUNITY_BENEFITS = [
+  { icon: '📸', title: 'Exclusive content', body: 'Behind-the-scenes stories, photos and updates between festivals.' },
+  { icon: '🎉', title: 'Members events', body: 'Invitations to socials and gatherings through the year.' },
+  { icon: '📬', title: 'Club mailing list', body: 'Stay up to date with news and announcements from Torbay Sharks RFC.' },
+  { icon: '⭐', title: 'Upgrade any time', body: 'Switch to a paid membership to unlock the SharkFest festival discount and full member benefits.' },
+]
+
 const F27_HIGHLIGHTS = [
   { icon: '🎸', day: 'Fri', label: 'Indie covers band' },
   { icon: '🪩', day: 'Sat', label: '25th party · silver theme' },
   { icon: '🤠', day: 'Sun', label: 'Line dancing & country band' },
 ]
 
-export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp, hasBooking, hasPasskey }: Props) {
+export function MembersView({ card, email, justJoined, discountPercent, news, events, partnerEmail, isPartner, isComp, isCommunity, hasBooking, hasPasskey }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -146,7 +154,13 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
             <Link href="/2027" className="f27-btn f27-btn--ghost">Explore the weekend</Link>
           </div>
 
-          <p className="m27-note">Your member ticket discount is applied automatically when we set up your booking.</p>
+          {isCommunity ? (
+            <p className="m27-note">
+              <Link href="/join" style={{ color: 'inherit', textDecoration: 'underline' }}>Upgrade to a full membership</Link> to unlock the {discountPercent}% member discount on your festival booking.
+            </p>
+          ) : (
+            <p className="m27-note">Your member ticket discount is applied automatically when we set up your booking.</p>
+          )}
         </div>
       </section>
 
@@ -163,7 +177,40 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
               {error}
             </div>
           )}
-          {isComp ? (
+          {isCommunity ? (
+            <>
+              <button className="btn btn-dark members-manage" onClick={() => setCompOpen(o => !o)}>
+                {compOpen ? 'Close' : 'Membership details'}
+              </button>
+              {compOpen && (
+                <div className="comp-portal">
+                  <div className="comp-portal-section">
+                    <p className="comp-portal-label">Plan</p>
+                    <p className="comp-portal-value">Community Member</p>
+                  </div>
+                  <div className="comp-portal-section">
+                    <p className="comp-portal-label">Status</p>
+                    <p className="comp-portal-value">
+                      Active
+                      <span className="comp-portal-badge">Free</span>
+                    </p>
+                  </div>
+                  <div className="comp-portal-divider" />
+                  <p className="comp-portal-label" style={{ marginBottom: '0.5rem' }}>What&apos;s included</p>
+                  <ul className="comp-portal-perks">
+                    <li>Access to the members area</li>
+                    <li>Exclusive members content &amp; updates</li>
+                    <li>Invitations to members events</li>
+                    <li>Club mailing list</li>
+                  </ul>
+                  <p className="comp-portal-note">Community membership is free — no subscription or payment to manage.</p>
+                  <Link href="/join" className="btn btn-accent" style={{ display: 'inline-block', marginTop: '0.75rem', fontSize: '0.8125rem', height: '2rem', padding: '0 1rem', lineHeight: '2rem' }}>
+                    Upgrade membership →
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : isComp ? (
             <>
               <button className="btn btn-dark members-manage" onClick={() => setCompOpen(o => !o)}>
                 {compOpen ? 'Close' : 'Manage membership'}
@@ -204,7 +251,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
 
       {/* Benefits */}
       <div className="members-benefits">
-        {BENEFITS(discountPercent).map(b => (
+        {(isCommunity ? COMMUNITY_BENEFITS : BENEFITS(discountPercent)).map(b => (
           <div className="members-benefit" key={b.title}>
             <span className="members-benefit-icon" aria-hidden="true">{b.icon}</span>
             <p className="members-benefit-title">{b.title}</p>

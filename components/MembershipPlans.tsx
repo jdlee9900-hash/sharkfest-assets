@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { formatAmount, MEMBERSHIP_TIERS, type MemberPlan } from '@/lib/types'
 
 // Only ever hand off to a genuine Stripe Checkout URL (mirrors MyBookingView).
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function MembershipPlans({ prices, discountPercent }: Props) {
+  const router = useRouter()
   const [loading, setLoading] = useState<MemberPlan | null>(null)
   const [error, setError] = useState('')
 
@@ -40,6 +42,23 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
     }
   }
 
+  const handleCommunity = async () => {
+    setLoading('community')
+    setError('')
+    try {
+      const res = await fetch('/api/membership/community', { method: 'POST' })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'Could not sign up')
+      router.push('/members?welcome=1')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setLoading(null)
+    }
+  }
+
+  const paidTiers = MEMBERSHIP_TIERS.filter(t => !t.free)
+  const communityTier = MEMBERSHIP_TIERS.find(t => t.free)
+
   return (
     <div className="join-plans">
       {error && (
@@ -49,9 +68,10 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
         </div>
       )}
 
+      {/* Paid tiers */}
       <div className="join-tiers">
-        {MEMBERSHIP_TIERS.map(tier => {
-          const amount = prices[tier.id]
+        {paidTiers.map(tier => {
+          const amount = prices[tier.id as 'individual' | 'family']
           return (
             <div className="join-plan-card join-tier-card" key={tier.id}>
               <p className="join-plan-name">{tier.label}</p>
@@ -76,6 +96,36 @@ export function MembershipPlans({ prices, discountPercent }: Props) {
       <p className="join-plan-fineprint">
         Billed monthly · Secure payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2027 tickets
       </p>
+
+      {/* Community (free) tier — shown below paid options as a lighter alternative */}
+      {communityTier && (
+        <div className="join-community-tier">
+          <div className="join-community-divider">
+            <span>or</span>
+          </div>
+          <div className="join-plan-card join-community-card">
+            <div className="join-community-header">
+              <p className="join-plan-name">{communityTier.label}</p>
+              <span className="join-community-badge">Free</span>
+            </div>
+            <p className="join-plan-note" style={{ margin: '0 0 1rem' }}>{communityTier.tagline}</p>
+            <ul className="join-community-perks">
+              <li>Access to the members area</li>
+              <li>Members-only content &amp; events</li>
+              <li>Added to the club mailing list</li>
+              <li>Digital membership card</li>
+            </ul>
+            <p className="join-community-no-discount">Does not include the SharkFest festival discount — upgrade any time.</p>
+            <button
+              className="btn join-community-btn"
+              onClick={handleCommunity}
+              disabled={loading !== null}
+            >
+              {loading === 'community' ? 'Joining…' : 'Join for free'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -82,6 +82,48 @@ export function membershipNumber(m: Pick<Membership, 'id'>): string {
   return `TSRFC-${hex}`
 }
 
+/**
+ * Create a free community membership. Registers the user as a Stripe customer
+ * (so payments can be attached later) but creates no subscription.
+ * Does NOT set is_member on registrations — community members get no festival discount.
+ */
+export async function createCommunityMembership(userId: string, email: string): Promise<void> {
+  const key = process.env.STRIPE_SECRET_KEY
+  const service = createServiceClient()
+
+  // Reuse an existing Stripe customer if one was created for a prior membership.
+  const { data: prior } = await service
+    .from('memberships')
+    .select('stripe_customer_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  let customerId = prior?.stripe_customer_id as string | undefined
+  if (!customerId && key) {
+    const stripe = new Stripe(key)
+    const customer = await stripe.customers.create({
+      email,
+      metadata: { user_id: userId },
+    })
+    customerId = customer.id
+  }
+
+  await service.from('memberships').upsert({
+    user_id: userId,
+    email,
+    stripe_customer_id: customerId ?? `community_cus_${userId}`,
+    stripe_subscription_id: `community_${userId}`,
+    stripe_price_id: null,
+    plan: 'community',
+    status: 'active',
+    current_period_end: null,
+    cancel_at_period_end: false,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'stripe_subscription_id' })
+}
+
 // ── Stripe subscription → membership row ──────────────────────────────────────
 
 /** Map Stripe's subscription status to our narrower set. */

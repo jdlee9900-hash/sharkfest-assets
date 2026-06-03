@@ -29,10 +29,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'Campaign is not in sending state. Call /prepare first.' }, { status: 400 })
   }
 
-  // Get next batch of pending sends with contact details
+  // Get next batch of pending send IDs
   const { data: batch, error: bErr } = await service
     .from('campaign_sends')
-    .select('id, contact_id, mailing_list_contacts(email, first_name, unsubscribe_token)')
+    .select('id, contact_id')
     .eq('campaign_id', id)
     .eq('status', 'pending')
     .limit(BATCH_SIZE)
@@ -40,21 +40,31 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   if (bErr) return NextResponse.json({ error: bErr.message }, { status: 500 })
 
   const sends = batch ?? []
+
+  // Fetch contact details separately to avoid PostgREST join ambiguity
+  const contactIds = sends.map((s: { contact_id: string }) => s.contact_id)
+  const { data: contactRows } = contactIds.length
+    ? await service
+        .from('mailing_list_contacts')
+        .select('id, email, first_name, unsubscribe_token')
+        .in('id', contactIds)
+    : { data: [] }
+
+  const contactMap = new Map(
+    (contactRows ?? []).map((c: { id: string; email: string; first_name: string; unsubscribe_token: string }) => [c.id, c])
+  )
+
   const origin = getOrigin()
   let batchSent = 0
   let batchFailed = 0
 
   // Process sends concurrently in groups of 10
-  type SendRow = {
-    id: string
-    contact_id: string
-    mailing_list_contacts: { email: string; first_name: string; unsubscribe_token: string }[]
-  }
+  type SendRow = { id: string; contact_id: string }
   for (let i = 0; i < sends.length; i += 10) {
     const chunk = sends.slice(i, i + 10) as SendRow[]
     await Promise.allSettled(
       chunk.map(async (send) => {
-        const contact = send.mailing_list_contacts?.[0] ?? null
+        const contact = contactMap.get(send.contact_id) ?? null
         if (!contact) {
           await service
             .from('campaign_sends')
