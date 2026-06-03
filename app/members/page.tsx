@@ -143,6 +143,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           partnerEmail={partnerEmail}
           isPartner={isPartner}
           isComp={primaryMembership.stripe_subscription_id.startsWith('comp_')}
+          isCommunity={primaryMembership.stripe_subscription_id.startsWith('community_')}
           hasBooking={hasBooking}
           hasPasskey={hasPasskey}
         />

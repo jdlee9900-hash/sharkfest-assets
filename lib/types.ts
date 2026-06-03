@@ -57,13 +57,14 @@ export interface Payment {
   created_at: string
 }
 
-export type MemberPlan = 'individual' | 'family'
+export type MemberPlan = 'individual' | 'family' | 'community'
 
-// Membership tiers (both billed monthly). Prices live in Stripe; these supply the
-// labels/blurbs the UI shows alongside the live amount. Client-safe (no server imports).
-export const MEMBERSHIP_TIERS: { id: MemberPlan; label: string; tagline: string }[] = [
+// Membership tiers. Paid tiers have a Stripe price; the community tier is free.
+// Client-safe (no server imports).
+export const MEMBERSHIP_TIERS: { id: MemberPlan; label: string; tagline: string; free?: boolean }[] = [
   { id: 'individual', label: 'Individual or Couple', tagline: 'For you — or you and a partner. Add a second login to share your booking.' },
   { id: 'family',     label: 'Family',               tagline: 'For the whole family. Add a second login to share your booking.' },
+  { id: 'community',  label: 'Community Member',     tagline: 'Stay connected to Torbay Sharks RFC all year round. No payment required.', free: true },
 ]
 
 /** Human label for a stored plan value (handles legacy monthly/annual rows). */
@@ -71,6 +72,7 @@ export function planLabel(plan: string): string {
   switch (plan) {
     case 'individual': return 'Individual or Couple'
     case 'family':     return 'Family'
+    case 'community':  return 'Community Member'
     case 'monthly':    return 'Monthly'
     case 'annual':     return 'Annual'
     default:           return 'Member'

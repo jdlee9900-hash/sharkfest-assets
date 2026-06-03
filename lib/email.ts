@@ -320,24 +320,32 @@ export function emailMembershipWelcome(
   origin: string
 ): EmailBody {
   const url = `${origin}/members`
-  const planLabel = plan === 'family' ? 'Family membership' : 'Individual / Couple membership'
+  const isCommunity = plan === 'community'
+  const planLabel = plan === 'family' ? 'Family membership'
+    : isCommunity ? 'Community membership'
+    : 'Individual / Couple membership'
+  const perksNote = isCommunity
+    ? 'Your members area is ready: exclusive content, members events, and your digital membership card.'
+    : 'Your members area is ready: exclusive content, members events, your digital membership card, and a reduced price on SharkFest 2027 tickets.'
+  const perksNoteText = isCommunity
+    ? 'Your members area is ready: exclusive content, members events, and your\ndigital membership card.'
+    : 'Your members area is ready: exclusive content, members events, your digital\nmembership card, and a reduced price on SharkFest 2027 tickets.'
   return {
     html: htmlWrap(`
       ${hh('Welcome to the club')}
       ${hp(`Hi ${member.first_name},`)}
-      ${hp("Your SharkFest membership is now active — thank you for supporting Torbay Sharks RFC.")}
+      ${hp("Your Torbay Sharks RFC membership is now active — welcome to the community.")}
       ${hSummary([['Membership', planLabel], ['Status', 'Active ✓']])}
-      ${hp('Your members area is ready: exclusive content, members events, your digital membership card, and a reduced price on SharkFest 2027 tickets.')}
+      ${hp(perksNote)}
       ${hcta('Enter the members area', url)}
     `),
     text: textWrap('SharkFest — Welcome to the club', `
 Hi ${member.first_name},
 
-Your SharkFest membership is now active — thank you for supporting Torbay Sharks RFC.
+Your Torbay Sharks RFC membership is now active — welcome to the community.
 
 ${tSummary([['Membership', planLabel], ['Status', 'Active']])}
-Your members area is ready: exclusive content, members events, your digital
-membership card, and a reduced price on SharkFest 2027 tickets.
+${perksNoteText}
 
 Enter the members area: ${url}
     `),
