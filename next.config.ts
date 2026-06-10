@@ -48,10 +48,6 @@ const config: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },
-  async redirects() {
-    // Uppercase variant of the unlinked SA Tour page (routes are case-sensitive).
-    return [{ source: '/SA', destination: '/sa', permanent: false }]
-  },
 }
 
 export default config
