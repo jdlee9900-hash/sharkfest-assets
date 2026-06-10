@@ -113,7 +113,9 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
               onChange={e => setEmail(e.target.value)}
               required
               autoComplete="email"
-              autoFocus
+              // On /join the form sits at the bottom of a long page — autofocus
+              // would scroll past all the membership info on load.
+              autoFocus={!joining}
             />
             <button
               type="submit"
