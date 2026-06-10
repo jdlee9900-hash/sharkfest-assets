@@ -64,9 +64,6 @@ export default async function Page() {
             </>
           ) : isLoggedIn ? (
             <>
-              <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-                Become a member
-              </Link>
               <Link href="/my-booking" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--grey-400)' }}>
                 My booking
               </Link>
