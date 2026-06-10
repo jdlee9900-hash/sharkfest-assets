@@ -10,7 +10,8 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
   const next = searchParams.get('next') ?? defaultNext
   const hasError = searchParams.get('error') === 'auth'
   // Members-branded variant when signing in to join or enter the members club.
-  const members = next.startsWith('/members') || next.startsWith('/join')
+  const joining = next.startsWith('/join')
+  const members = next.startsWith('/members') || joining
 
   const [email, setEmail]     = useState('')
   const [sent, setSent]       = useState(false)
@@ -61,7 +62,9 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
           <h1 className="auth-title">Check your inbox</h1>
           <p className="auth-sub">
             We sent a magic link to <strong>{email}</strong>.<br />
-            Click it to sign in — no password needed.
+            {joining
+              ? 'Click it and you’ll come straight back here to choose your plan.'
+              : 'Click it to sign in — no password needed.'}
           </p>
           <p className="auth-hint">
             Didn&apos;t receive it? Check your spam folder or{' '}
@@ -70,11 +73,15 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
         </>
       ) : (
         <>
-          <h1 className="auth-title">{members ? 'Members sign in' : 'Sign in to SharkFest'}</h1>
+          <h1 className="auth-title">
+            {joining ? 'Ready to join?' : members ? 'Members sign in' : 'Sign in to SharkFest'}
+          </h1>
           <p className="auth-sub">
-            {members
-              ? 'Sign in to access exclusive content, your digital membership card and member ticket prices.'
-              : "Enter your email and we'll send you a magic link."}
+            {joining
+              ? "New or returning — enter your email and we'll send you a secure link. No password, no forms. You'll pick your membership plan right after."
+              : members
+                ? 'Sign in to access exclusive content, your digital membership card and member ticket prices.'
+                : "Enter your email and we'll send you a magic link."}
           </p>
 
           {error && (
@@ -86,8 +93,14 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
             </div>
           )}
 
-          <PasskeyLogin />
-          <div className="passkey-divider"><span>or</span></div>
+          {/* New joiners won't have a passkey yet — lead with email for them,
+              and with the faster passkey path for returning members. */}
+          {!joining && (
+            <>
+              <PasskeyLogin />
+              <div className="passkey-divider"><span>or</span></div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="auth-form">
             <label htmlFor="auth-email" className="cu-label">Email address</label>
@@ -110,6 +123,13 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
               {loading ? 'Sending…' : 'Send magic link'}
             </button>
           </form>
+
+          {joining && (
+            <>
+              <div className="passkey-divider"><span>returning member?</span></div>
+              <PasskeyLogin />
+            </>
+          )}
         </>
       )}
     </div>

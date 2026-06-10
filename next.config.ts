@@ -13,7 +13,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com",
   "font-src 'self' data:",
   "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.supabase.co https://api.stripe.com",
   "frame-ancestors 'none'",
@@ -47,6 +47,10 @@ const config: NextConfig = {
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
+  },
+  async redirects() {
+    // Uppercase variant of the unlinked SA Tour page (routes are case-sensitive).
+    return [{ source: '/SA', destination: '/sa', permanent: false }]
   },
 }
 

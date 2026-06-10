@@ -12,6 +12,9 @@ export function useHeroCanvas(ref: RefObject<HTMLCanvasElement | null>) {
   useEffect(() => {
     const canvas = ref.current
     if (!canvas) return
+    // Respect the OS-level reduced-motion preference — skip animation entirely
+    // and leave the canvas blank so the CSS gradient background shows through.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 

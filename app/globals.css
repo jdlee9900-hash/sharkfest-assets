@@ -1150,6 +1150,24 @@ body::after {
 }
 .mb-banner--success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
 .mb-banner--warn    { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+.mb-banner-close {
+  margin-left: auto; background: transparent; border: none; cursor: pointer;
+  color: inherit; opacity: 0.6; padding: 0.25rem; line-height: 0; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mb-banner-close:hover { opacity: 1; }
+
+/* Passkey error — more prominent than the old small red text */
+.passkey-error { margin: 0.5rem 0 0; }
+.passkey-error-msg {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.9375rem; font-weight: 500; color: var(--red-600, #dc2626);
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--r-md); padding: 0.625rem 0.875rem; margin: 0 0 0.35rem;
+}
+.passkey-error-hint {
+  font-size: 0.8125rem; color: var(--grey-500); text-align: center; margin: 0;
+}
 
 .mb-card {
   background: var(--white); border-radius: var(--r-xl);
@@ -2470,6 +2488,62 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
 .join-community-btn { width: 100%; height: 2.5rem; font-size: 0.9375rem; background: var(--grey-100, #f1f5f9); color: var(--navy-900); border: 1px solid var(--grey-200); border-radius: 8px; cursor: pointer; font-weight: 500; transition: background 0.15s; }
 .join-community-btn:hover:not(:disabled) { background: var(--grey-200, #e2e8f0); }
 .join-community-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* Join page — open plan picker, perk lists & how-it-works */
+.join-action--plans { max-width: 880px; }
+.join-section-title {
+  font-family: var(--font-d); font-size: clamp(1.6rem, 4vw, 2.2rem);
+  color: var(--navy-900); text-align: center; margin: 0 0 1.5rem;
+}
+.join-perks {
+  margin: 0.25rem 0 0.5rem; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 0.45rem; text-align: left;
+}
+.join-perks li {
+  font-size: 0.875rem; color: var(--grey-600); line-height: 1.45;
+  display: flex; gap: 0.5rem; align-items: flex-start;
+}
+.join-perks li::before {
+  content: '✓'; color: var(--gold-600); font-weight: 700; flex: none;
+}
+.join-plan-card--highlight {
+  position: relative;
+  border-color: var(--gold-400);
+  box-shadow: 0 0 0 2px var(--gold-400), 0 8px 30px rgba(0,0,0,0.07);
+}
+.join-plan-picked {
+  position: absolute; top: -0.7rem; left: 50%; transform: translateX(-50%);
+  font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--gold-400); color: var(--navy-900);
+  border-radius: var(--r-full); padding: 0.2rem 0.7rem; white-space: nowrap;
+}
+.join-steps-wrap { max-width: 880px; margin: 3rem auto 3rem; }
+.join-steps {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+}
+@media (max-width: 640px) { .join-steps { grid-template-columns: 1fr; } }
+.join-step {
+  background: var(--white); border: 1px solid var(--grey-100);
+  border-radius: var(--r-xl); box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+  padding: 1.5rem; text-align: center;
+}
+.join-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  background: var(--navy-900); color: var(--gold-400);
+  font-family: var(--font-d); font-size: 1.05rem; margin-bottom: 0.75rem;
+}
+.join-step-title { font-size: 1rem; font-weight: 700; color: var(--navy-900); margin: 0 0 0.35rem; }
+.join-step-body { font-size: 0.875rem; color: var(--grey-500); line-height: 1.55; margin: 0; }
+
+/* "Already a member?" sign-in hints (hero + promo) */
+.hero-signin {
+  position: relative; z-index: 1;
+  margin: 1.1rem 0 0; font-size: 0.875rem; color: var(--grey-300, #cbd5e1);
+}
+.hero-signin a { color: var(--gold-400); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.join-promo-signin { margin: 1rem 0 0; font-size: 0.875rem; color: var(--grey-400); }
+.join-promo-signin a { color: var(--gold-400); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 
 /* My Booking — partner / shared access banner */
 .mb-banner--partner {

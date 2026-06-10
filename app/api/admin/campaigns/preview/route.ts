@@ -1,14 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { adminEmails } from '@/lib/types'
+import { } from '@/lib/supabase/server'
+import { assertAdmin } from '@/lib/admin'
 import { buildCampaignPreview } from '@/lib/email'
-
-async function assertAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !adminEmails().includes(user.email ?? '')) return null
-  return user
-}
 
 export async function POST(req: NextRequest) {
   if (!await assertAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

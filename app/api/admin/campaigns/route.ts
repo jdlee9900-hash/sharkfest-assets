@@ -1,13 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { adminEmails } from '@/lib/types'
-
-async function assertAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !adminEmails().includes(user.email ?? '')) return null
-  return user
-}
+import { createServiceClient } from '@/lib/supabase/server'
+import { assertAdmin } from '@/lib/admin'
 
 export async function GET() {
   if (!await assertAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,6 +20,8 @@ export async function POST(req: NextRequest) {
 
   const { subject, body } = await req.json()
   if (!subject?.trim()) return NextResponse.json({ error: 'subject required' }, { status: 400 })
+  if (subject.length > 200) return NextResponse.json({ error: 'subject too long (max 200 characters)' }, { status: 400 })
+  if (body && body.length > 200_000) return NextResponse.json({ error: 'body too long (max 200,000 characters)' }, { status: 400 })
 
   const service = createServiceClient()
   const { data, error } = await service

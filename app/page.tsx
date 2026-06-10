@@ -73,9 +73,14 @@ export default async function Page() {
               <SignOutButton className="rc-header-signout" />
             </>
           ) : (
-            <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-              Become a member
-            </Link>
+            <>
+              <Link href="/login" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--grey-400)' }}>
+                Sign in
+              </Link>
+              <Link href="/join" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+                Become a member
+              </Link>
+            </>
           )}
         </nav>
       </header>
@@ -118,6 +123,12 @@ export default async function Page() {
               </>
             )}
           </div>
+
+          {!isLoggedIn && (
+            <p className="hero-signin">
+              Already a member? <Link href="/login">Sign in</Link>
+            </p>
+          )}
         </div>
 
         <div className="scroll-hint" aria-hidden="true">
@@ -284,6 +295,11 @@ export default async function Page() {
                 when the next festival&apos;s tickets open.
               </p>
               <Link href="/join" className="btn btn-accent join-promo-cta">Become a member</Link>
+              {!isLoggedIn && (
+                <p className="join-promo-signin">
+                  Already a member? <Link href="/login">Sign in</Link>
+                </p>
+              )}
             </ScrollReveal>
           </div>
         </section>

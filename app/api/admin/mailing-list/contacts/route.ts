@@ -1,13 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { adminEmails } from '@/lib/types'
-
-async function assertAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !adminEmails().includes(user.email ?? '')) return null
-  return user
-}
+import { createServiceClient } from '@/lib/supabase/server'
+import { assertAdmin } from '@/lib/admin'
 
 export async function GET() {
   if (!await assertAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

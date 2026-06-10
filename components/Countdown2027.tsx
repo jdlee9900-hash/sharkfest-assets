@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 // May Bank Holiday weekend — gates open Friday 28 May 2027
 const TARGET = new Date('2027-05-28T16:00:00')
@@ -23,21 +23,26 @@ function FlipUnit({ value, label }: { value: number; label: string }) {
   const display = pad(value)
   const [prev, setPrev] = useState(display)
   const [flip, setFlip] = useState(false)
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     if (display !== prev) {
-      setFlip(true)
-      const t = setTimeout(() => { setPrev(display); setFlip(false) }, 350)
-      return () => clearTimeout(t)
+      if (reducedMotion) {
+        setPrev(display)
+      } else {
+        setFlip(true)
+        const t = setTimeout(() => { setPrev(display); setFlip(false) }, 350)
+        return () => clearTimeout(t)
+      }
     }
-  }, [display, prev])
+  }, [display, prev, reducedMotion])
 
   return (
     <div className="flip-unit">
-      <div className="f27-flip-card" style={{ perspective: '240px' }}>
+      <div className="f27-flip-card" style={{ perspective: reducedMotion ? 'none' : '240px' }}>
         <motion.span
           key={prev}
-          animate={flip ? { rotateX: [0, -90] } : { rotateX: 0 }}
+          animate={(!reducedMotion && flip) ? { rotateX: [0, -90] } : { rotateX: 0 }}
           transition={{ duration: 0.175, ease: 'easeIn' }}
           className="f27-flip-digit"
         >
@@ -45,8 +50,8 @@ function FlipUnit({ value, label }: { value: number; label: string }) {
         </motion.span>
         <motion.span
           key={display + '-in'}
-          initial={{ rotateX: 90 }}
-          animate={flip ? { rotateX: 0 } : { rotateX: 90 }}
+          initial={{ rotateX: reducedMotion ? 0 : 90 }}
+          animate={(!reducedMotion && flip) ? { rotateX: 0 } : { rotateX: reducedMotion ? 0 : 90 }}
           transition={{ duration: 0.175, ease: 'easeOut', delay: 0.175 }}
           className="f27-flip-digit"
         >

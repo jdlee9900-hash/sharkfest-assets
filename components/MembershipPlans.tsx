@@ -18,9 +18,11 @@ interface Props {
   prices: { individual: number | null; family: number | null }
   discountPercent: number
   isUpgrade?: boolean
+  /** Plan the visitor picked before signing in — visually highlighted. */
+  highlightPlan?: MemberPlan | null
 }
 
-export function MembershipPlans({ prices, discountPercent, isUpgrade = false }: Props) {
+export function MembershipPlans({ prices, discountPercent, isUpgrade = false, highlightPlan = null }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState<MemberPlan | null>(null)
   const [error, setError] = useState('')
@@ -79,8 +81,10 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false }: 
       <div className="join-tiers">
         {paidTiers.map(tier => {
           const amount = prices[tier.id as 'individual' | 'family']
+          const highlighted = highlightPlan === tier.id
           return (
-            <div className="join-plan-card join-tier-card" key={tier.id}>
+            <div className={`join-plan-card join-tier-card${highlighted ? ' join-plan-card--highlight' : ''}`} key={tier.id}>
+              {highlighted && <span className="join-plan-picked">Your pick</span>}
               <p className="join-plan-name">{tier.label}</p>
               <p className="join-plan-price">
                 {amount != null
@@ -88,12 +92,15 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false }: 
                   : <span className="join-plan-amount">—</span>}
               </p>
               <p className="join-plan-note">{tier.tagline}</p>
+              <ul className="join-perks">
+                {tier.perks.map(p => <li key={p}>{p}</li>)}
+              </ul>
               <button
                 className="btn btn-accent join-cta"
                 onClick={() => handleJoin(tier.id)}
                 disabled={loading !== null}
               >
-                {loading === tier.id ? 'Redirecting…' : 'Become a member'}
+                {loading === tier.id ? 'Redirecting…' : highlighted ? 'Continue — secure checkout' : 'Become a member'}
               </button>
             </div>
           )
@@ -110,17 +117,14 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false }: 
           <div className="join-community-divider">
             <span>or</span>
           </div>
-          <div className="join-plan-card join-community-card">
+          <div className={`join-plan-card join-community-card${highlightPlan === 'community' ? ' join-plan-card--highlight' : ''}`}>
             <div className="join-community-header">
               <p className="join-plan-name">{communityTier.label}</p>
               <span className="join-community-badge">Free</span>
             </div>
             <p className="join-plan-note" style={{ margin: '0 0 1rem' }}>{communityTier.tagline}</p>
             <ul className="join-community-perks">
-              <li>Access to the members area</li>
-              <li>Members-only content &amp; events</li>
-              <li>Added to the club mailing list</li>
-              <li>Digital membership card</li>
+              {communityTier.perks.map(p => <li key={p}>{p}</li>)}
             </ul>
             <p className="join-community-no-discount">Does not include the SharkFest festival discount — upgrade any time.</p>
             <button

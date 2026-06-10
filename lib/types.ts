@@ -61,10 +61,45 @@ export type MemberPlan = 'individual' | 'family' | 'community'
 
 // Membership tiers. Paid tiers have a Stripe price; the community tier is free.
 // Client-safe (no server imports).
-export const MEMBERSHIP_TIERS: { id: MemberPlan; label: string; tagline: string; free?: boolean }[] = [
-  { id: 'individual', label: 'Individual or Couple', tagline: 'For you — or you and a partner. Add a second login to share your booking.' },
-  { id: 'family',     label: 'Family',               tagline: 'For the whole family. Add a second login to share your booking.' },
-  { id: 'community',  label: 'Community Member',     tagline: 'Stay connected to Torbay Sharks RFC all year round. No payment required.', free: true },
+export const MEMBERSHIP_TIERS: { id: MemberPlan; label: string; tagline: string; perks: string[]; free?: boolean }[] = [
+  {
+    id: 'individual',
+    label: 'Individual or Couple',
+    tagline: 'For you — or you and a partner. Add a second login to share your booking.',
+    perks: [
+      'SharkFest 2027 registration — members only',
+      'Member discount applied to your booking',
+      'First access when 2027 signups open',
+      'Members area, exclusive content & events',
+      'Digital membership card',
+      'Second login to share your booking',
+    ],
+  },
+  {
+    id: 'family',
+    label: 'Family',
+    tagline: 'For the whole family. Add a second login to share your booking.',
+    perks: [
+      'SharkFest 2027 registration — members only',
+      'Member discount applied to your booking',
+      'First access when 2027 signups open',
+      'Members area, exclusive content & events',
+      'Digital membership card for the family',
+      'Second login to share your booking',
+    ],
+  },
+  {
+    id: 'community',
+    label: 'Community Member',
+    tagline: 'Stay connected to Torbay Sharks RFC all year round. No payment required.',
+    perks: [
+      'Access to the members area',
+      'Members-only content & events',
+      'Added to the club mailing list',
+      'Digital membership card',
+    ],
+    free: true,
+  },
 ]
 
 /** Human label for a stored plan value (handles legacy monthly/annual rows). */
