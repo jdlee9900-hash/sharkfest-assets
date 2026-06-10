@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { Registration, PaymentPlan, Instalment, Payment, AccommodationType } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
@@ -284,6 +284,14 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
   const [paying, setPaying]           = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [payError, setPayError]       = useState('')
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+
+  // Auto-dismiss the payment result banner after 6s
+  useEffect(() => {
+    if (!paymentResult) return
+    const t = setTimeout(() => setBannerDismissed(true), 6_000)
+    return () => clearTimeout(t)
+  }, [paymentResult])
 
   const paidIds = new Set(
     payments.filter(p => p.status === 'paid' && p.instalment_id).map(p => p.instalment_id!)
@@ -351,17 +359,23 @@ export function MyBookingView({ user, registration, paymentPlan, instalments, pa
         <SignOutButton>Sign out</SignOutButton>
       </div>
 
-      {/* Payment result banners */}
-      {paymentResult === 'success' && (
+      {/* Payment result banners — auto-dismiss after 6s, or tap × to close */}
+      {!bannerDismissed && paymentResult === 'success' && (
         <div className="mb-banner mb-banner--success" role="alert">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-          Payment received — thank you!
+          Payment received — thank you! Your balance below has been updated.
+          <button className="mb-banner-close" aria-label="Dismiss" onClick={() => setBannerDismissed(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
       )}
-      {paymentResult === 'cancelled' && (
+      {!bannerDismissed && paymentResult === 'cancelled' && (
         <div className="mb-banner mb-banner--warn" role="alert">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Payment cancelled — you can try again below.
+          <button className="mb-banner-close" aria-label="Dismiss" onClick={() => setBannerDismissed(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
       )}
 

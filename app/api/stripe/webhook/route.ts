@@ -39,10 +39,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Webhook error: ${err instanceof Error ? err.message : 'unknown'}` }, { status: 400 })
   }
 
-  // ── Membership subscription lifecycle ──────────────────────────────────────
+  // ── checkout.session.completed — branch by mode ────────────────────────────
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
-    if (session.mode === 'subscription' && session.subscription) {
+
+    if (session.mode === 'subscription') {
+      // Membership new-signup path
+      if (!session.subscription) return NextResponse.json({ ok: true })
       const service = createServiceClient()
       const sub = await stripe.subscriptions.retrieve(session.subscription as string)
       const email = session.customer_details?.email ?? session.customer_email ?? ''
@@ -59,12 +62,63 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ ok: true })
     }
+
+    // mode === 'payment' — one-time festival payment
+    const { registration_id, instalment_id } = session.metadata ?? {}
+    if (!registration_id) return NextResponse.json({ ok: true })
+
+    const service = createServiceClient()
+
+    if (instalment_id) {
+      // Upsert so Stripe webhook retries are idempotent — requires the
+      // UNIQUE constraint on payments.stripe_session_id (migration 0009).
+      await service.from('payments').upsert({
+        registration_id,
+        instalment_id,
+        amount: session.amount_total ?? 0,
+        status: 'paid',
+        stripe_session_id: session.id,
+        stripe_payment_intent_id: session.payment_intent as string,
+        paid_at: new Date().toISOString(),
+      }, { onConflict: 'stripe_session_id' })
+    } else {
+      // Flat amount payment — update the pending record created at checkout.
+      await service
+        .from('payments')
+        .update({
+          status: 'paid',
+          stripe_payment_intent_id: session.payment_intent as string,
+          paid_at: new Date().toISOString(),
+        })
+        .eq('stripe_session_id', session.id)
+    }
+
+    try {
+      const [regRes, planRes, paidRes] = await Promise.all([
+        service.from('registrations').select('first_name, email').eq('id', registration_id).single(),
+        service.from('payment_plans').select('total_amount').eq('registration_id', registration_id).maybeSingle(),
+        service.from('payments').select('amount').eq('registration_id', registration_id).eq('status', 'paid'),
+      ])
+      if (regRes.data) {
+        const totalPaid   = (paidRes.data ?? []).reduce((s: number, p: { amount: number }) => s + p.amount, 0)
+        const outstanding = planRes.data ? planRes.data.total_amount - totalPaid : 0
+        await sendEmail(
+          regRes.data.email,
+          'Payment confirmed — SharkFest 2027',
+          emailPaymentReceipt(regRes.data, session.amount_total ?? 0, new Date().toISOString(), outstanding, getOrigin())
+        )
+      }
+    } catch (err) {
+      console.error('[email] payment receipt failed:', err)
+    }
+
+    return NextResponse.json({ ok: true })
   }
 
+  // ── Membership subscription lifecycle ──────────────────────────────────────
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
     const sub = event.data.object as Stripe.Subscription
     const service = createServiceClient()
-    // Reuse the email already stored on the row; fall back to the customer's email.
     const { data: row } = await service
       .from('memberships').select('email').eq('stripe_subscription_id', sub.id).maybeSingle()
     let email = row?.email ?? ''
@@ -105,68 +159,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  // ── One-time festival payments (existing) ──────────────────────────────────
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session
-    const { registration_id, instalment_id } = session.metadata ?? {}
-
-    if (!registration_id) return NextResponse.json({ ok: true })
-
-    const service = createServiceClient()
-
-    // Update payment record
-    await service
-      .from('payments')
-      .update({
-        status: 'paid',
-        stripe_payment_intent_id: session.payment_intent as string,
-        paid_at: new Date().toISOString(),
-      })
-      .eq('stripe_session_id', session.id)
-
-    // If payment was for a specific instalment, upsert a paid record
-    if (instalment_id) {
-      const { data: existing } = await service
-        .from('payments')
-        .select('id')
-        .eq('stripe_session_id', session.id)
-        .maybeSingle()
-
-      if (!existing) {
-        await service.from('payments').insert({
-          registration_id,
-          instalment_id,
-          amount: session.amount_total ?? 0,
-          status: 'paid',
-          stripe_session_id: session.id,
-          stripe_payment_intent_id: session.payment_intent as string,
-          paid_at: new Date().toISOString(),
-        })
-      }
-    }
-
-    // Send payment receipt
-    try {
-      const [regRes, planRes, paidRes] = await Promise.all([
-        service.from('registrations').select('first_name, email').eq('id', registration_id).single(),
-        service.from('payment_plans').select('total_amount').eq('registration_id', registration_id).maybeSingle(),
-        service.from('payments').select('amount').eq('registration_id', registration_id).eq('status', 'paid'),
-      ])
-      if (regRes.data) {
-        const totalPaid   = (paidRes.data ?? []).reduce((s: number, p: { amount: number }) => s + p.amount, 0)
-        const outstanding = planRes.data ? planRes.data.total_amount - totalPaid : 0
-        await sendEmail(
-          regRes.data.email,
-          'Payment confirmed — SharkFest 2027',
-          emailPaymentReceipt(regRes.data, session.amount_total ?? 0, new Date().toISOString(), outstanding, getOrigin())
-        )
-      }
-    } catch (err) {
-      console.error('[email] payment receipt failed:', err)
-    }
-  }
-
-  if (event.type === 'checkout.session.expired' || event.type === 'payment_intent.payment_failed') {
+  // ── Payment session expired ────────────────────────────────────────────────
+  if (event.type === 'checkout.session.expired') {
     const session = event.data.object as Stripe.Checkout.Session
     if (session.id) {
       const service = createServiceClient()
@@ -176,6 +170,22 @@ export async function POST(request: Request) {
         .eq('stripe_session_id', session.id)
         .eq('status', 'pending')
     }
+    return NextResponse.json({ ok: true })
+  }
+
+  // ── Payment intent failed (card declined mid-checkout) ────────────────────
+  // Matches any pending payment record that already has the PI ID stored from
+  // a previous webhook. Newly-pending records (no PI ID yet) are handled when
+  // the checkout session expires above.
+  if (event.type === 'payment_intent.payment_failed') {
+    const pi = event.data.object as Stripe.PaymentIntent
+    const service = createServiceClient()
+    await service
+      .from('payments')
+      .update({ status: 'failed' })
+      .eq('stripe_payment_intent_id', pi.id)
+      .eq('status', 'pending')
+    return NextResponse.json({ ok: true })
   }
 
   return NextResponse.json({ ok: true })

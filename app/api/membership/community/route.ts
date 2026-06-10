@@ -6,7 +6,7 @@ import { sendEmail, emailMembershipWelcome, getOrigin } from '@/lib/email'
 export async function POST() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const existing = await getActiveMembership(user.id)
   if (existing) return NextResponse.json({ error: 'You already have an active membership' }, { status: 409 })

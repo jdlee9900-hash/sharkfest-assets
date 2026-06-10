@@ -77,9 +77,13 @@ export function PasskeyLogin({ className }: Props) {
         {status === 'loading' ? 'Authenticating…' : 'Sign in with Face ID / Touch ID'}
       </button>
       {status === 'error' && errorMsg && (
-        <p role="alert" style={{ fontSize: '0.8125rem', color: 'var(--red-500)', margin: '0.4rem 0 0', textAlign: 'center' }}>
-          {errorMsg}
-        </p>
+        <div role="alert" className="passkey-error">
+          <p className="passkey-error-msg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {errorMsg}
+          </p>
+          <p className="passkey-error-hint">Use the email option below to sign in instead.</p>
+        </div>
       )}
     </div>
   )

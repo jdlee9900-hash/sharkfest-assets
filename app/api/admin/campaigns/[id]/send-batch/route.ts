@@ -1,14 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { getOrigin, sendEmail, buildCampaignEmail } from '@/lib/email'
-import { adminEmails } from '@/lib/types'
-
-async function assertAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !adminEmails().includes(user.email ?? '')) return null
-  return user
-}
+import { assertAdmin } from '@/lib/admin'
 
 const BATCH_SIZE = 50
 

@@ -59,24 +59,44 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
 
   const needsElectric = ELECTRIC_TYPES.includes(form.accommodation as Accommodation)
 
+  const validate = (): string => {
+    if (!form.first_name.trim()) return 'Please enter your first name.'
+    if (!form.surname.trim())    return 'Please enter your surname.'
+    if (!form.email.trim())      return 'Please enter your email address.'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.'
+    if (!form.mobile.trim())     return 'Please enter a mobile number.'
+    if (!form.accommodation)     return 'Please select an accommodation type.'
+    return ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.accommodation) { setError('Please select an accommodation type.'); return }
+    const validationError = validate()
+    if (validationError) { setError(validationError); return }
     setError('')
     setSubmitting(true)
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15_000)
 
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, company: hp, year: event.year, camp_near: campNear.map(p => p.id), partner_email: partnerEmail.trim() || undefined, payment_method: paymentMethod }),
+        signal: controller.signal,
       })
       const body = await res.json()
-      if (!res.ok) throw new Error(body.error ?? 'Registration failed')
+      if (!res.ok) throw new Error(body.error ?? 'Registration failed — please try again.')
       setStep('success')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong — please try again.')
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('The request timed out — please check your connection and try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong — please try again.')
+      }
     } finally {
+      clearTimeout(timeout)
       setSubmitting(false)
     }
   }
@@ -94,9 +114,12 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
         </p>
         <p className="reg-success-hint">
           A confirmation has been sent to <strong>{form.email}</strong>.
-          Once your payment plan is ready, you can view and pay through your{' '}
-          <a href="/login?next=/my-booking" className="reg-link">booking portal</a>.
+          Once your payment plan is ready you can view and pay through your booking portal.
         </p>
+        <a href="/login?next=/my-booking" className="btn btn-accent" style={{ marginTop: '1.25rem', width: '100%', justifyContent: 'center' }}>
+          View your booking
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
       </div>
     )
   }

@@ -6,7 +6,7 @@ import type { RsvpResponse } from '@/lib/types'
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Only active members can RSVP to member events.
   const membership = await getActiveMembership(user.id)
