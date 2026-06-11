@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatAmount, MEMBERSHIP_TIERS, type MemberPlan } from '@/lib/types'
+import { MEMBERSHIP_TIERS, type MemberPlan } from '@/lib/types'
+import { PlanTicket, CommunityTicket } from '@/components/PlanTicket'
 
 // Only ever hand off to a genuine Stripe Checkout URL (mirrors MyBookingView).
 function redirectToStripe(url: unknown) {
@@ -78,23 +79,18 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false, hi
       )}
 
       {/* Paid tiers */}
-      <div className="join-tiers">
+      <div className="tix-grid">
         {paidTiers.map(tier => {
           const amount = prices[tier.id as 'individual' | 'family']
           const highlighted = highlightPlan === tier.id
           return (
-            <div className={`join-plan-card join-tier-card${highlighted ? ' join-plan-card--highlight' : ''}`} key={tier.id}>
-              {highlighted && <span className="join-plan-picked">Your pick</span>}
-              <p className="join-plan-name">{tier.label}</p>
-              <p className="join-plan-price">
-                {amount != null
-                  ? <><span className="join-plan-amount">{formatAmount(amount)}</span><span className="join-plan-per">/month</span></>
-                  : <span className="join-plan-amount">—</span>}
-              </p>
-              <p className="join-plan-note">{tier.tagline}</p>
-              <ul className="join-perks">
-                {tier.perks.map(p => <li key={p}>{p}</li>)}
-              </ul>
+            <PlanTicket
+              key={tier.id}
+              tier={tier}
+              amount={amount}
+              highlighted={highlighted}
+              savePercent={discountPercent}
+            >
               <button
                 className="btn btn-accent join-cta"
                 onClick={() => handleJoin(tier.id)}
@@ -102,31 +98,22 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false, hi
               >
                 {loading === tier.id ? 'Redirecting…' : highlighted ? 'Continue — secure checkout' : 'Become a member'}
               </button>
-            </div>
+            </PlanTicket>
           )
         })}
       </div>
 
-      <p className="join-plan-fineprint">
+      <p className="tix-fineprint">
         Billed monthly · Secure payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2027 tickets
       </p>
 
       {/* Community (free) tier — only shown when not already a community member */}
       {communityTier && !isUpgrade && (
-        <div className="join-community-tier">
-          <div className="join-community-divider">
+        <div className="tix-community-wrap">
+          <div className="tix-divider">
             <span>or</span>
           </div>
-          <div className={`join-plan-card join-community-card${highlightPlan === 'community' ? ' join-plan-card--highlight' : ''}`}>
-            <div className="join-community-header">
-              <p className="join-plan-name">{communityTier.label}</p>
-              <span className="join-community-badge">Free</span>
-            </div>
-            <p className="join-plan-note" style={{ margin: '0 0 1rem' }}>{communityTier.tagline}</p>
-            <ul className="join-community-perks">
-              {communityTier.perks.map(p => <li key={p}>{p}</li>)}
-            </ul>
-            <p className="join-community-no-discount">Does not include the SharkFest festival discount — upgrade any time.</p>
+          <CommunityTicket tier={communityTier} highlighted={highlightPlan === 'community'}>
             <button
               className="btn join-community-btn"
               onClick={handleCommunity}
@@ -134,7 +121,7 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false, hi
             >
               {loading === 'community' ? 'Joining…' : 'Join for free'}
             </button>
-          </div>
+          </CommunityTicket>
         </div>
       )}
     </div>

@@ -26,13 +26,13 @@ const SEP = (
   </svg>
 )
 
-export function Marquee() {
+export function Marquee({ items = ITEMS }: { items?: string[] }) {
   return (
     <div className="marquee-track" aria-hidden="true">
       <div className="marquee-inner">
         {[0, 1].map(copy => (
           <div key={copy} className="marquee-list">
-            {ITEMS.map((item, i) => (
+            {items.map((item, i) => (
               <span key={i} className="marquee-item">
                 {SEP}
                 {item}
