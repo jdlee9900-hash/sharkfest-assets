@@ -129,6 +129,62 @@ export function festivalTotal(tickets: FestivalTickets, fees: FestivalFees): num
   return FESTIVAL_CATEGORIES.reduce((sum, c) => sum + categorySubtotal(c, tickets, fees), 0)
 }
 
+// ── Per-person food preferences ──────────────────────────────────────────────
+export interface PersonFood {
+  kind: 'adult' | 'child'
+  /** A configured food option, or '' for no preference. */
+  choice: string
+}
+
+const NO_PREFERENCE = 'No preference'
+
+/**
+ * Build an authoritative per-person food list of length adults+kids. The kind is
+ * derived from position (adults first, then children); each choice is kept only
+ * if it's a currently-offered option, otherwise blanked. Raw input is aligned by
+ * index, matching how the booking form emits it.
+ */
+export function normaliseFoodPreferences(
+  raw: unknown, adults: number, kids: number, options: string[],
+): PersonFood[] {
+  const list = Array.isArray(raw) ? raw : []
+  const choiceAt = (i: number): string => {
+    const r = list[i]
+    const c = r && typeof r === 'object' ? String((r as Record<string, unknown>).choice ?? '').trim() : ''
+    return options.includes(c) ? c : ''
+  }
+  const out: PersonFood[] = []
+  for (let i = 0; i < adults; i++) out.push({ kind: 'adult', choice: choiceAt(i) })
+  for (let i = 0; i < kids; i++)   out.push({ kind: 'child', choice: choiceAt(adults + i) })
+  return out
+}
+
+/** Short summary like "2 Meat Eater · 1 Vegetarian · 1 No preference". */
+export function summariseFood(prefs: PersonFood[]): string {
+  if (prefs.length === 0) return ''
+  const counts = new Map<string, number>()
+  for (const p of prefs) {
+    const key = p.choice || NO_PREFERENCE
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  // Named options first (in count order), no-preference last.
+  return [...counts.entries()]
+    .sort((a, b) => (a[0] === NO_PREFERENCE ? 1 : 0) - (b[0] === NO_PREFERENCE ? 1 : 0) || b[1] - a[1])
+    .map(([choice, n]) => `${n} ${choice}`)
+    .join(' · ')
+}
+
+/** "Adult 1: Vegetarian · Adult 2: No preference · Child 1: Meat Eater". */
+export function describeFoodPerPerson(prefs: PersonFood[]): string {
+  let a = 0, c = 0
+  return prefs
+    .map(p => {
+      const who = p.kind === 'child' ? `Child ${++c}` : `Adult ${++a}`
+      return `${who}: ${p.choice || 'No preference'}`
+    })
+    .join(' · ')
+}
+
 /** Merge a stored/raw value over the defaults so missing keys never break. */
 export function mergePricing(raw: unknown): SitePricing {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<SitePricing>

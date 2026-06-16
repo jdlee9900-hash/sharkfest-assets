@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Registration } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
+import { describeFoodPerPerson } from '@/lib/pricing'
 import { DEFAULT_EVENT_YEAR } from '@/lib/events'
 
 type Status = 'pending' | 'confirmed' | 'waitlist' | 'cancelled'
@@ -301,6 +302,9 @@ export function AdminDashboard({
                             <div><dt>Estimated total</dt><dd>{formatAmount(r.estimated_total)}</dd></div>
                           )}
                           {r.food_preference && <div><dt>Food preference</dt><dd>{r.food_preference}</dd></div>}
+                          {Array.isArray(r.food_preferences) && r.food_preferences.length > 0 && (
+                            <div className="mb-full"><dt>Food (per person)</dt><dd>{describeFoodPerPerson(r.food_preferences)}</dd></div>
+                          )}
                           {r.tickets && (() => {
                             const parts = TICKET_LABELS
                               .map(({ key, label }) => {

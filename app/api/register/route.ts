@@ -6,7 +6,7 @@ import { getEvent } from '@/lib/events'
 import { isActiveMemberOrPartner } from '@/lib/membership'
 import { isInstalmentAvailable } from '@/lib/instalments'
 import { getPricing } from '@/lib/pricing-server'
-import { normaliseTickets, totalAttendees, festivalTotal } from '@/lib/pricing'
+import { normaliseTickets, totalAttendees, festivalTotal, normaliseFoodPreferences, summariseFood } from '@/lib/pricing'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
       vehicle_reg, notes, company, year, camp_near, partner_email,
-      tickets: rawTickets, food_preference: rawFood,
+      tickets: rawTickets, food_preference: rawFood, food_preferences: rawFoodPrefs,
       payment_method: rawPaymentMethod,
     } = body
 
@@ -97,10 +97,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please add at least one person to your booking.' }, { status: 400 })
     }
 
-    // Only store a food preference the admin currently offers.
-    const foodPreference = typeof rawFood === 'string' && pricing.foodOptions.includes(rawFood.trim())
-      ? rawFood.trim()
-      : null
+    // Per-person food preferences (one entry per attendee), validated against the
+    // options the admin currently offers. Older clients may send a single
+    // `food_preference` string instead — keep that working as a summary.
+    const foodPreferences = normaliseFoodPreferences(rawFoodPrefs, parsedAdults, parsedKids, pricing.foodOptions)
+    const hasFoodChoices = foodPreferences.some(p => p.choice)
+    const foodSummary = hasFoodChoices
+      ? summariseFood(foodPreferences)
+      : (typeof rawFood === 'string' && pricing.foodOptions.includes(rawFood.trim()) ? rawFood.trim() : null)
 
     const parsedHookup = Boolean(electric_hookup)
     const cap = (v: unknown, n: number) =>
@@ -143,7 +147,8 @@ export async function POST(request: Request) {
         // New booking fields — only sent when present so older databases without
         // the 0011 migration keep working.
         ...(tickets ? { tickets } : {}),
-        ...(foodPreference ? { food_preference: foodPreference } : {}),
+        ...(hasFoodChoices ? { food_preferences: foodPreferences } : {}),
+        ...(foodSummary ? { food_preference: foodSummary } : {}),
         ...(estimatedTotal != null ? { estimated_total: estimatedTotal } : {}),
         // Only sent when chosen, so registrations without a pick keep working
         // even before the camp_near migration (0004) is applied.
@@ -172,7 +177,7 @@ export async function POST(request: Request) {
     await Promise.allSettled([
       sendEmail(data.email, `${event.name} — Registration received`, emailRegistrationUser(data, origin, event, paymentMethod)),
       ...admins.map(to =>
-        sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin({ ...data, food_preference: foodPreference, estimated_total: estimatedTotal }, origin, event))
+        sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin({ ...data, food_preference: foodSummary, estimated_total: estimatedTotal }, origin, event))
       ),
       ...(partnerEmailClean
         ? [sendEmail(partnerEmailClean, `${event.name} — You've been added to a booking`, emailPartnerInvite(`${data.first_name} ${data.surname}`, partnerEmailClean, origin))]

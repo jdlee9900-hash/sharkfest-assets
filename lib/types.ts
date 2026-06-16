@@ -23,6 +23,7 @@ export interface Registration {
   payment_method: 'full' | 'instalments' | null
   tickets: Record<string, { adults: number; kids: number }> | null
   food_preference: string | null
+  food_preferences: { kind: 'adult' | 'child'; choice: string }[] | null
   estimated_total: number | null
   created_at: string
 }

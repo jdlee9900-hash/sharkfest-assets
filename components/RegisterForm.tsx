@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getEvent, type FestivalEvent } from '@/lib/events'
 import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
 import { isInstalmentAvailable, calculateInstalmentSchedule, INSTALMENT_CUTOFF } from '@/lib/instalments'
@@ -36,6 +36,14 @@ const ELECTRIC_TYPES: Accommodation[] = ['Caravan', 'Mobile Home', 'Campervan']
 // Quantity options for the ticket dropdowns.
 const QTY_OPTIONS = Array.from({ length: 16 }, (_, i) => i)
 
+// Resize a list of choices to `len`, keeping existing entries and padding with ''.
+const resizeChoices = (prev: string[], len: number): string[] => {
+  if (prev.length === len) return prev
+  const next = prev.slice(0, len)
+  while (next.length < len) next.push('')
+  return next
+}
+
 export interface RegisterPricing {
   festival: FestivalFees
   foodOptions: string[]
@@ -62,7 +70,10 @@ export function RegisterForm({
   })
 
   const [tickets, setTickets]         = useState<FestivalTickets>(EMPTY_TICKETS)
-  const [foodPreference, setFoodPreference] = useState('')
+  // One food choice per attendee — adults first, then children. Arrays resize to
+  // match the ticket counts (see the effects below).
+  const [adultFood, setAdultFood]     = useState<string[]>([])
+  const [kidFood, setKidFood]         = useState<string[]>([])
   const [campNear, setCampNear]       = useState<Picked[]>([])
   const [partnerEmail, setPartnerEmail] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'full' | 'instalments'>('full')
@@ -82,6 +93,15 @@ export function RegisterForm({
   const totals = totalAttendees(tickets)
   const peopleCount = totals.adults + totals.kids
   const grandTotal = festivalTotal(tickets, pricing.festival)
+
+  // Keep the per-person food lists in step with the chosen ticket counts.
+  useEffect(() => { setAdultFood(prev => resizeChoices(prev, totals.adults)) }, [totals.adults])
+  useEffect(() => { setKidFood(prev => resizeChoices(prev, totals.kids)) }, [totals.kids])
+
+  const setAdultChoice = (i: number, v: string) =>
+    setAdultFood(prev => prev.map((c, idx) => (idx === i ? v : c)))
+  const setKidChoice = (i: number, v: string) =>
+    setKidFood(prev => prev.map((c, idx) => (idx === i ? v : c)))
 
   const validate = (): string => {
     if (!form.first_name.trim()) return 'Please enter your first name.'
@@ -113,7 +133,10 @@ export function RegisterForm({
           adults: totals.adults,
           kids: totals.kids,
           tickets,
-          food_preference: foodPreference || undefined,
+          food_preferences: [
+            ...adultFood.map(choice => ({ kind: 'adult', choice })),
+            ...kidFood.map(choice => ({ kind: 'child', choice })),
+          ],
           company: hp,
           year: event.year,
           camp_near: campNear.map(p => p.id),
@@ -332,16 +355,37 @@ export function RegisterForm({
           </p>
         </div>
 
-        {/* Food preference */}
-        <div className="cu-field">
-          <label htmlFor="reg-food" className="cu-label">Food preference <span className="cu-optional">(optional)</span></label>
-          <select id="reg-food" className="cu-input"
-            value={foodPreference} onChange={e => setFoodPreference(e.target.value)}>
-            <option value="">No preference</option>
-            {pricing.foodOptions.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
-          <span className="reg-field-hint">Helps us cater — keep it simple, just pick the closest option.</span>
-        </div>
+        {/* Food preferences — one per person */}
+        {peopleCount > 0 && (
+          <div className="cu-field">
+            <p className="cu-label">Food preferences <span className="cu-optional">(optional)</span></p>
+            <p className="reg-field-hint" style={{ marginTop: 0 }}>
+              Pick the closest option for each person — it helps us cater.
+            </p>
+            <div className="reg-food-list">
+              {adultFood.map((choice, i) => (
+                <label key={`a${i}`} className="reg-food-row">
+                  <span className="reg-food-who">Adult {i + 1}</span>
+                  <select className="cu-input reg-food-select" value={choice}
+                    onChange={e => setAdultChoice(i, e.target.value)}>
+                    <option value="">No preference</option>
+                    {pricing.foodOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </label>
+              ))}
+              {kidFood.map((choice, i) => (
+                <label key={`k${i}`} className="reg-food-row">
+                  <span className="reg-food-who">Child {i + 1}</span>
+                  <select className="cu-input reg-food-select" value={choice}
+                    onChange={e => setKidChoice(i, e.target.value)}>
+                    <option value="">No preference</option>
+                    {pricing.foodOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Accommodation */}
         <div className="cu-field">
