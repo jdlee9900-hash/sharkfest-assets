@@ -4,6 +4,11 @@ import { useState } from 'react'
 import { getEvent, type FestivalEvent } from '@/lib/events'
 import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
 import { isInstalmentAvailable, calculateInstalmentSchedule, INSTALMENT_CUTOFF } from '@/lib/instalments'
+import { formatAmount } from '@/lib/types'
+import {
+  FESTIVAL_CATEGORIES, EMPTY_TICKETS, categorySubtotal, festivalTotal, totalAttendees,
+  type FestivalTickets, type FestivalCategoryKey, type FestivalFees,
+} from '@/lib/pricing'
 
 type Step = 'welcome' | 'form' | 'success'
 type Accommodation = 'Tent' | 'Caravan' | 'Mobile Home' | 'Campervan'
@@ -13,8 +18,6 @@ interface FormData {
   surname: string
   email: string
   mobile: string
-  adults: number
-  kids: number
   accommodation: Accommodation | ''
   electric_hookup: boolean
   vehicle_reg: string
@@ -30,7 +33,21 @@ const ACCOMMODATIONS: { value: Accommodation; label: string; icon: string; hint:
 
 const ELECTRIC_TYPES: Accommodation[] = ['Caravan', 'Mobile Home', 'Campervan']
 
-export function RegisterForm({ event = getEvent(undefined) }: { event?: FestivalEvent }) {
+// Quantity options for the ticket dropdowns.
+const QTY_OPTIONS = Array.from({ length: 16 }, (_, i) => i)
+
+export interface RegisterPricing {
+  festival: FestivalFees
+  foodOptions: string[]
+}
+
+export function RegisterForm({
+  event = getEvent(undefined),
+  pricing,
+}: {
+  event?: FestivalEvent
+  pricing: RegisterPricing
+}) {
   const [step, setStep]           = useState<Step>('welcome')
   const [agreed, setAgreed]       = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -41,10 +58,11 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
 
   const [form, setForm] = useState<FormData>({
     first_name: '', surname: '', email: '', mobile: '',
-    adults: 1, kids: 0, accommodation: '',
-    electric_hookup: false, vehicle_reg: '', notes: '',
+    accommodation: '', electric_hookup: false, vehicle_reg: '', notes: '',
   })
 
+  const [tickets, setTickets]         = useState<FestivalTickets>(EMPTY_TICKETS)
+  const [foodPreference, setFoodPreference] = useState('')
   const [campNear, setCampNear]       = useState<Picked[]>([])
   const [partnerEmail, setPartnerEmail] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'full' | 'instalments'>('full')
@@ -57,7 +75,13 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
   const patch = (key: keyof FormData, value: FormData[keyof FormData]) =>
     setForm(prev => ({ ...prev, [key]: value }))
 
+  const setTicket = (key: FestivalCategoryKey, kind: 'adults' | 'kids', value: number) =>
+    setTickets(prev => ({ ...prev, [key]: { ...prev[key], [kind]: value } }))
+
   const needsElectric = ELECTRIC_TYPES.includes(form.accommodation as Accommodation)
+  const totals = totalAttendees(tickets)
+  const peopleCount = totals.adults + totals.kids
+  const grandTotal = festivalTotal(tickets, pricing.festival)
 
   const validate = (): string => {
     if (!form.first_name.trim()) return 'Please enter your first name.'
@@ -65,6 +89,7 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
     if (!form.email.trim())      return 'Please enter your email address.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.'
     if (!form.mobile.trim())     return 'Please enter a mobile number.'
+    if (peopleCount < 1)         return 'Please add at least one person to your booking.'
     if (!form.accommodation)     return 'Please select an accommodation type.'
     return ''
   }
@@ -83,7 +108,18 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, company: hp, year: event.year, camp_near: campNear.map(p => p.id), partner_email: partnerEmail.trim() || undefined, payment_method: paymentMethod }),
+        body: JSON.stringify({
+          ...form,
+          adults: totals.adults,
+          kids: totals.kids,
+          tickets,
+          food_preference: foodPreference || undefined,
+          company: hp,
+          year: event.year,
+          camp_near: campNear.map(p => p.id),
+          partner_email: partnerEmail.trim() || undefined,
+          payment_method: paymentMethod,
+        }),
         signal: controller.signal,
       })
       const body = await res.json()
@@ -110,7 +146,7 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
         <h2 className="reg-success-title">You&apos;re registered!</h2>
         <p className="reg-success-sub">
           Thanks for signing up for <strong>{event.name}</strong>.<br/>
-          We&apos;ll be in touch with your pitch details and payment plan shortly.
+          We&apos;ll be in touch to confirm your pitch details and payment plan.
         </p>
         <p className="reg-success-hint">
           A confirmation has been sent to <strong>{form.email}</strong>.
@@ -145,7 +181,7 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
             Completing this form reserves your pitch at {event.name}, held at the Torbay Sharks RFC ground on the Devon Coast from {event.dates}. Your place is not confirmed until a deposit has been received.</p>
 
             <p><strong>Pricing &amp; Payment</strong><br/>
-            Costs vary by pitch type, party size, and requirements. Our team will allocate your personal pricing and send a breakdown to your email within 7 days. Payment can be made in full or in agreed instalments through your booking portal.</p>
+            Your estimated cost is shown as you choose your tickets, based on the current SharkFest fees. The committee will confirm your final breakdown and send it to your email. Payment can be made in full or in agreed instalments through your booking portal.</p>
 
             <p><strong>Cancellations</strong><br/>
             Deposits are non-refundable. Cancellations made more than 60 days before the event may receive a partial refund of additional payments at the committee&apos;s discretion. Cancellations within 60 days forfeit all payments.</p>
@@ -245,20 +281,66 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
           </div>
         </div>
 
-        {/* Party size */}
-        <div className="reg-row">
-          <div className="cu-field">
-            <label htmlFor="reg-adults" className="cu-label">Adults (18+) *</label>
-            <input id="reg-adults" type="number" className="cu-input" required
-              min={1} max={20} value={form.adults}
-              onChange={e => patch('adults', parseInt(e.target.value) || 1)} />
+        {/* Tickets — choose adults/kids per ticket type */}
+        <div className="cu-field">
+          <p className="cu-label">Your tickets *</p>
+          <p className="reg-field-hint" style={{ marginTop: 0 }}>
+            Choose how many adults and children (4–17) for each ticket type. Your estimated total updates below.
+          </p>
+          <div className="reg-tickets">
+            {FESTIVAL_CATEGORIES.map(cat => {
+              const subtotal = categorySubtotal(cat, tickets, pricing.festival)
+              return (
+                <div key={cat.key} className="reg-ticket-row">
+                  <div className="reg-ticket-info">
+                    <span className="reg-ticket-name">{cat.label}</span>
+                    <span className="reg-ticket-hint">
+                      {cat.hint} · Adult {formatAmount(pricing.festival[cat.adultKey])}
+                      {cat.kidsFree ? ' · Kids free' : ` · Kid ${formatAmount(pricing.festival[cat.kidKey])}`}
+                    </span>
+                  </div>
+                  <div className="reg-ticket-qtys">
+                    <label className="reg-qty">
+                      <span className="reg-qty-label">Adults</span>
+                      <select className="cu-input reg-qty-select" value={tickets[cat.key].adults}
+                        onChange={e => setTicket(cat.key, 'adults', Number(e.target.value))}>
+                        {QTY_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </label>
+                    <label className="reg-qty">
+                      <span className="reg-qty-label">Children</span>
+                      <select className="cu-input reg-qty-select" value={tickets[cat.key].kids}
+                        onChange={e => setTicket(cat.key, 'kids', Number(e.target.value))}>
+                        {QTY_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </label>
+                    <span className="reg-ticket-sub">{subtotal > 0 ? formatAmount(subtotal) : '—'}</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          <div className="cu-field">
-            <label htmlFor="reg-kids" className="cu-label">Children (under 18)</label>
-            <input id="reg-kids" type="number" className="cu-input"
-              min={0} max={20} value={form.kids}
-              onChange={e => patch('kids', parseInt(e.target.value) || 0)} />
+          <div className="reg-total-row">
+            <div>
+              <span className="reg-total-label">Estimated total</span>
+              <span className="reg-total-people">{peopleCount} {peopleCount === 1 ? 'person' : 'people'}</span>
+            </div>
+            <span className="reg-total-amount">{formatAmount(grandTotal)}</span>
           </div>
+          <p className="reg-field-hint">
+            This is an estimate from the current SharkFest fees. The committee will confirm your final price.
+          </p>
+        </div>
+
+        {/* Food preference */}
+        <div className="cu-field">
+          <label htmlFor="reg-food" className="cu-label">Food preference <span className="cu-optional">(optional)</span></label>
+          <select id="reg-food" className="cu-input"
+            value={foodPreference} onChange={e => setFoodPreference(e.target.value)}>
+            <option value="">No preference</option>
+            {pricing.foodOptions.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <span className="reg-field-hint">Helps us cater — keep it simple, just pick the closest option.</span>
         </div>
 
         {/* Accommodation */}
@@ -297,8 +379,8 @@ export function RegisterForm({ event = getEvent(undefined) }: { event?: Festival
 
         {/* Camp near */}
         <div className="cu-field">
-          <p className="cu-label">Who would you like to camp near? <span className="cu-optional">(optional)</span></p>
-          <CampNearPicker year={event.year} eventName={event.name} picked={campNear} onChange={setCampNear} />
+          <p className="cu-label">Who would you like to be near? <span className="cu-optional">(optional)</span></p>
+          <CampNearPicker year={event.year} eventName={event.name} picked={campNear} onChange={setCampNear} max={1} />
         </div>
 
         {/* Partner email */}

@@ -2,9 +2,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-import { getActiveMembership, memberPriceId, memberDiscountPercent } from '@/lib/membership'
+import { getActiveMembership, memberDiscountPercent } from '@/lib/membership'
+import { getPricing } from '@/lib/pricing-server'
 import { MEMBERSHIP_TIERS, type MemberPlan } from '@/lib/types'
 import { LoginForm } from '@/components/LoginForm'
 import { MembershipPlans } from '@/components/MembershipPlans'
@@ -13,30 +13,10 @@ import { OceanCanvas } from '@/components/OceanCanvas'
 import { Marquee } from '@/components/Marquee'
 import { ScrollReveal } from '@/components/ScrollReveal'
 import { MembershipCard } from '@/components/MembershipCard'
-import { PlanTicket, CommunityTicket } from '@/components/PlanTicket'
+import { PlanTicket } from '@/components/PlanTicket'
 
 export const metadata: Metadata = {
   title: 'Become a member · SharkFest',
-}
-
-// Look up the real recurring prices so the page shows accurate amounts.
-async function fetchPrices(): Promise<{ individual: number | null; family: number | null }> {
-  const key = process.env.STRIPE_SECRET_KEY
-  const individualId = memberPriceId('individual')
-  const familyId = memberPriceId('family')
-  if (!key || (!individualId && !familyId)) return { individual: null, family: null }
-  const stripe = new Stripe(key)
-  const get = async (id: string | null) => {
-    if (!id) return null
-    try {
-      const price = await stripe.prices.retrieve(id)
-      return price.unit_amount ?? null
-    } catch {
-      return null
-    }
-  }
-  const [individual, family] = await Promise.all([get(individualId), get(familyId)])
-  return { individual, family }
 }
 
 const PERKS_MARQUEE = [
@@ -85,7 +65,7 @@ const STEPS = [
 ]
 
 function isPlan(value: string | undefined): value is MemberPlan {
-  return value === 'individual' || value === 'family' || value === 'community'
+  return value === 'playing' || value === 'social_family' || value === 'social_single'
 }
 
 export default async function JoinPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
@@ -93,13 +73,17 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   const { data: { user } } = await supabase.auth.getUser()
   const isLoggedIn = !!user
   const membership = user ? await getActiveMembership(user.id) : null
-  const prices = await fetchPrices()
+  const pricing = await getPricing()
+  const prices: Partial<Record<MemberPlan, number | null>> = {
+    playing: pricing.membership.playing,
+    social_family: pricing.membership.social_family,
+    social_single: pricing.membership.social_single,
+  }
   const discount = memberDiscountPercent()
   const { plan: planParam } = await searchParams
   const chosenPlan = isPlan(planParam) ? planParam : null
 
   const paidTiers = MEMBERSHIP_TIERS.filter(t => !t.free)
-  const communityTier = MEMBERSHIP_TIERS.find(t => t.free)
   const isPaidMember = !!membership && membership.plan !== 'community'
 
   return (
@@ -256,7 +240,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
                     <PlanTicket
                       key={tier.id}
                       tier={tier}
-                      amount={prices[tier.id as 'individual' | 'family']}
+                      amount={prices[tier.id] ?? null}
                       savePercent={discount}
                     >
                       <Link href={`/join?plan=${tier.id}#signin`} className="btn btn-accent join-cta">
@@ -266,18 +250,8 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
                   ))}
                 </div>
                 <p className="tix-fineprint">
-                  Billed monthly · Secure payment via Stripe · Cancel any time · Members save {discount}% on SharkFest 2027 tickets
+                  Billed monthly by standing order · Secure card payment via Stripe · Cancel any time · Members save {discount}% on SharkFest 2027 tickets
                 </p>
-                {communityTier && (
-                  <div className="tix-community-wrap">
-                    <div className="tix-divider"><span>or</span></div>
-                    <CommunityTicket tier={communityTier}>
-                      <Link href={`/join?plan=community#signin`} className="btn join-community-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        Join for free
-                      </Link>
-                    </CommunityTicket>
-                  </div>
-                )}
               </div>
             </section>
 

@@ -13,7 +13,8 @@ export async function POST(request: Request) {
   if (!stripeKey) return NextResponse.json({ error: 'Payments not configured' }, { status: 503 })
 
   const body = await request.json().catch(() => ({}))
-  const plan: MemberPlan = body?.plan === 'family' ? 'family' : 'individual'
+  const VALID_PLANS: MemberPlan[] = ['playing', 'social_family', 'social_single']
+  const plan: MemberPlan = VALID_PLANS.includes(body?.plan) ? body.plan : 'social_single'
 
   // Map plan → price ID on the server; never trust a client-supplied price.
   const price = memberPriceId(plan)

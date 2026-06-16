@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import type { MemberPlan } from '@/lib/types'
+import { planLabel, type MemberPlan } from '@/lib/types'
 
 interface Props {
   name: string
@@ -17,7 +17,7 @@ function fmtDate(iso: string | null): string {
 
 // A premium, credit-card-style digital membership pass. Presentational only.
 export function MembershipCard({ name, membershipNumber, plan, status, memberSince, qrDataUrl }: Props) {
-  const tier = plan === 'family' ? 'Family Member' : 'Member'
+  const tier = planLabel(plan)
   const live = status === 'active' || status === 'past_due'
 
   return (

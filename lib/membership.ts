@@ -3,11 +3,25 @@ import { createServiceClient } from '@/lib/supabase/server'
 import type { Membership, MemberPlan, MembershipStatus } from '@/lib/types'
 
 // Stripe recurring price IDs are created in the Stripe dashboard and supplied via env.
-// Falls back to the older monthly/annual env vars so nothing hard-breaks pre-setup.
+// Each paid tier has its own price; legacy env vars are used as fallbacks so nothing
+// hard-breaks pre-setup. The displayed price comes from the admin Pricing page, but
+// the actual amount charged is whatever these Stripe prices are set to.
 export function memberPriceId(plan: MemberPlan): string | null {
-  const id = plan === 'family'
-    ? (process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL)
-    : (process.env.STRIPE_PRICE_INDIVIDUAL ?? process.env.STRIPE_PRICE_MONTHLY)
+  let id: string | undefined
+  switch (plan) {
+    case 'playing':
+    case 'family':
+      id = process.env.STRIPE_PRICE_PLAYING ?? process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL
+      break
+    case 'social_family':
+      id = process.env.STRIPE_PRICE_SOCIAL_FAMILY ?? process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL
+      break
+    case 'social_single':
+    case 'individual':
+    default:
+      id = process.env.STRIPE_PRICE_SOCIAL_SINGLE ?? process.env.STRIPE_PRICE_INDIVIDUAL ?? process.env.STRIPE_PRICE_MONTHLY
+      break
+  }
   return id?.trim() || null
 }
 
@@ -150,8 +164,14 @@ export async function upsertMembershipFromStripe(sub: Stripe.Subscription, email
   const service = createServiceClient()
   const priceId = sub.items.data[0]?.price.id ?? null
   const periodEnd = sub.items.data[0]?.current_period_end ?? null
-  const familyPrice = process.env.STRIPE_PRICE_FAMILY ?? process.env.STRIPE_PRICE_ANNUAL
-  const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? (priceId === familyPrice ? 'family' : 'individual')
+  // Checkout always stamps the plan in metadata; fall back to inferring from the
+  // price id for legacy/manual subscriptions.
+  const inferPlan = (): MemberPlan => {
+    if (priceId && priceId === memberPriceId('playing')) return 'playing'
+    if (priceId && priceId === memberPriceId('social_family')) return 'social_family'
+    return 'social_single'
+  }
+  const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? inferPlan()
 
   await service.from('memberships').upsert({
     user_id: userId,

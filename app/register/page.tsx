@@ -6,6 +6,7 @@ import { RegisterForm } from '@/components/RegisterForm'
 import { getEvent, isRegistrationOpen } from '@/lib/events'
 import { createClient } from '@/lib/supabase/server'
 import { isActiveMemberOrPartner } from '@/lib/membership'
+import { getPricing } from '@/lib/pricing-server'
 
 export async function generateMetadata(
   { searchParams }: { searchParams: Promise<{ year?: string }> }
@@ -33,6 +34,7 @@ export default async function RegisterPage(
   }
 
   const isOpen = isRegistrationOpen(event.year)
+  const pricing = isOpen ? await getPricing() : null
 
   return (
     <>
@@ -71,8 +73,8 @@ export default async function RegisterPage(
       </section>
 
       <main className="rc-gallery-wrap" style={{ paddingTop: '3rem' }}>
-        {isOpen ? (
-          <RegisterForm event={event} />
+        {isOpen && pricing ? (
+          <RegisterForm event={event} pricing={{ festival: pricing.festival, foodOptions: pricing.foodOptions }} />
         ) : (
           <div className="reg-coming-soon">
             <div className="reg-cs-icon" aria-hidden="true">🦈</div>

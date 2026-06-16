@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import type { FestivalEvent } from './events'
-import type { MemberPlan } from './types'
+import { planLabel as memberPlanLabel, type MemberPlan } from './types'
 
 // Default event for templates that don't (yet) take one — keeps existing
 // payment/receipt emails unchanged while registration emails go per-event.
@@ -158,38 +158,37 @@ View your booking: ${url}
 }
 
 export function emailRegistrationAdmin(
-  reg: { id: string; first_name: string; surname: string; email: string; mobile: string; adults: number; kids: number; accommodation: string; electric_hookup: boolean },
+  reg: { id: string; first_name: string; surname: string; email: string; mobile: string; adults: number; kids: number; accommodation: string; electric_hookup: boolean; food_preference?: string | null; estimated_total?: number | null },
   origin: string,
   event: Pick<FestivalEvent, 'name'> = DEFAULT_EVENT
 ): EmailBody {
   const party = `${reg.adults} adult${reg.adults !== 1 ? 's' : ''}${reg.kids ? `, ${reg.kids} child${reg.kids !== 1 ? 'ren' : ''}` : ''}`
   const accom = `${reg.accommodation}${reg.electric_hookup ? ' + electric hookup' : ''}`
   const url   = `${origin}/admin`
+  // Optional extra rows from the richer booking flow.
+  const extra: [string, string][] = []
+  if (reg.estimated_total != null) extra.push(['Est. total', `£${(reg.estimated_total / 100).toFixed(2)}`])
+  if (reg.food_preference) extra.push(['Food', reg.food_preference])
+  const rows: [string, string][] = [
+    ['Event',         event.name],
+    ['Name',          `${reg.first_name} ${reg.surname}`],
+    ['Email',         reg.email],
+    ['Mobile',        reg.mobile],
+    ['Party',         party],
+    ['Accommodation', accom],
+    ...extra,
+  ]
   return {
     html: htmlWrap(`
       ${hh(`New ${event.name} registration`)}
       ${hp(`A new ${event.name} registration has been submitted and is awaiting review.`)}
-      ${hSummary([
-        ['Event',         event.name],
-        ['Name',          `${reg.first_name} ${reg.surname}`],
-        ['Email',         reg.email],
-        ['Mobile',        reg.mobile],
-        ['Party',         party],
-        ['Accommodation', accom],
-      ])}
+      ${hSummary(rows)}
       ${hcta('Open admin panel', url)}
     `, event.name),
     text: textWrap(`${event.name} — New registration`, `
 A new ${event.name} registration is awaiting review.
 
-${tSummary([
-  ['Event',         event.name],
-  ['Name',          `${reg.first_name} ${reg.surname}`],
-  ['Email',         reg.email],
-  ['Mobile',        reg.mobile],
-  ['Party',         party],
-  ['Accommodation', accom],
-])}
+${tSummary(rows)}
 Admin panel: ${url}
     `),
   }
@@ -321,9 +320,7 @@ export function emailMembershipWelcome(
 ): EmailBody {
   const url = `${origin}/members`
   const isCommunity = plan === 'community'
-  const planLabel = plan === 'family' ? 'Family membership'
-    : isCommunity ? 'Community membership'
-    : 'Individual / Couple membership'
+  const planLabel = isCommunity ? 'Community membership' : `${memberPlanLabel(plan)} membership`
   const perksNote = isCommunity
     ? 'Your members area is ready: exclusive content, members events, and your digital membership card.'
     : 'Your members area is ready: exclusive content, members events, your digital membership card, and a reduced price on SharkFest 2027 tickets.'

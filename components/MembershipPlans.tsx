@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { MEMBERSHIP_TIERS, type MemberPlan } from '@/lib/types'
-import { PlanTicket, CommunityTicket } from '@/components/PlanTicket'
+import { PlanTicket } from '@/components/PlanTicket'
 
 // Only ever hand off to a genuine Stripe Checkout URL (mirrors MyBookingView).
 function redirectToStripe(url: unknown) {
@@ -16,7 +15,8 @@ function redirectToStripe(url: unknown) {
 }
 
 interface Props {
-  prices: { individual: number | null; family: number | null }
+  /** Monthly price (pence) per tier id, from the admin Pricing settings. */
+  prices: Partial<Record<MemberPlan, number | null>>
   discountPercent: number
   isUpgrade?: boolean
   /** Plan the visitor picked before signing in — visually highlighted. */
@@ -24,7 +24,6 @@ interface Props {
 }
 
 export function MembershipPlans({ prices, discountPercent, isUpgrade = false, highlightPlan = null }: Props) {
-  const router = useRouter()
   const [loading, setLoading] = useState<MemberPlan | null>(null)
   const [error, setError] = useState('')
 
@@ -46,29 +45,14 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false, hi
     }
   }
 
-  const handleCommunity = async () => {
-    setLoading('community')
-    setError('')
-    try {
-      const res = await fetch('/api/membership/community', { method: 'POST' })
-      const body = await res.json()
-      if (!res.ok) throw new Error(body.error ?? 'Could not sign up')
-      router.push('/members?welcome=1')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-      setLoading(null)
-    }
-  }
-
   const paidTiers = MEMBERSHIP_TIERS.filter(t => !t.free)
-  const communityTier = MEMBERSHIP_TIERS.find(t => t.free)
 
   return (
     <div className="join-plans">
       {isUpgrade && (
         <div className="join-upgrade-banner">
           <p className="join-upgrade-title">Upgrade your membership</p>
-          <p className="join-upgrade-sub">You&apos;re currently a Community Member. Choose a paid plan to unlock the SharkFest festival discount and full member benefits.</p>
+          <p className="join-upgrade-sub">Choose a paid plan to unlock the SharkFest festival discount and full member benefits.</p>
         </div>
       )}
       {error && (
@@ -78,10 +62,9 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false, hi
         </div>
       )}
 
-      {/* Paid tiers */}
       <div className="tix-grid">
         {paidTiers.map(tier => {
-          const amount = prices[tier.id as 'individual' | 'family']
+          const amount = prices[tier.id] ?? null
           const highlighted = highlightPlan === tier.id
           return (
             <PlanTicket
@@ -104,26 +87,8 @@ export function MembershipPlans({ prices, discountPercent, isUpgrade = false, hi
       </div>
 
       <p className="tix-fineprint">
-        Billed monthly · Secure payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2027 tickets
+        Billed monthly by standing order · Secure card payment via Stripe · Cancel any time · Members save {discountPercent}% on SharkFest 2027 tickets
       </p>
-
-      {/* Community (free) tier — only shown when not already a community member */}
-      {communityTier && !isUpgrade && (
-        <div className="tix-community-wrap">
-          <div className="tix-divider">
-            <span>or</span>
-          </div>
-          <CommunityTicket tier={communityTier} highlighted={highlightPlan === 'community'}>
-            <button
-              className="btn join-community-btn"
-              onClick={handleCommunity}
-              disabled={loading !== null}
-            >
-              {loading === 'community' ? 'Joining…' : 'Join for free'}
-            </button>
-          </CommunityTicket>
-        </div>
-      )}
     </div>
   )
 }

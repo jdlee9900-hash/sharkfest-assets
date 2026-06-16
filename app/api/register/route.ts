@@ -5,6 +5,8 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvent } from '@/lib/events'
 import { isActiveMemberOrPartner } from '@/lib/membership'
 import { isInstalmentAvailable } from '@/lib/instalments'
+import { getPricing } from '@/lib/pricing-server'
+import { normaliseTickets, totalAttendees, festivalTotal } from '@/lib/pricing'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -24,6 +26,7 @@ export async function POST(request: Request) {
       first_name, surname, email, mobile,
       adults, kids, accommodation, electric_hookup,
       vehicle_reg, notes, company, year, camp_near, partner_email,
+      tickets: rawTickets, food_preference: rawFood,
       payment_method: rawPaymentMethod,
     } = body
 
@@ -73,9 +76,32 @@ export async function POST(request: Request) {
 
     const service = createServiceClient()
 
+    // Tickets drive party size and the estimated total. Recompute the total from
+    // the server's own pricing — never trust a client-supplied amount. Older
+    // clients without `tickets` fall back to the plain adults/kids fields.
+    const pricing = await getPricing()
+    const hasTickets = rawTickets && typeof rawTickets === 'object'
+    const tickets = hasTickets ? normaliseTickets(rawTickets) : null
+    const partyFromTickets = tickets ? totalAttendees(tickets) : null
+    const estimatedTotal = tickets ? festivalTotal(tickets, pricing.festival) : null
+
     // Clamp counts and cap free-text so a single request can't store absurd values.
-    const parsedAdults = Math.min(20, Math.max(1, parseInt(adults) || 1))
-    const parsedKids   = Math.min(20, Math.max(0, parseInt(kids)   || 0))
+    const parsedAdults = partyFromTickets
+      ? Math.min(60, partyFromTickets.adults)
+      : Math.min(20, Math.max(1, parseInt(adults) || 1))
+    const parsedKids = partyFromTickets
+      ? Math.min(60, partyFromTickets.kids)
+      : Math.min(20, Math.max(0, parseInt(kids) || 0))
+
+    if (parsedAdults + parsedKids < 1) {
+      return NextResponse.json({ error: 'Please add at least one person to your booking.' }, { status: 400 })
+    }
+
+    // Only store a food preference the admin currently offers.
+    const foodPreference = typeof rawFood === 'string' && pricing.foodOptions.includes(rawFood.trim())
+      ? rawFood.trim()
+      : null
+
     const parsedHookup = Boolean(electric_hookup)
     const cap = (v: unknown, n: number) =>
       typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null
@@ -114,6 +140,11 @@ export async function POST(request: Request) {
         notes: cap(notes, 1000),
         year: event.year,
         status: 'pending',
+        // New booking fields — only sent when present so older databases without
+        // the 0011 migration keep working.
+        ...(tickets ? { tickets } : {}),
+        ...(foodPreference ? { food_preference: foodPreference } : {}),
+        ...(estimatedTotal != null ? { estimated_total: estimatedTotal } : {}),
         // Only sent when chosen, so registrations without a pick keep working
         // even before the camp_near migration (0004) is applied.
         ...(campNear1 ? { camp_near_1: campNear1 } : {}),
@@ -141,7 +172,7 @@ export async function POST(request: Request) {
     await Promise.allSettled([
       sendEmail(data.email, `${event.name} — Registration received`, emailRegistrationUser(data, origin, event, paymentMethod)),
       ...admins.map(to =>
-        sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin(data, origin, event))
+        sendEmail(to, `New ${event.name} registration: ${data.first_name} ${data.surname}`, emailRegistrationAdmin({ ...data, food_preference: foodPreference, estimated_total: estimatedTotal }, origin, event))
       ),
       ...(partnerEmailClean
         ? [sendEmail(partnerEmailClean, `${event.name} — You've been added to a booking`, emailPartnerInvite(`${data.first_name} ${data.surname}`, partnerEmailClean, origin))]

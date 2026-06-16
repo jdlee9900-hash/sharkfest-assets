@@ -21,6 +21,9 @@ export interface Registration {
   camp_near_1: string | null
   camp_near_2: string | null
   payment_method: 'full' | 'instalments' | null
+  tickets: Record<string, { adults: number; kids: number }> | null
+  food_preference: string | null
+  estimated_total: number | null
   created_at: string
 }
 
@@ -57,60 +60,66 @@ export interface Payment {
   created_at: string
 }
 
-export type MemberPlan = 'individual' | 'family' | 'community'
+// Current paid tiers plus legacy keys kept valid for existing membership rows.
+export type MemberPlan =
+  | 'playing' | 'social_family' | 'social_single'
+  | 'individual' | 'family' | 'community'
 
-// Membership tiers. Paid tiers have a Stripe price; the community tier is free.
+// Membership tiers paid by monthly standing order / card. Prices are configured
+// in the admin Pricing page (and must match the Stripe recurring prices).
 // Client-safe (no server imports).
 export const MEMBERSHIP_TIERS: { id: MemberPlan; label: string; tagline: string; perks: string[]; free?: boolean }[] = [
   {
-    id: 'individual',
-    label: 'Individual or Couple',
-    tagline: 'For you — or you and a partner. Add a second login to share your booking.',
+    id: 'playing',
+    label: 'Playing Sharks Member',
+    tagline: "For playing members — includes the player's family / partner.",
     perks: [
+      'Membership for a playing Shark, their family & partner',
       'SharkFest 2027 registration — members only',
       'Member discount applied to your booking',
       'First access when 2027 signups open',
       'Members area, exclusive content & events',
-      'Digital membership card',
-      'Second login to share your booking',
+      'Digital membership card · second login to share your booking',
     ],
   },
   {
-    id: 'family',
-    label: 'Family',
-    tagline: 'For the whole family. Add a second login to share your booking.',
+    id: 'social_family',
+    label: 'Non-Playing Social Family',
+    tagline: 'Social family membership for non-playing supporters.',
     perks: [
+      'Family membership for non-playing supporters',
       'SharkFest 2027 registration — members only',
       'Member discount applied to your booking',
-      'First access when 2027 signups open',
       'Members area, exclusive content & events',
-      'Digital membership card for the family',
-      'Second login to share your booking',
+      'Digital membership card · second login to share your booking',
     ],
   },
   {
-    id: 'community',
-    label: 'Community Member',
-    tagline: 'Stay connected to Torbay Sharks RFC all year round. No payment required.',
+    id: 'social_single',
+    label: 'Non-Playing Single Social',
+    tagline: 'Single social membership for non-playing supporters.',
     perks: [
-      'Access to the members area',
-      'Members-only content & events',
-      'Added to the club mailing list',
+      'Single membership for a non-playing supporter',
+      'SharkFest 2027 registration — members only',
+      'Member discount applied to your booking',
+      'Members area, exclusive content & events',
       'Digital membership card',
     ],
-    free: true,
   },
 ]
 
-/** Human label for a stored plan value (handles legacy monthly/annual rows). */
+/** Human label for a stored plan value (handles legacy rows). */
 export function planLabel(plan: string): string {
   switch (plan) {
-    case 'individual': return 'Individual or Couple'
-    case 'family':     return 'Family'
-    case 'community':  return 'Community Member'
-    case 'monthly':    return 'Monthly'
-    case 'annual':     return 'Annual'
-    default:           return 'Member'
+    case 'playing':       return 'Playing Sharks Member'
+    case 'social_family': return 'Non-Playing Social Family'
+    case 'social_single': return 'Non-Playing Single Social'
+    case 'individual':    return 'Individual or Couple'
+    case 'family':        return 'Family'
+    case 'community':     return 'Community Member'
+    case 'monthly':       return 'Monthly'
+    case 'annual':        return 'Annual'
+    default:              return 'Member'
   }
 }
 export type MembershipStatus = 'active' | 'past_due' | 'canceled' | 'incomplete'
