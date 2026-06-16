@@ -4,17 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 
 export interface Picked { id: string; name: string }
 
-export const MAX_CAMP_NEAR = 2
+export const MAX_CAMP_NEAR = 1
 
 /**
  * Typeahead picker for "camp near" — searches people already registered for a
- * given event and lets someone nominate up to two of them. Selections are
+ * given event and lets someone nominate one (or more) of them. Selections are
  * stored as their registration id, so it stays properly linked in the database.
  *
  * Used on the registration form and on the My Booking page.
  */
 export function CampNearPicker({
-  year, eventName, picked, onChange, excludeId,
+  year, eventName, picked, onChange, excludeId, max = MAX_CAMP_NEAR,
 }: {
   year: number
   eventName: string
@@ -22,6 +22,8 @@ export function CampNearPicker({
   onChange: (next: Picked[]) => void
   /** A registration id to hide from results (e.g. the viewer's own booking). */
   excludeId?: string
+  /** How many people/families may be picked. Defaults to one. */
+  max?: number
 }) {
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<Picked[]>([])
@@ -29,7 +31,7 @@ export function CampNearPicker({
   const [open, setOpen]       = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
 
-  const full = picked.length >= MAX_CAMP_NEAR
+  const full = picked.length >= max
 
   // Debounced search; skips ids already chosen / the viewer, and anything under 2 chars.
   useEffect(() => {
@@ -63,7 +65,7 @@ export function CampNearPicker({
   }, [])
 
   const add = (item: Picked) => {
-    if (picked.length >= MAX_CAMP_NEAR) return
+    if (picked.length >= max) return
     onChange([...picked, item])
     setQuery(''); setResults([]); setOpen(false)
   }
@@ -118,8 +120,8 @@ export function CampNearPicker({
 
       <p className="cn-hint">
         {full
-          ? `You've chosen ${MAX_CAMP_NEAR} people. Remove one to change your selection.`
-          : `Optional — pick up to two people you’d like to be pitched near. You can only choose people who’ve already registered for ${eventName}, so if you’re one of the first there may be no one to pick yet. Feel free to leave this blank.`}
+          ? `You've made your choice. Remove it to pick someone else.`
+          : `Optional — pick ${max === 1 ? 'one family' : `up to ${max} families`} you’d like to be pitched near. You can only choose people who’ve already registered for ${eventName}, so if you’re one of the first there may be no one to pick yet. Feel free to leave this blank.`}
       </p>
     </div>
   )

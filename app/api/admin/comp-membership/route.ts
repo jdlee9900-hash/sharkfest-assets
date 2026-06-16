@@ -90,7 +90,8 @@ export async function POST(request: Request) {
     }
   }
 
-  const plan: MemberPlan = body?.plan === 'family' ? 'family' : 'individual'
+  const COMP_PLANS: MemberPlan[] = ['playing', 'social_family', 'social_single']
+  const plan: MemberPlan = COMP_PLANS.includes(body?.plan) ? body.plan : 'playing'
   // Far-future period so the gate treats it as active; one comp row per user.
   const periodEnd = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString()
   await service.from('memberships').upsert({

@@ -7,7 +7,7 @@ import type { MemberPlan } from '@/lib/types'
 export function AdminCompMembership() {
   const router = useRouter()
   const [email, setEmail] = useState('')
-  const [plan, setPlan] = useState<MemberPlan>('individual')
+  const [plan, setPlan] = useState<MemberPlan>('playing')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [error, setError] = useState('')
@@ -46,9 +46,10 @@ export function AdminCompMembership() {
         <input id="comp-email" type="email" className="cu-input" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" required />
       </div>
 
-      <div className="join-toggle" role="tablist" aria-label="Tier" style={{ alignSelf: 'flex-start' }}>
-        <button type="button" role="tab" aria-selected={plan === 'individual'} className={`join-toggle-btn ${plan === 'individual' ? 'is-active' : ''}`} onClick={() => setPlan('individual')}>Individual / Couple</button>
-        <button type="button" role="tab" aria-selected={plan === 'family'} className={`join-toggle-btn ${plan === 'family' ? 'is-active' : ''}`} onClick={() => setPlan('family')}>Family</button>
+      <div className="join-toggle" role="tablist" aria-label="Tier" style={{ alignSelf: 'flex-start', flexWrap: 'wrap' }}>
+        <button type="button" role="tab" aria-selected={plan === 'playing'} className={`join-toggle-btn ${plan === 'playing' ? 'is-active' : ''}`} onClick={() => setPlan('playing')}>Playing</button>
+        <button type="button" role="tab" aria-selected={plan === 'social_family'} className={`join-toggle-btn ${plan === 'social_family' ? 'is-active' : ''}`} onClick={() => setPlan('social_family')}>Social Family</button>
+        <button type="button" role="tab" aria-selected={plan === 'social_single'} className={`join-toggle-btn ${plan === 'social_single' ? 'is-active' : ''}`} onClick={() => setPlan('social_single')}>Social Single</button>
       </div>
 
       {error && <div className="auth-error" role="alert">{error}</div>}

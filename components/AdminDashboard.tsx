@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Registration } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
+import { describeFoodPerPerson } from '@/lib/pricing'
 import { DEFAULT_EVENT_YEAR } from '@/lib/events'
 
 type Status = 'pending' | 'confirmed' | 'waitlist' | 'cancelled'
@@ -14,6 +15,14 @@ const STATUS_OPTS: { value: Status; label: string; color: string }[] = [
   { value: 'confirmed', label: 'Confirmed', color: '#22c55e' },
   { value: 'waitlist',  label: 'Waitlist',  color: '#a78bfa' },
   { value: 'cancelled', label: 'Cancelled', color: '#f87171' },
+]
+
+// Labels for the ticket-category breakdown shown in a registration's detail row.
+const TICKET_LABELS: { key: string; label: string }[] = [
+  { key: 'full',       label: 'Full weekend' },
+  { key: 'camping',    label: '1-night camping' },
+  { key: 'daytripper', label: 'Day tripper' },
+  { key: 'committee',  label: 'Committee' },
 ]
 
 export function AdminDashboard({
@@ -103,7 +112,10 @@ export function AdminDashboard({
 
   const openAllocate = (id: string) => {
     setAllocating(id)
-    setPlanTotal('')
+    // Pre-fill with the booker's estimated total (from the SharkFest fees) so the
+    // committee can confirm or tweak it rather than retype from scratch.
+    const reg = registrations.find(r => r.id === id)
+    setPlanTotal(reg?.estimated_total != null ? (reg.estimated_total / 100).toFixed(2) : '')
     setPlanNotes('')
     setPlanError('')
     setPlanSuccess('')
@@ -286,6 +298,26 @@ export function AdminDashboard({
                       <div className="adm-detail">
                         <dl className="mb-detail-grid">
                           <div><dt>Mobile</dt><dd>{r.mobile}</dd></div>
+                          {r.estimated_total != null && (
+                            <div><dt>Estimated total</dt><dd>{formatAmount(r.estimated_total)}</dd></div>
+                          )}
+                          {r.food_preference && <div><dt>Food preference</dt><dd>{r.food_preference}</dd></div>}
+                          {Array.isArray(r.food_preferences) && r.food_preferences.length > 0 && (
+                            <div className="mb-full"><dt>Food (per person)</dt><dd>{describeFoodPerPerson(r.food_preferences)}</dd></div>
+                          )}
+                          {r.tickets && (() => {
+                            const parts = TICKET_LABELS
+                              .map(({ key, label }) => {
+                                const t = r.tickets?.[key]
+                                if (!t || (t.adults === 0 && t.kids === 0)) return null
+                                const bits = [t.adults ? `${t.adults}A` : '', t.kids ? `${t.kids}C` : ''].filter(Boolean).join(' ')
+                                return `${label}: ${bits}`
+                              })
+                              .filter(Boolean)
+                            return parts.length > 0 ? (
+                              <div className="mb-full"><dt>Tickets</dt><dd>{parts.join(' · ')}</dd></div>
+                            ) : null
+                          })()}
                           {r.vehicle_reg && <div><dt>Vehicle</dt><dd>{r.vehicle_reg}</dd></div>}
                           {(() => {
                             const near = [r.camp_near_1, r.camp_near_2]

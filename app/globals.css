@@ -2881,3 +2881,46 @@ button.cn-result:hover, button.cn-result:focus-visible { background: var(--gold-
   padding: 0 0.5rem; transition: color 0.15s;
 }
 .pwa-prompt-later:hover { color: #fff; }
+
+/* ── Booking: ticket selector + estimated total ──────────────────────────── */
+.reg-tickets { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+.reg-ticket-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 0.95rem; border: 1px solid var(--grey-300);
+  border-radius: var(--r-md, 12px); background: #fff;
+}
+.reg-ticket-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1 1 12rem; }
+.reg-ticket-name { font-weight: 600; font-size: 0.95rem; color: var(--navy-900); }
+.reg-ticket-hint { font-size: 0.78rem; color: var(--grey-400); }
+.reg-ticket-qtys { display: flex; align-items: flex-end; gap: 0.6rem; }
+.reg-qty { display: flex; flex-direction: column; gap: 0.2rem; }
+.reg-qty-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--grey-400); }
+.reg-qty-select { width: 4.25rem; height: 2.4rem; padding: 0 0.5rem; }
+.reg-ticket-sub { min-width: 4.5rem; text-align: right; font-weight: 700; color: var(--navy-900); font-size: 0.95rem; }
+.reg-total-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 0.85rem; padding: 0.85rem 1rem;
+  border-radius: var(--r-md, 12px); background: var(--navy-900); color: #fff;
+}
+.reg-total-label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gold-400); }
+.reg-total-people { display: block; font-size: 0.8rem; color: var(--grey-300); margin-top: 0.15rem; }
+.reg-total-amount { font-family: var(--font-d); font-size: 1.5rem; color: var(--gold-400); }
+
+/* ── Admin: pricing editor ───────────────────────────────────────────────── */
+.adm-price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.85rem; }
+.adm-price-suffix { padding: 0 0.6rem; color: var(--grey-400); font-size: 0.85rem; }
+.adm-fee-group { padding: 0.85rem 0; border-top: 1px solid var(--grey-100); }
+.adm-fee-group:first-of-type { border-top: none; }
+.adm-fee-title { font-weight: 600; font-size: 0.92rem; color: var(--navy-900); margin: 0 0 0.6rem; }
+.adm-fee-hint { font-weight: 400; font-size: 0.78rem; color: var(--grey-400); margin-left: 0.4rem; }
+
+/* ── Booking: per-person food preferences ─────────────────────────────────── */
+.reg-food-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+.reg-food-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.85rem;
+  padding: 0.55rem 0.85rem; border: 1px solid var(--grey-300);
+  border-radius: var(--r-md, 12px); background: #fff;
+}
+.reg-food-who { font-weight: 600; font-size: 0.9rem; color: var(--navy-900); }
+.reg-food-select { width: auto; min-width: 11rem; height: 2.4rem; }

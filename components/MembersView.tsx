@@ -8,7 +8,7 @@ import { Countdown2027 } from '@/components/Countdown2027'
 import { PartnerEmailCard } from '@/components/PartnerEmailCard'
 import { SignOutButton } from '@/components/SignOutButton'
 import { PasskeySetup } from '@/components/PasskeySetup'
-import type { MemberPlan } from '@/lib/types'
+import { planLabel, type MemberPlan } from '@/lib/types'
 
 function redirectToStripe(url: unknown) {
   if (typeof url !== 'string') throw new Error('Could not open billing')
@@ -219,7 +219,7 @@ export function MembersView({ card, email, justJoined, discountPercent, news, ev
                 <div className="comp-portal">
                   <div className="comp-portal-section">
                     <p className="comp-portal-label">Plan</p>
-                    <p className="comp-portal-value">{card.plan === 'family' ? 'Family' : 'Individual or Couple'}</p>
+                    <p className="comp-portal-value">{planLabel(card.plan)}</p>
                   </div>
                   <div className="comp-portal-section">
                     <p className="comp-portal-label">Status</p>

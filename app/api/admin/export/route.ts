@@ -1,7 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
+import { FESTIVAL_CATEGORIES, normaliseTickets, describeFoodPerPerson, type PersonFood } from '@/lib/pricing'
 import ExcelJS from 'exceljs'
+
+// Compact "Full weekend: 2A 1C · Day tripper: 1A" summary of a booking's tickets.
+function ticketSummary(raw: unknown): string {
+  if (!raw || typeof raw !== 'object') return ''
+  const t = normaliseTickets(raw)
+  return FESTIVAL_CATEGORIES
+    .map(c => {
+      const { adults, kids } = t[c.key]
+      if (!adults && !kids) return null
+      const bits = [adults ? `${adults}A` : '', kids ? `${kids}C` : ''].filter(Boolean).join(' ')
+      return `${c.label}: ${bits}`
+    })
+    .filter(Boolean)
+    .join(' · ')
+}
 
 // Build a worksheet from an array of plain row objects (keys become headers).
 function addSheet(wb: ExcelJS.Workbook, name: string, rows: Record<string, string | number>[]) {
@@ -73,6 +89,10 @@ export async function GET(request: Request) {
       'Mobile':            r.mobile,
       'Adults':            r.adults,
       'Kids':              r.kids,
+      'Tickets':           ticketSummary(r.tickets),
+      'Food Preference':   r.food_preference ?? '',
+      'Food (per person)': Array.isArray(r.food_preferences) ? describeFoodPerPerson(r.food_preferences as PersonFood[]) : '',
+      'Estimated Total (£)': fmtAmount(r.estimated_total),
       'Accommodation':     r.accommodation,
       'Electric Hookup':   r.electric_hookup ? 'Yes' : 'No',
       'Camp Near 1':       r.camp_near_1 ? (nameByRegId.get(r.camp_near_1) ?? '') : '',

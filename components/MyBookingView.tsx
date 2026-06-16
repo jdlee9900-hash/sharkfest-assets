@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { Registration, PaymentPlan, Instalment, Payment, AccommodationType } from '@/lib/types'
 import { formatAmount } from '@/lib/types'
+import { describeFoodPerPerson } from '@/lib/pricing'
 import { getEvent } from '@/lib/events'
 import { CampNearPicker, type Picked } from '@/components/CampNearPicker'
 import { PartnerEmailCard } from '@/components/PartnerEmailCard'
@@ -179,6 +180,10 @@ function BookingDetailsCard({ registration, isPartner }: { registration: Registr
           <div><dt>Adults</dt><dd>{saved.adults}</dd></div>
           <div><dt>Children</dt><dd>{saved.kids}</dd></div>
           <div><dt>Accommodation</dt><dd>{saved.accommodation}{saved.electric_hookup ? ' + Electric' : ''}</dd></div>
+          {Array.isArray(saved.food_preferences) && saved.food_preferences.length > 0
+            ? <div className="mb-full"><dt>Food (per person)</dt><dd>{describeFoodPerPerson(saved.food_preferences)}</dd></div>
+            : saved.food_preference && <div><dt>Food preference</dt><dd>{saved.food_preference}</dd></div>}
+          {saved.estimated_total != null && <div><dt>Estimated total</dt><dd>{formatAmount(saved.estimated_total)}</dd></div>}
           {saved.vehicle_reg && <div><dt>Vehicle</dt><dd>{saved.vehicle_reg}</dd></div>}
           {saved.notes && <div className="mb-full"><dt>Notes</dt><dd>{saved.notes}</dd></div>}
         </dl>
@@ -222,7 +227,7 @@ function CampNearCard({ registration, initial }: { registration: Registration; i
     <div className="mb-card">
       <h2 className="mb-card-title">Camp near</h2>
       <p className="mb-camp-intro">
-        Choose up to two people you’d like to be pitched near. You can change this any
+        Choose one family you’d like to be pitched near. You can change this any
         time — handy if you booked early before your friends had registered.
       </p>
 
@@ -232,6 +237,7 @@ function CampNearCard({ registration, initial }: { registration: Registration; i
         picked={picked}
         onChange={p => { setPicked(p); setDone(false) }}
         excludeId={registration.id}
+        max={1}
       />
 
       {error && (

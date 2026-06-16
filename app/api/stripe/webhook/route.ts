@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         const userId = sub.metadata?.user_id
         if (userId && email) {
           const firstName = await memberFirstName(service, userId, email)
-          const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? 'individual'
+          const plan: MemberPlan = (sub.metadata?.plan as MemberPlan) ?? 'social_single'
           await sendEmail(email, 'Welcome to the club — SharkFest membership', emailMembershipWelcome({ first_name: firstName }, plan, getOrigin()))
         }
       } catch (err) {
