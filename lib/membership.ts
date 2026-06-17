@@ -2,6 +2,16 @@ import Stripe from 'stripe'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Membership, MemberPlan, MembershipStatus } from '@/lib/types'
 
+// stripe_subscription_id prefixes mark memberships that have no real Stripe
+// subscription behind them: 'comp_' = admin-granted, 'community_' = free tier.
+export const COMP_SUB_PREFIX = 'comp_'
+export const COMMUNITY_SUB_PREFIX = 'community_'
+
+/** True for admin-comped / free-community memberships that have no real Stripe subscription. */
+export function isSyntheticSubscription(subId: string | null | undefined): boolean {
+  return !!subId && (subId.startsWith(COMP_SUB_PREFIX) || subId.startsWith(COMMUNITY_SUB_PREFIX))
+}
+
 // Stripe recurring price IDs are created in the Stripe dashboard and supplied via env.
 // Each paid tier has its own price; legacy env vars are used as fallbacks so nothing
 // hard-breaks pre-setup. The displayed price comes from the admin Pricing page, but
