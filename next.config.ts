@@ -16,6 +16,7 @@ const csp = [
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com",
   "font-src 'self' data:",
   "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.supabase.co https://api.stripe.com",
+  "frame-src https://www.youtube-nocookie.com https://www.youtube.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

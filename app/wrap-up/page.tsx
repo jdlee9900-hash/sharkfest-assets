@@ -48,6 +48,31 @@ export default function WrapUpPage() {
         </div>
         <div className="hero-wave" style={{ zIndex: 2 }} aria-hidden="true">
           <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path d="M0,24 C360,48 720,0 1080,24 C1260,36 1380,12 1440,24 L1440,48 L0,48 Z" fill="var(--navy-900)"/>
+          </svg>
+        </div>
+      </section>
+
+      {/* ── Highlights Video ────────────────────── */}
+      <section className="video-showcase">
+        <div className="video-showcase-inner">
+          <div className="section-label" style={{ color: 'var(--gold-400)', justifyContent: 'center' }}>
+            <span className="section-label-line" />
+            Highlights Reel · SharkFest 2026
+            <span className="section-label-line" />
+          </div>
+          <h2 className="video-showcase-title">Relive the weekend</h2>
+          <div className="video-player-wrap">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/zAc9lpjD3Yw?rel=0&modestbranding=1"
+              title="SharkFest 2026 Highlights Reel"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </div>
+        <div className="video-showcase-wave" aria-hidden="true">
+          <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
             <path d="M0,24 C360,48 720,0 1080,24 C1260,36 1380,12 1440,24 L1440,48 L0,48 Z" fill="var(--off-white)"/>
           </svg>
         </div>
