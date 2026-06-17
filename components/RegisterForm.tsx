@@ -411,14 +411,17 @@ export function RegisterForm({
 
         {/* Electric hookup */}
         {needsElectric && (
-          <label className="reg-tc-agree">
-            <input
-              type="checkbox"
-              checked={form.electric_hookup}
-              onChange={e => patch('electric_hookup', e.target.checked)}
-            />
-            <span>Electric hookup required</span>
-          </label>
+          <div>
+            <label className="reg-tc-agree">
+              <input
+                type="checkbox"
+                checked={form.electric_hookup}
+                onChange={e => patch('electric_hookup', e.target.checked)}
+              />
+              <span>Electric hookup required</span>
+            </label>
+            <p className="reg-field-hint">Electric pitches are limited in availability and not guaranteed.</p>
+          </div>
         )}
 
         {/* Camp near */}
