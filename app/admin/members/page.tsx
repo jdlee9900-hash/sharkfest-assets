@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 import type { Membership } from '@/lib/types'
+import { isSyntheticSubscription } from '@/lib/membership'
 import { AdminCompMembership } from '@/components/AdminCompMembership'
+import { AdminCancelButton } from '@/components/AdminCancelButton'
 
 export const metadata: Metadata = { title: 'Members · Admin · SharkFest' }
 export const dynamic = 'force-dynamic'
@@ -39,7 +41,7 @@ export default async function AdminMembersPage() {
         ) : (
           <div className="mb-table-scroll">
             <table className="mb-pay-table">
-              <thead><tr><th>Email</th><th>Plan</th><th>Status</th><th>Renews</th></tr></thead>
+              <thead><tr><th>Email</th><th>Plan</th><th>Status</th><th>Renews</th><th>Actions</th></tr></thead>
               <tbody>
                 {members.map(m => (
                   <tr key={m.id}>
@@ -47,6 +49,15 @@ export default async function AdminMembersPage() {
                     <td style={{ textTransform: 'capitalize' }}>{m.plan}{m.stripe_customer_id === 'comp' ? ' · comp' : ''}</td>
                     <td style={{ textTransform: 'capitalize' }}>{m.status.replace('_', ' ')}</td>
                     <td>{fmtDate(m.current_period_end)}</td>
+                    <td>
+                      <AdminCancelButton
+                        id={m.id}
+                        status={m.status}
+                        synthetic={isSyntheticSubscription(m.stripe_subscription_id)}
+                        periodEnd={m.current_period_end}
+                        cancelAtPeriodEnd={m.cancel_at_period_end}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

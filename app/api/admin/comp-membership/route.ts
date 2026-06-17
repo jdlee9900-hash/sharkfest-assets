@@ -3,11 +3,7 @@ import Stripe from 'stripe'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { adminEmails } from '@/lib/types'
 import type { MemberPlan } from '@/lib/types'
-
-// stripe_subscription_id prefixed 'comp_' is the canonical signal that a membership
-// was granted by an admin rather than created through Stripe. stripe_customer_id may
-// now hold a real Stripe customer ID even for comp members so festival payments work.
-const COMP_SUB_PREFIX = 'comp_'
+import { COMP_SUB_PREFIX } from '@/lib/membership'
 
 const REAL_STRIPE_CUSTOMER = /^cus_[A-Za-z0-9]{10,}$/
 
