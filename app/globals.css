@@ -1028,21 +1028,33 @@ body::after {
 
 /* T&C box */
 .reg-tc {
-  border: 1px solid var(--grey-100); border-radius: var(--r-lg);
-  overflow: hidden;
+  border: 2px solid var(--navy-900); border-radius: var(--r-lg);
+  overflow: hidden; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.1);
 }
 .reg-tc-title {
   background: var(--navy-900); color: var(--gold-400);
-  font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 0.625rem 1rem; margin: 0;
+  font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.875rem 1.25rem; margin: 0;
+}
+.reg-tc-hint {
+  margin: 0; padding: 0.625rem 1.25rem; background: #fffbea;
+  border-bottom: 1px solid var(--grey-100);
+  font-size: 0.875rem; font-weight: 600; color: var(--navy-900);
 }
 .reg-tc-body {
-  padding: 1.25rem 1rem; max-height: 280px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 0.875rem;
-  font-size: 0.875rem; line-height: 1.65; color: var(--grey-600);
+  padding: 1.5rem 1.5rem; max-height: 460px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1.125rem;
+  font-size: 1rem; line-height: 1.75; color: var(--grey-700, #334155);
   scrollbar-width: thin;
+  background: #fff;
 }
 .reg-tc-body p { margin: 0; }
+.reg-tc-lead { font-size: 1.0625rem; color: var(--navy-900); text-align: center; }
+.reg-tc-warning {
+  margin-top: 0.25rem; padding: 0.875rem 1rem;
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--r-md);
+  color: #991b1b; text-align: center;
+}
 
 .reg-tc-agree {
   display: flex; align-items: flex-start; gap: 0.75rem;
