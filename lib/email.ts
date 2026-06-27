@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import type { FestivalEvent } from './events'
 import { planLabel as memberPlanLabel, type MemberPlan } from './types'
+import { TERMS_TITLE, TERMS_INTRO, TERMS_CLAUSES, TERMS_WARNING } from './terms'
 
 // Default event for templates that don't (yet) take one — keeps existing
 // payment/receipt emails unchanged while registration emails go per-event.
@@ -99,6 +100,46 @@ function hcta(label: string, url: string): string {
   <p style="margin:10px 0 0;font-size:12px;color:#94a3b8">Or copy: <a href="${url}" style="color:#64748b">${url}</a></p>`
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+// Full Terms & Conditions rendered into the confirmation email so the attendee
+// receives a verbatim copy of exactly what they agreed to at sign-up. Content
+// comes from the shared canonical source in lib/terms.ts.
+function termsHtml(): string {
+  const intro = TERMS_INTRO
+    .map(p => `<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#334155">${escapeHtml(p)}</p>`)
+    .join('')
+  const clauses = TERMS_CLAUSES
+    .map(c => `<p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:#334155">${escapeHtml(c)}</p>`)
+    .join('')
+  return `
+    <table cellpadding="0" cellspacing="0" style="width:100%;margin:28px 0 0;border-top:1px solid #e2e8f0;padding-top:24px">
+      <tr><td>
+        <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#0f172a">${escapeHtml(TERMS_TITLE)}</h2>
+        ${intro}
+        ${clauses}
+        <p style="margin:16px 0 0;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;font-size:13px;font-weight:700;color:#991b1b;text-align:center">${escapeHtml(TERMS_WARNING)}</p>
+      </td></tr>
+    </table>`
+}
+
+function termsText(): string {
+  return [
+    TERMS_TITLE,
+    '',
+    TERMS_INTRO.join('\n\n'),
+    '',
+    TERMS_CLAUSES.join('\n\n'),
+    '',
+    TERMS_WARNING,
+  ].join('\n')
+}
+
 function hSummary(rows: [string, string][]): string {
   const cells = rows.map(([l, v]) =>
     `<tr>
@@ -143,6 +184,8 @@ export function emailRegistrationUser(
       ${hp(paymentNote)}
       ${hp('You can check your booking status at any time:')}
       ${hcta('View my booking', url)}
+      ${hp('For your records, here are the full Terms &amp; Conditions you agreed to when registering:')}
+      ${termsHtml()}
     `, event.name),
     text: textWrap(`${event.name} — Registration received`, `
 Hi ${reg.first_name},
@@ -153,6 +196,10 @@ and will review your booking shortly.
 ${paymentNoteText}
 
 View your booking: ${url}
+
+For your records, here are the full Terms & Conditions you agreed to when registering:
+
+${termsText()}
     `),
   }
 }
