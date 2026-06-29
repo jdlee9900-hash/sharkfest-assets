@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { SaTourInterestForm } from '@/components/SaTourInterestForm'
+import { SaTourMap } from '@/components/SaTourMap'
 import './tour.css'
 
 // Unlinked page — reachable by direct URL only, kept out of search indexes.
@@ -99,6 +100,48 @@ export default function SaTourPage() {
               sorted — beds, breakfasts, luxury coaches, matches, game drives and every braai.
               Porter and driver tips included.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Trip summary + map ───────────────────────────────── */}
+      <section className="sa-summary" id="summary">
+        <div className="sa-summary-inner">
+          <div className="sa-summary-copy">
+            <span className="sa-eyebrow-earth">The trip at a glance</span>
+            <h2>ONE LOOP UP<br />THE COAST.</h2>
+            <p className="sa-summary-lead">
+              Fly into <strong>Durban</strong> and we&apos;ll have you on the road. Ten nights, three
+              centres, three matches — beachfront to Big-5 bush and back to the sand to wind it down.
+              Here&apos;s the shape of the journey.
+            </p>
+            <ol className="sa-legend">
+              <li style={{ '--dot': 'var(--tour-a1)' } as React.CSSProperties}>
+                <span className="sa-legend-dot" aria-hidden="true">1</span>
+                <span className="sa-legend-text">
+                  <strong>Umhlanga Rocks</strong>
+                  <span>Nights 1–3 · sea-front start, 25 km north of Durban</span>
+                </span>
+              </li>
+              <li style={{ '--dot': 'var(--tour-a2)' } as React.CSSProperties}>
+                <span className="sa-legend-dot" aria-hidden="true">2</span>
+                <span className="sa-legend-text">
+                  <strong>Hluhluwe</strong>
+                  <span>Nights 4–6 · into Zululand and the game reserves</span>
+                </span>
+              </li>
+              <li style={{ '--dot': 'var(--tour-a3)' } as React.CSSProperties}>
+                <span className="sa-legend-dot" aria-hidden="true">3</span>
+                <span className="sa-legend-text">
+                  <strong>Zinkwazi Beach</strong>
+                  <span>Nights 7–10 · the chill-down on the north coast</span>
+                </span>
+              </li>
+            </ol>
+          </div>
+          <div className="sa-map-wrap">
+            <SaTourMap />
+            <p className="sa-map-caption">Not to scale — a feel for the route, not a road atlas.</p>
           </div>
         </div>
       </section>
