@@ -13,10 +13,12 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
   const joining = next.startsWith('/join')
   const members = next.startsWith('/members') || joining
 
-  const [email, setEmail]     = useState('')
-  const [sent, setSent]       = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState(hasError ? 'That link has expired — please request a new one.' : '')
+  const [email, setEmail]       = useState('')
+  const [sent, setSent]         = useState(false)
+  const [code, setCode]         = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState(hasError ? 'That link has expired — please request a new one.' : '')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,10 +27,12 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
     setError('')
 
     const supabase = createClient()
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+    // Send a one-time code (not a clickable link). Email link scanners — most
+    // notably Outlook / Microsoft Defender "Safe Links" — pre-fetch links and
+    // burn the single-use token before the user clicks. A typed code can't be
+    // consumed by a scanner, so it's reliable across all mail providers.
     const { error: sbErr } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: redirectTo },
     })
 
     if (sbErr) {
@@ -38,6 +42,32 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
       setSent(true)
       setLoading(false)
     }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const token = code.trim()
+    if (!token) return
+    setVerifying(true)
+    setError('')
+
+    const supabase = createClient()
+    const { error: sbErr } = await supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token,
+      type: 'email',
+    })
+
+    if (sbErr) {
+      setError(sbErr.message)
+      setVerifying(false)
+      return
+    }
+
+    // Session cookies are now set — run the same account linking the magic-link
+    // callback does, then continue to the destination.
+    await fetch('/api/auth/post-otp', { method: 'POST' }).catch(() => {})
+    window.location.href = next
   }
 
   return (
@@ -59,16 +89,50 @@ export function LoginForm({ defaultNext = '/my-booking' }: { defaultNext?: strin
 
       {sent ? (
         <>
-          <h1 className="auth-title">Check your inbox</h1>
+          <h1 className="auth-title">Enter your code</h1>
           <p className="auth-sub">
-            We sent a magic link to <strong>{email}</strong>.<br />
+            We sent a 6-digit code to <strong>{email}</strong>.<br />
             {joining
-              ? 'Click it and you’ll come straight back here to choose your plan.'
-              : 'Click it to sign in — no password needed.'}
+              ? 'Enter it below and you’ll come straight back here to choose your plan.'
+              : 'Enter it below to sign in — no password needed.'}
           </p>
+
+          {error && (
+            <div className="auth-error" role="alert">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleVerify} className="auth-form">
+            <label htmlFor="auth-code" className="cu-label">6-digit code</label>
+            <input
+              id="auth-code"
+              type="text"
+              className="cu-input"
+              placeholder="123456"
+              value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              required
+              autoFocus
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              maxLength={6}
+            />
+            <button
+              type="submit"
+              className="btn btn-accent auth-submit"
+              disabled={verifying || code.trim().length < 6}
+            >
+              {verifying ? 'Verifying…' : 'Verify & sign in'}
+            </button>
+          </form>
+
           <p className="auth-hint">
             Didn&apos;t receive it? Check your spam folder or{' '}
-            <button className="auth-link-btn" onClick={() => setSent(false)}>try again</button>.
+            <button className="auth-link-btn" onClick={() => { setSent(false); setCode(''); setError('') }}>try again</button>.
           </p>
         </>
       ) : (
