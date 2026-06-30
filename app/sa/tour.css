@@ -148,6 +148,75 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Trip summary + map ───────────────────────────────────────────────── */
+.sa-summary {
+  background: linear-gradient(180deg, var(--tour-sand) 0%, var(--tour-sand-deep) 100%);
+  border-bottom: 1px solid var(--grey-200);
+}
+.sa-summary-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 72px 32px;
+  display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 52px;
+  align-items: center;
+}
+.sa-summary-copy h2 {
+  font-family: var(--font-d); font-size: clamp(36px, 6vw, 54px);
+  line-height: 0.92; margin: 0 0 14px; letter-spacing: 0.01em;
+  color: var(--navy-900);
+}
+.sa-summary-lead {
+  font-size: 16px; color: var(--grey-600); line-height: 1.65; margin: 0 0 24px;
+}
+.sa-summary-lead strong { color: var(--navy-900); }
+
+.sa-legend { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.sa-legend li { display: flex; align-items: center; gap: 14px; }
+.sa-legend-dot {
+  flex: none;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--dot); color: #fff;
+  font-family: var(--font-d); font-size: 17px; line-height: 1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.sa-legend-text { display: flex; flex-direction: column; gap: 2px; }
+.sa-legend-text strong {
+  font-family: var(--font-d); font-size: 19px; font-weight: 400;
+  letter-spacing: 0.02em; color: var(--navy-900); text-transform: uppercase;
+}
+.sa-legend-text span { font-size: 13px; color: var(--grey-600); }
+
+.sa-map-wrap {
+  background: #fff;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--r-2xl);
+  padding: 14px 14px 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.10);
+}
+.sa-map-svg { width: 100%; height: auto; display: block; border-radius: var(--r-lg); }
+.sa-map-caption {
+  font-family: var(--tour-mono); font-size: 11px; color: var(--grey-400);
+  text-align: center; margin: 8px 0 4px; letter-spacing: 0.03em;
+}
+
+/* SVG text styling */
+.sa-map-name {
+  font-family: var(--font-d); font-size: 19px; letter-spacing: 0.03em;
+  fill: var(--navy-900);
+}
+.sa-map-sub { font-family: var(--tour-mono); font-size: 11px; fill: var(--grey-600); }
+.sa-map-num { font-family: var(--font-d); font-size: 18px; fill: #fff; }
+.sa-map-ocean {
+  font-family: var(--font-d); font-size: 22px; letter-spacing: 0.32em;
+  fill: #fff; fill-opacity: 0.30;
+}
+.sa-map-n { font-family: var(--font-d); font-size: 13px; fill: #fbbf24; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sa-map-dash { animation: sa-dash 1.2s linear infinite; }
+}
+@keyframes sa-dash { to { stroke-dashoffset: -14; } }
+
 /* ── Journey ──────────────────────────────────────────────────────────── */
 .sa-journey { max-width: 1100px; margin: 0 auto; padding: 88px 32px 64px; }
 .sa-journey-header { max-width: 720px; margin-bottom: 12px; }
@@ -328,10 +397,14 @@
   .sa-leg.flip .sa-leg-photo { order: 0; }
   .sa-leg-photo { min-height: 240px; }
   .sa-register-inner { grid-template-columns: 1fr; gap: 40px; }
+  .sa-summary-inner { grid-template-columns: 1fr; gap: 36px; }
+  .sa-summary-copy { order: 1; }
+  .sa-map-wrap { order: 0; }
 }
 @media (max-width: 560px) {
   .sa-hero-inner { padding: 64px 20px 64px; }
   .sa-journey { padding: 64px 20px 48px; }
   .sa-leg-body { padding: 26px 22px 24px; }
   .sa-register-inner { padding: 56px 20px 64px; }
+  .sa-summary-inner { padding: 56px 20px; }
 }
