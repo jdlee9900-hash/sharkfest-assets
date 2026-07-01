@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { SaTourInterestForm } from '@/components/SaTourInterestForm'
 import { SaTourMap } from '@/components/SaTourMap'
 import './tour.css'
 
@@ -33,12 +32,6 @@ const HotelIcon = () => (
   </svg>
 )
 
-const CheckIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-)
-
 export default function SaTourPage() {
   return (
     <div className="sa-page">
@@ -48,8 +41,8 @@ export default function SaTourPage() {
           <span>SharkFest</span>
         </Link>
         <nav className="rc-header-nav" aria-label="Site navigation">
-          <a href="#register" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
-            Register interest
+          <a href="#journey" className="btn btn-accent" style={{ fontSize: '0.8125rem', height: '2.25rem', padding: '0 1.125rem' }}>
+            See the journey
           </a>
         </nav>
       </header>
@@ -76,8 +69,7 @@ export default function SaTourPage() {
             <span className="sa-stat-pill"><strong>BIG 5</strong>on the game drives</span>
           </div>
           <div className="sa-cta-row">
-            <a className="btn btn-accent" style={{ height: '3rem', padding: '0 1.75rem' }} href="#register">Register interest</a>
-            <a className="sa-btn-ghost" href="#journey">See the journey</a>
+            <a className="btn btn-accent" style={{ height: '3rem', padding: '0 1.75rem' }} href="#journey">See the journey</a>
           </div>
           <div className="sa-route-card">
             <div className="sa-route-label"><span className="sa-pulse-dot" aria-hidden="true" />The route</div>
@@ -284,28 +276,6 @@ export default function SaTourPage() {
         </article>
       </section>
 
-      {/* ── Register interest ────────────────────────────────── */}
-      <section className="sa-register" id="register">
-        <div className="sa-register-sunset" aria-hidden="true" />
-        <div className="sa-register-inner">
-          <div className="sa-register-copy">
-            <span className="sa-eyebrow-dark">Register interest</span>
-            <h2>GET YOUR<br />NAME DOWN.</h2>
-            <p className="sa-lead-dark">
-              You book the flights into <strong>Durban</strong> — we sort everything on the ground.{' '}
-              <strong>Lodge beds set the cap</strong> on numbers, so the earlier you&apos;re on the list,
-              the better your shout.
-            </p>
-            <ul className="sa-points">
-              <li><CheckIcon /><span>Buffet breakfast every day; welcome dinner, three braais, three lodge dinners, the ski-boat club day and the end-of-tour dinner all included</span></li>
-              <li><CheckIcon /><span>All transfers in luxury coaches, porter and driver tips covered</span></li>
-              <li><CheckIcon /><span>Playing kit and tour kit included — and something for the ladies and the kids</span></li>
-            </ul>
-          </div>
-          <SaTourInterestForm />
-        </div>
-      </section>
-
       {/* ── Footer ───────────────────────────────────────────── */}
       <footer className="footer">
         <Image src="/logo.png" alt="Torbay Sharks RFC" width={44} height={44} className="footer-logo-img" />
@@ -314,7 +284,6 @@ export default function SaTourPage() {
         <nav className="footer-links" aria-label="Footer links">
           <Link href="/">SharkFest home</Link>
           <a href="#journey">The journey</a>
-          <a href="#register">Register interest</a>
           <a href="mailto:hello@torbaySharks.co.uk">Contact</a>
         </nav>
         <p className="footer-copy">© 2026 Torbay Sharks RFC. All rights reserved.</p>
